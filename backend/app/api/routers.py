@@ -23,7 +23,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
 auth_router  = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @auth_router.post("/login")
-def login(user_data: schemas.UserEntrance, db: Session = Depends(get_db)):
+def login(user_data: UserEntrance, db: Session = Depends(get_db)):
 
     user_in_db = crud.get_user_by_email(db, email=user_data.email)
     
