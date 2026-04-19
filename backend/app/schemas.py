@@ -3,6 +3,8 @@ from pydantic import BaseModel, EmailStr, Field, SecretStr
 import uuid
 from pydantic import BaseModel
 #валидация данных 
+
+
 class UserCreate(BaseModel):
     name: Annotated[str, Field(pattern="^[A-Za-zА-Яа-яЁё]+$")]
     surname: Annotated[str, Field(pattern="^[A-Za-zА-Яа-яЁё]+$")]

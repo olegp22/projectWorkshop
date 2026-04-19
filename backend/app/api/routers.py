@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.schemas import UserCreate, UserResponse, UserEntrance
+
+from app.schemas import UserCreate, UserResponse, UserEntrance,GroupCreate,GroupResponse
 from app.db.session import get_db
 import crud
-
+from app.models.group import Group  
 
 users_router  = APIRouter(prefix="/users", tags=["Users"])
 #ручка для регистрации
@@ -46,3 +47,22 @@ def login(user_data: UserEntrance, db: Session = Depends(get_db)):
         )
 
     return {"message": "Вы успешно вошли!", "user_id": user_in_db.id}
+
+
+#ручка для создания группы
+
+groups_router = APIRouter(prefix="/groups", tags=["Groups"])
+
+@groups_router.post("/", response_model=GroupResponse)
+async def make_group(
+    group: GroupCreate, 
+    creator_id: int, # Пока передаем вручную для теста!!!!!!
+    db: Session = Depends(get_db)
+):
+    # Проверка на уникальность имени
+    existing_group = db.query(Group).filter(Group.name == group.name).first()
+    if existing_group:
+        raise HTTPException(status_code=400, detail="Группа с таким именем уже есть")
+        
+    new_group = crud.create_group(db, group, creator_id)
+    return new_group

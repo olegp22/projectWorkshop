@@ -1,4 +1,6 @@
 from sqlalchemy.orm import declarative_base
 
-# Базовый класс для моделей
 Base = declarative_base()
+
+from app.models.user import User
+from app.models.group import Group
