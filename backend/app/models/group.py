@@ -1,7 +1,7 @@
 import uuid
 from sqlalchemy import Column, Integer, String, ForeignKey
 from app.db.base import Base
-
+#запрос в бд для создание таблица с групой
 class Group(Base):
     __tablename__ = "groups"
 

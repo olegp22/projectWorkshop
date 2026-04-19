@@ -1,5 +1,7 @@
 from typing import Annotated
 from pydantic import BaseModel, EmailStr, Field, SecretStr
+import uuid
+from pydantic import BaseModel
 #валидация данных 
 class UserCreate(BaseModel):
     name: Annotated[str, Field(pattern="^[A-Za-zА-Яа-яЁё]+$")]
@@ -18,6 +20,21 @@ class UserResponse(BaseModel):
     name: str
     surname: str
     patronymic: str
+
+    class Config:
+        from_attributes = True
+
+
+
+class GroupCreate(BaseModel):
+    name: str
+
+class GroupResponse(BaseModel):
+    id: int
+    name: str
+    creator_id: int
+    reviewer_invite_token: str
+    student_invite_token: str
 
     class Config:
         from_attributes = True
