@@ -21,7 +21,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
 
 
 auth_router  = APIRouter(prefix="/auth", tags=["Authentication"])
-
+#ручка для входа
 @auth_router.post("/login")
 def login(user_data: UserEntrance, db: Session = Depends(get_db)):
 
