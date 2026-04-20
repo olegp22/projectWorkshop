@@ -64,3 +64,7 @@ def get_group_participants(db: Session, group_id: int):
         result.append({"user_id": m.id, "name": m.name, "surname": m.surname, "role": m.role})
         
     return result
+
+
+def get_user_by_id(db: Session, user_id: int):
+    return db.query(User).filter(User.id == user_id).first()
