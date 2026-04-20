@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..'
 from app.core.config import DATABASE_URL
 from app.db.base import Base
 from app.models.user import User
-from app.models.group import Group, GroupMember
+from app.models.group import Group, GroupMember, Criterion
 
 # Объект конфигурации Alembic
 config = context.config

@@ -48,3 +48,20 @@ class MemberResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# Схема для создания критерия
+class CriterionCreate(BaseModel):
+    name: str
+    description: str | None = None
+
+# Схема для ответа
+class CriterionResponse(BaseModel):
+    id: int
+    name: str
+    description: str | None
+    max_score: int
+    group_id: int
+
+    class Config:
+        from_attributes = True

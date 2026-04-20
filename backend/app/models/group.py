@@ -1,6 +1,5 @@
 import uuid
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum
-from sqlalchemy import Column, Integer, ForeignKey, Enum, UniqueConstraint
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Text,UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 import enum
@@ -40,3 +39,14 @@ class GroupMember(Base):
 
     group = relationship("Group")
     user = relationship("User")
+
+
+#запрос в бд для создания таблица с критериями оценивания в группе
+class Criterion(Base):
+    __tablename__ = "criteria"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False) # Название (например, "Чистота кода")
+    description = Column(Text, nullable=True) # Описание того, за что даются баллы
+    max_score = Column(Integer, default=10) # Максимальный балл (у нас будет 10)
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
