@@ -4,6 +4,8 @@ from sqlalchemy import Column, Integer, ForeignKey, Enum, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 import enum
+
+
 #запрос в бд для создание таблица с групой
 class Group(Base):
     __tablename__ = "groups"
