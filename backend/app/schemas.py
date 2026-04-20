@@ -1,7 +1,6 @@
 from typing import Annotated
 from pydantic import BaseModel, EmailStr, Field, SecretStr
 import uuid
-from pydantic import BaseModel
 #валидация данных 
 
 

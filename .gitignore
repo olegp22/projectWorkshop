@@ -33,3 +33,4 @@ backend/ENV/
 *.swp
 *.swo
 
+alembic.ini.local
