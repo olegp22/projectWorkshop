@@ -3,7 +3,7 @@ from pydantic import BaseModel, EmailStr, Field, SecretStr
 import uuid
 #валидация данных 
 
-
+#валидация для пользователь
 class UserCreate(BaseModel):
     name: Annotated[str, Field(pattern="^[A-Za-zА-Яа-яЁё]+$")]
     surname: Annotated[str, Field(pattern="^[A-Za-zА-Яа-яЁё]+$")]
@@ -26,7 +26,7 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
-
+#валидация для групп
 class GroupCreate(BaseModel):
     name: str
 
@@ -36,6 +36,15 @@ class GroupResponse(BaseModel):
     creator_id: int
     reviewer_invite_token: str
     student_invite_token: str
+
+    class Config:
+        from_attributes = True
+
+class MemberResponse(BaseModel):
+    user_id: int
+    name: str
+    surname: str
+    role: str
 
     class Config:
         from_attributes = True

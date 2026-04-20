@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.schemas import UserCreate, UserResponse, UserEntrance,GroupCreate,GroupResponse
+from app.schemas import UserCreate, UserResponse, UserEntrance,GroupCreate,GroupResponse,\
+    MemberResponse
 from app.db.session import get_db
 import crud
 from app.models.group import Group  
@@ -50,7 +51,6 @@ def login(user_data: UserEntrance, db: Session = Depends(get_db)):
 
 
 #ручка для создания группы
-
 groups_router = APIRouter(prefix="/groups", tags=["Groups"])
 
 @groups_router.post("/", response_model=GroupResponse)
@@ -66,3 +66,11 @@ async def make_group(
         
     new_group = crud.create_group(db, group, creator_id)
     return new_group
+
+#ручка для выведения участников группы
+@groups_router.get("/{group_id}/members", response_model=list[MemberResponse])
+async def read_members(group_id: int, db: Session = Depends(get_db)):
+    participants = crud.get_group_participants(db, group_id)
+    if not participants:
+        raise HTTPException(status_code=404, detail="Группа не найдена или пуста")
+    return participants
