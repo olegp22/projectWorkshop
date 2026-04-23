@@ -23,3 +23,13 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+/* Смещение блока для студентов влево */
+#student-section {
+    transform: translateX(-150px);
+}
+
+/* Смещение блока для экспертов вправо */
+#expert-section {
+    transform: translateX(150px);
+}
