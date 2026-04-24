@@ -22,3 +22,5 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
         )
     new_user = crud.create_user(db, user)
     return new_user
+
+

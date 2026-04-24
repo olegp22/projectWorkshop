@@ -25,7 +25,15 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class UserGroupResponse(BaseModel):
+    id: int
+    name: str
+    role: str  # "creator", "reviewer" или "student"
 
+    class Config:
+        from_attributes = True
+
+        
 #валидация для групп
 class GroupCreate(BaseModel):
     name: str
@@ -65,3 +73,4 @@ class CriterionResponse(BaseModel):
 
     class Config:
         from_attributes = True
+

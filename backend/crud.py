@@ -3,6 +3,7 @@ from app.models.user import User
 from app.schemas import UserCreate
 from passlib.context import CryptContext
 import uuid
+from sqlalchemy import or_
 from app.models.group import Group, GroupMember, Criterion
 from app.schemas import GroupCreate, CriterionCreate
 
@@ -126,3 +127,32 @@ def delete_criterion_from_db(db: Session, criterion_id: int):
         db.commit()
         return True
     return False
+
+
+
+def get_user_groups(db: Session, user_id: int):
+    # 1. Группы, где пользователь является участником (student/reviewer)
+    member_groups = db.query(Group.id, Group.name, GroupMember.role).join(
+        GroupMember, Group.id == GroupMember.group_id
+    ).filter(GroupMember.user_id == user_id).all()
+
+    # 2. Группы, где пользователь является создателем
+    owned_groups = db.query(Group.id, Group.name).filter(
+        Group.creator_id == user_id
+    ).all()
+
+    # Собираем всё в один список, избегая дубликатов
+    result = []
+    seen_ids = set()
+
+    # Сначала добавляем те, где он владелец
+    for g in owned_groups:
+        result.append({"id": g.id, "name": g.name, "role": "creator"})
+        seen_ids.add(g.id)
+
+    # Затем добавляем остальные
+    for g in member_groups:
+        if g.id not in seen_ids:
+            result.append({"id": g.id, "name": g.name, "role": g.role})
+            
+    return result

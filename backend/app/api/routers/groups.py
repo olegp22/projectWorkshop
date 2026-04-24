@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.schemas import GroupCreate,GroupResponse,CriterionResponse ,MemberResponse, CriterionCreate
+from app.schemas import GroupCreate,GroupResponse,CriterionResponse ,MemberResponse, CriterionCreate,UserGroupResponse
 from app.db.session import get_db
 import crud
 from app.models.group import Group, GroupMember, Criterion
@@ -178,3 +178,12 @@ async def delete_criterion(
         raise HTTPException(status_code=404, detail="Критерий не найден")
 
     return {"message": "Критерий успешно удален"}
+
+#---------------ручка на показ групп пользователей--------------
+@groups_router.get("/my", response_model=list[UserGroupResponse])
+async def read_my_groups(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    # Просто передаем ID текущего авторизованного пользователя
+    return crud.get_user_groups(db, user_id=current_user.id)
