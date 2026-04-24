@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сервис экспертной обратной связи</title>
+    <link href="css/tailwind.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-white min-h-screen flex flex-col">
+    <!-- Шапка -->
+    <header class="bg-indigo-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+        <div class="font-semibold text-gray-800">Логотип</div>
+        <div class="flex items-center gap-4">
+            <button class="p-2 hover:bg-indigo-300 rounded-full transition">
+                <img src="icons/search.svg" alt="Поиск" class="w-5 h-5" onerror="this.style.display='none'">
+            </button>
+            <button class="p-2 hover:bg-indigo-300 rounded-full transition relative">
+                <img src="icons/notification.svg" alt="Уведомления" class="w-5 h-5" onerror="this.style.display='none'">
+            </button>
+            <button class="p-2 hover:bg-indigo-300 rounded-full transition">
+                <img src="icons/profile.svg" alt="Профиль" class="w-5 h-5" onerror="this.style.display='none'">
+            </button>
+            <div class="flex items-center gap-1 cursor-pointer">
+                <span class="text-sm text-gray-700">ФИО</span>
+                <img src="icons/arrow-down.svg" alt="Стрелка" class="w-4 h-4" onerror="this.style.display='none'">
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero секция -->
+    <section class="px-6 py-16 max-w-6xl mx-auto w-full">
+        <div class="flex items-center justify-between gap-12">
+            <div class="flex-1">
+                <h1 class="text-4xl font-bold text-indigo-900 mb-4">*Название сайта*</h1>
+                <p class="text-gray-600 mb-8 text-lg">сервис сбора экспертной обратной связи по проектам</p>
+                <button id="startNowBtn" class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded font-medium transition shadow-md cursor-pointer">
+                    Начать сейчас
+                </button>
+            </div>
+            <div class="flex-1">
+                <img src="images/hero-illustration.png" alt="Иллюстрация" class="w-full max-w-md" onerror="this.style.display='none'">
+            </div>
+        </div>
+    </section>
+
+    <!-- Секция для студентов (блок входа студента) -->
+    <section id="student-section" class="px-6 py-12 max-w-4xl mx-auto w-full scroll-target">
+        <div class="border-2 border-orange-400 rounded-lg p-6 flex items-center gap-8 bg-white">
+            <div class="w-48 h-48 flex-shrink-0 bg-indigo-100 rounded-lg flex items-center justify-center">
+                <img src="images/student-illustration.png" alt="Для студентов" class="w-32 h-32" onerror="this.style.display='none'">
+            </div>
+            <div class="flex-1">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Для студентов и организаторов</h3>
+                <ul class="text-gray-600 mb-6 space-y-2">
+                    <li class="flex items-start gap-2"><span class="text-gray-800">•</span><span>отправляйте проекты на проверку</span></li>
+                    <li class="flex items-start gap-2"><span class="text-gray-800">•</span><span>получайте обратную связь</span></li>
+                    <li class="flex items-start gap-2"><span class="text-gray-800">•</span><span>отслеживайте прогресс</span></li>
+                </ul>
+                <a href="student.html" class="inline-block border-2 border-orange-400 text-orange-500 hover:bg-orange-50 px-6 py-2 rounded font-medium transition">
+                    Войти
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Секция для экспертов (блок входа эксперта) -->
+    <section id="expert-section" class="px-6 py-12 max-w-4xl mx-auto w-full scroll-target">
+        <div class="border-2 border-orange-400 rounded-lg p-6 flex items-center gap-8 bg-white">
+            <div class="flex-1">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Для экспертов</h3>
+                <ul class="text-gray-600 mb-6 space-y-2">
+                    <li class="flex items-start gap-2"><span class="text-gray-800">•</span><span>получайте проекты</span></li>
+                    <li class="flex items-start gap-2"><span class="text-gray-800">•</span><span>оценивайте по критериям</span></li>
+                    <li class="flex items-start gap-2"><span class="text-gray-800">•</span><span>оставляйте обратную связь</span></li>
+                </ul>
+                <a href="expert.html" class="inline-block border-2 border-orange-400 text-orange-500 hover:bg-orange-50 px-6 py-2 rounded font-medium transition">
+                    Войти
+                </a>
+            </div>
+            <div class="w-48 h-48 flex-shrink-0 bg-indigo-100 rounded-lg flex items-center justify-center">
+                <img src="images/expert-illustration.png" alt="Для экспертов" class="w-32 h-32" onerror="this.style.display='none'">
+            </div>
+        </div>
+    </section>
+
+    <!-- Футер -->
+    <footer class="bg-indigo-200 px-6 py-8 mt-auto">
+        <div class="max-w-6xl mx-auto">
+            <div class="font-semibold text-gray-800">Логотип</div>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
