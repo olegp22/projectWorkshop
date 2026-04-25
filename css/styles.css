@@ -1,35 +1,35 @@
 /* Дополнительные стили поверх Tailwind CSS */
 
-/* Специфические эффекты для карточек проектов */
+/* Эффекты для карточек проектов */
 .project-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .project-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Активное состояние для фильтров (класс добавляется через JS) */
+/* Активное состояние для фильтров (класс добавляется через js) */
 .filter-btn.active {
-    background-color: #f97316;
+  background-color: #f97316;
 }
 
 /* Поддержка line-clamp для браузеров */
 .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Смещение блока для студентов влево */
 #student-section {
-    transform: translateX(-150px);
+  transform: translateX(-150px);
 }
 
 /* Смещение блока для экспертов вправо */
 #expert-section {
-    transform: translateX(150px);
+  transform: translateX(150px);
 }
