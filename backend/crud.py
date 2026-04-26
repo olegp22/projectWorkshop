@@ -7,6 +7,7 @@ from sqlalchemy import or_
 from sqlalchemy import func
 from app.models.group import Group, GroupMember, Criterion
 from app.schemas import GroupCreate, CriterionCreate, UserUpdate, ReviewCreate, SubmissionCreate
+    
 from app.models.submission import Submission, Grade
 #основые функции
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
@@ -236,3 +237,43 @@ def submit_review(db: Session, submission_id: int, review_data: ReviewCreate):
     db.commit()
     db.refresh(db_submission)
     return db_submission
+
+#вывод оценивания по критериям
+def get_submission_details(db: Session, submission_id: int):
+    submission = db.query(Submission).filter(Submission.id == submission_id).first()
+    if not submission:
+        return None
+
+    # Собираем оценки вместе с названиями критериев
+    grades_with_names = db.query(
+        Grade.score,
+        Criterion.name.label("criterion_name")
+    ).join(Criterion, Grade.criterion_id == Criterion.id)\
+     .filter(Grade.submission_id == submission_id).all()
+
+    return {
+        "id": submission.id,
+        "link": submission.link,
+        "status": submission.status,
+        "reviewer_comment": submission.reviewer_comment,
+        "grades": grades_with_names
+    }
+
+
+# Обновление ссылки студентом
+def update_submission_link(db: Session, submission_id: int, new_link: str):
+    submission = db.query(Submission).filter(Submission.id == submission_id).first()
+    if submission:
+        submission.link = new_link
+        db.commit()
+        db.refresh(submission)
+    return submission
+
+# Обновление комментария преподавателем
+def update_submission_comment(db: Session, submission_id: int, new_comment: str):
+    submission = db.query(Submission).filter(Submission.id == submission_id).first()
+    if submission:
+        submission.reviewer_comment = new_comment
+        db.commit()
+        db.refresh(submission)
+    return submission

@@ -109,3 +109,27 @@ class SubmissionResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class GradeDetailResponse(BaseModel):
+    criterion_name: str
+    score: int
+
+# Полный отчет о проверке для студента
+class SubmissionFullDetails(BaseModel):
+    id: int
+    link: str
+    status: str
+    reviewer_comment: str | None
+    grades: list[GradeDetailResponse]
+
+    class Config:
+        from_attributes = True
+
+# Схема для обновления ссылки (для студента)
+class SubmissionLinkUpdate(BaseModel):
+    link: str
+
+# Схема для обновления комментария (для преподавателя)
+class SubmissionCommentUpdate(BaseModel):
+    comment: str

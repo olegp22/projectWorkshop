@@ -2,13 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.schemas import GroupCreate,GroupResponse,CriterionResponse ,MemberResponse, CriterionCreate,UserGroupResponse,\
-    SubmissionCreate,SubmissionResponse, ReviewCreate
+    SubmissionCreate,SubmissionResponse, ReviewCreate, GradeDetailResponse, SubmissionFullDetails\
+    ,SubmissionCommentUpdate, SubmissionLinkUpdate
 from app.db.session import get_db
 import crud
 from app.models.group import Group, GroupMember, Criterion
 from app.core.auth import create_access_token
 from app.api.deps import get_current_user
-
+from app.models.submission import Submission
 
 
 groups_router = APIRouter(prefix="/groups", tags=["Groups"])
@@ -230,3 +231,70 @@ async def review_work(
         raise HTTPException(status_code=403, detail="Эта работа не назначена вам на проверку")
 
     return crud.submit_review(db, submission_id, review)
+
+#показ оценивания 
+@groups_router.get("/submissions/{submission_id}", response_model=SubmissionFullDetails)
+async def read_submission_results(
+    submission_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    # Получаем детали работы
+    details = crud.get_submission_details(db, submission_id)
+    if not details:
+        raise HTTPException(status_code=404, detail="Работа не найдена")
+
+    # Проверка прав: работу видит либо тот, кто её сдал, либо создатель группы
+    # Сначала найдем саму работу в БД для проверки владельца
+    raw_sub = db.query(Submission).filter(Submission.id == submission_id).first()
+    group = db.query(Group).filter(Group.id == raw_sub.group_id).first()
+
+    if raw_sub.student_id != current_user.id and group.creator_id != current_user.id:
+        raise HTTPException(status_code=403, detail="У вас нет доступа к результатам этой работы")
+
+    return details
+
+
+
+# 1. Изменение ссылки студентом
+@groups_router.put("/submissions/{submission_id}/link", response_model=SubmissionResponse)
+async def change_submission_link(
+    submission_id: int,
+    data: SubmissionLinkUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    submission = db.query(Submission).filter(Submission.id == submission_id).first()
+    
+    if not submission:
+        raise HTTPException(status_code=404, detail="Работа не найдена")
+    
+    # Проверка: только тот, кто сдал работу, может менять ссылку
+    if submission.student_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Вы можете менять ссылку только в своей работе")
+
+    # (Опционально) Запретить менять ссылку, если работа уже проверена
+    if submission.status == "graded":
+        raise HTTPException(status_code=400, detail="Нельзя менять ссылку, работа уже проверена")
+
+    return crud.update_submission_link(db, submission_id, data.link)
+
+
+# 2. Изменение комментария преподавателем
+@groups_router.put("/submissions/{submission_id}/comment", response_model=SubmissionResponse)
+async def change_reviewer_comment(
+    submission_id: int,
+    data: SubmissionCommentUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    submission = db.query(Submission).filter(Submission.id == submission_id).first()
+    
+    if not submission:
+        raise HTTPException(status_code=404, detail="Работа не найдена")
+
+    # Проверка: только назначенный ревьюер может менять комментарий
+    if submission.reviewer_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Вы не являетесь проверяющим этой работы")
+
+    return crud.update_submission_comment(db, submission_id, data.comment)

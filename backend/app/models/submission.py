@@ -24,3 +24,4 @@ class Grade(Base):
     submission_id = Column(Integer, ForeignKey("submissions.id"), nullable=False)
     criterion_id = Column(Integer, ForeignKey("criteria.id"), nullable=False) # За какой критерий
     score = Column(Integer, nullable=False) # Оценка от 0 до 10
+
