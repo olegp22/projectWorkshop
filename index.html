@@ -7,9 +7,9 @@
   <meta name="description" content="Сервис сбора экспертной обратной связи по проектам для студентов УрФУ">
   <meta property="og:title" content="Сервис экспертной обратной связи">
   <meta property="og:description" content="Сервис сбора экспертной обратной связи по проектам">
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+  <link href="css/tailwind.css" rel="stylesheet">
   <base target="_blank">
 </head>
 <body class="bg-white min-h-screen flex flex-col font-['Inter']">
@@ -27,18 +27,18 @@
         <img src="icons/profile.svg" alt="" class="w-5 h-5" onerror="this.parentElement.innerText='👤'">
       </button>
       <div class="flex items-center gap-1 cursor-pointer" id="profile-name">
-        <span class="text-sm text-gray-700 font-medium">ФИО</span>
+        <span class="text-sm text-black-700 font-medium">ФИО</span>
         <span class="text-xs" aria-hidden="true">▾</span>
       </div>
     </nav>
   </header>
 
-  <main class="flex-grow">
+  <main class="grow">
     <section class="px-6 py-16 max-w-6xl mx-auto w-full">
       <div class="flex items-center justify-between gap-12">
         <div class="flex-1">
-          <h1 class="text-4xl font-bold text-indigo-900 mb-4">*Название сайта*</h1>
-          <p class="text-gray-600 mb-8 text-lg">сервис сбора экспертной обратной связи по проектам</p>
+          <h1 class="text-4xl font-bold text-indigo-900 mb-4">Экспертная проверка</h1>
+          <p class="text-gray-600 mb-8 text-lg">Сервис сбора экспертной обратной связи по проектам</p>
           <button id="startNowBtn" class="bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white px-8 py-3 rounded font-medium transition shadow-md cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500">
             Начать сейчас
           </button>
@@ -51,8 +51,8 @@
 
     <section id="student-section" class="px-6 py-12 max-w-4xl mx-auto w-full">
       <div class="border-2 border-orange-400 rounded-lg p-6 flex flex-col md:flex-row items-center gap-8 bg-white shadow-sm">
-        <div class="w-48 h-48 flex-shrink-0 bg-indigo-100 rounded-lg flex items-center justify-center text-4xl">
-          <img src="images/student-illustration.png" alt="" class="w-32 h-32" loading="lazy" onerror="this.parentElement.innerText='🎓'">
+        <div class="w-48 h-48 shrink-0 bg-indigo-100 rounded-lg flex items-center justify-center text-4xl">
+          <img src="images/student-illustration.png" alt="" class="w-40 h-40" loading="lazy" onerror="this.parentElement.innerText='🎓'">
         </div>
         <div class="flex-1">
           <h2 class="text-xl font-semibold text-gray-800 mb-4">Для студентов и организаторов</h2>
@@ -81,8 +81,8 @@
             Войти
           </button>
         </div>
-        <div class="w-48 h-48 flex-shrink-0 bg-indigo-100 rounded-lg flex items-center justify-center text-4xl order-1 md:order-2">
-          <img src="images/expert-illustration.png" alt="" class="w-32 h-32" loading="lazy" onerror="this.parentElement.innerText='👤'">
+        <div class="w-48 h-48 shrink-0 bg-indigo-100 rounded-lg flex items-center justify-center text-4xl order-1 md:order-2">
+          <img src="images/expert-illustration.png" alt="" class="w-40 h-40" loading="lazy" onerror="this.parentElement.innerText='👤'">
         </div>
       </div>
     </section>
@@ -170,6 +170,7 @@
         </div>
 
         <button class="w-full flex items-center justify-center px-4 py-2 border border-orange-400 text-orange-500 text-sm font-medium hover:bg-orange-50 active:bg-orange-100 transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-400">
+          <img src="icons/urfu.svg" alt="" class="w-5 h-5">
           Войти с учётной записью УрФУ
         </button>
       </div>
