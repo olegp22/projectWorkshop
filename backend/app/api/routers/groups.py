@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.schemas import GroupCreate,GroupResponse,CriterionResponse ,MemberResponse, CriterionCreate,UserGroupResponse
+from app.schemas import GroupCreate,GroupResponse,CriterionResponse ,MemberResponse, CriterionCreate,UserGroupResponse,\
+    SubmissionCreate,SubmissionResponse, ReviewCreate
 from app.db.session import get_db
 import crud
 from app.models.group import Group, GroupMember, Criterion
@@ -187,3 +188,45 @@ async def read_my_groups(
 ):
     # Просто передаем ID текущего авторизованного пользователя, получаем список
     return crud.get_user_groups(db, user_id=current_user.id)
+
+
+# Загрузка работы (для студента)
+@groups_router.post("/submit", response_model=SubmissionResponse)
+async def upload_work(
+    submission: SubmissionCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    # Проверяем, состоит ли пользователь в этой группе как студент
+    is_member = db.query(GroupMember).filter_by(
+        group_id=submission.group_id, 
+        user_id=current_user.id, 
+        role="student"
+    ).first()
+    
+    if not is_member:
+        raise HTTPException(status_code=403, detail="Вы не являетесь студентом этой группы")
+
+    new_submission = crud.create_submission(db, submission, student_id=current_user.id)
+    
+    if not new_submission:
+        raise HTTPException(status_code=400, detail="В группе пока нет проверяющих")
+        
+    return new_submission
+
+
+# Оценка работы (для проверяющего)
+@groups_router.post("/submissions/{submission_id}/review")
+async def review_work(
+    submission_id: int,
+    review: ReviewCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    # Проверяем, назначена ли эта работа именно этому проверяющему
+    db_submission = db.query(Submission).filter_by(id=submission_id, reviewer_id=current_user.id).first()
+    
+    if not db_submission:
+        raise HTTPException(status_code=403, detail="Эта работа не назначена вам на проверку")
+
+    return crud.submit_review(db, submission_id, review)

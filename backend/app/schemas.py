@@ -82,3 +82,30 @@ class CriterionResponse(BaseModel):
     class Config:
         from_attributes = True
 
+# Схема для загрузки работы студентом
+class SubmissionCreate(BaseModel):
+    link: str  # Ссылка на Google Docs / Диск
+    group_id: int
+
+
+# Схема для выставления оценки
+class GradeCreate(BaseModel):
+    criterion_id: int
+    score: int = Field(ge=0, le=10) # Оценка строго от 0 до 10
+
+# Схема для завершения проверки (комментарий + оценки)
+class ReviewCreate(BaseModel):
+    comment: str | None = None
+    grades: list[GradeCreate]
+
+# Схема для ответа 
+class SubmissionResponse(BaseModel):
+    id: int
+    link: str
+    student_id: int
+    reviewer_id: int | None
+    status: str
+    reviewer_comment: str | None
+
+    class Config:
+        from_attributes = True

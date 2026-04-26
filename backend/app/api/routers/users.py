@@ -23,7 +23,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     new_user = crud.create_user(db, user)
     return new_user
 
-
+#--------------ручка для изменнения почты и ФИО------------------
 @users_router.put("/me", response_model=UserResponse)
 async def update_profile(
     userChang: UserUpdate, 

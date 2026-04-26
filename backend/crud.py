@@ -4,9 +4,10 @@ from app.schemas import UserCreate
 from passlib.context import CryptContext
 import uuid
 from sqlalchemy import or_
+from sqlalchemy import func
 from app.models.group import Group, GroupMember, Criterion
-from app.schemas import GroupCreate, CriterionCreate,UserUpdate
-
+from app.schemas import GroupCreate, CriterionCreate, UserUpdate, ReviewCreate, SubmissionCreate
+from app.models.submission import Submission, Grade
 #основые функции
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
@@ -170,3 +171,68 @@ def get_user_groups(db: Session, user_id: int):
             result.append({"id": g.id, "name": g.name, "role": g.role})
             
     return result
+
+
+
+def create_submission(db: Session, submission_data: SubmissionCreate, student_id: int):
+    # 1. Находим всех проверяющих в этой группе
+    reviewers = db.query(GroupMember).filter(
+        GroupMember.group_id == submission_data.group_id,
+        GroupMember.role == "reviewer"
+    ).all()
+
+    if not reviewers:
+        return None # Если проверяющих нет, вернем None (обработаем это в роутере)
+
+    # 2. АЛГОРИТМ: Считаем количество работ у каждого проверяющего в этой группе
+    # Выбираем того, у кого меньше всего назначенных работ
+    reviewer_counts = (
+        db.query(
+            GroupMember.user_id, 
+            func.count(Submission.id).label("total")
+        )
+        .outerjoin(Submission, GroupMember.user_id == Submission.reviewer_id)
+        .filter(GroupMember.group_id == submission_data.group_id, GroupMember.role == "reviewer")
+        .group_by(GroupMember.user_id)
+        .order_by("total") # Сортируем по возрастанию (самый свободный будет первым)
+        .first()
+    )
+
+    assigned_reviewer_id = reviewer_counts.user_id if reviewer_counts else reviewers[0].user_id
+
+    # 3. Создаем запись о работе
+    db_submission = Submission(
+        link=submission_data.link,
+        group_id=submission_data.group_id,
+        student_id=student_id,
+        reviewer_id=assigned_reviewer_id,
+        status="pending"
+    )
+    
+    db.add(db_submission)
+    db.commit()
+    db.refresh(db_submission)
+    return db_submission
+
+# Функция для выставления оценок
+def submit_review(db: Session, submission_id: int, review_data: ReviewCreate):
+    db_submission = db.query(Submission).filter(Submission.id == submission_id).first()
+    if not db_submission:
+        return None
+
+    # Сохраняем комментарий и меняем статус
+    db_submission.reviewer_comment = review_data.comment
+    db_submission.status = "graded"
+
+    # Сохраняем оценки по критериям
+    for g in review_data.grades:
+        db_grade = Grade(
+            submission_id=submission_id,
+            criterion_id=g.criterion_id,
+            score=g.score
+        )
+        db.add(db_grade)
+    
+    db.commit()
+    db.refresh(db_submission)
+    return db_submission
