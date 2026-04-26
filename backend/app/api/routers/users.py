@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.schemas import UserCreate, UserResponse, UserEntrance,GroupCreate,GroupResponse,\
-    MemberResponse
+    MemberResponse, UserUpdate
 from app.db.session import get_db
 import crud
 from app.models.group import Group, GroupMember
@@ -23,4 +23,24 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     new_user = crud.create_user(db, user)
     return new_user
 
+
+@users_router.put("/me", response_model=UserResponse)
+async def update_profile(
+    userChang: UserUpdate, 
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    # Если пользователь меняет почту, проверяем, свободна ли она
+    if userChang.email != current_user.email:
+        existing_user = crud.get_user_by_email(db, userChang.email)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Этот email уже занят другим пользователем"
+            )
+    
+    # Обновляем данные, передавая ID прямо из токена
+    updated_user = crud.update_user(db, current_user.id, userChang)
+    return updated_user
+    
 

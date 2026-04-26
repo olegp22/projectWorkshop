@@ -33,7 +33,15 @@ class UserGroupResponse(BaseModel):
     class Config:
         from_attributes = True
 
-        
+
+class UserUpdate(BaseModel):
+    email: EmailStr
+    name: str
+    surname: str
+    patronymic: str
+
+
+
 #валидация для групп
 class GroupCreate(BaseModel):
     name: str

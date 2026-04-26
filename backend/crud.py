@@ -5,7 +5,7 @@ from passlib.context import CryptContext
 import uuid
 from sqlalchemy import or_
 from app.models.group import Group, GroupMember, Criterion
-from app.schemas import GroupCreate, CriterionCreate
+from app.schemas import GroupCreate, CriterionCreate,UserUpdate
 
 #основые функции
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
@@ -29,6 +29,20 @@ def get_user_by_email(db: Session, email: str):
 #проверка хэша пароля
 def verify_password(plain_password: str, hashed_password: str):
     return pwd_context.verify(plain_password, hashed_password)
+
+
+#изменение данных пользователя
+def update_user(db: Session, user_id: int, userChang: UserUpdate):
+    db_user=db.query(User).filter(User.id==user_id).first()
+    if db_user:
+        db_user.email=userChang.email
+        db_user.name=userChang.name
+        db_user.surname=userChang.surname
+        db_user.patronymic=userChang.patronymic
+
+        db.commit()
+        db.refresh(db_user)
+    return db_user
 
 
 

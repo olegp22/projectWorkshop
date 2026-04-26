@@ -185,5 +185,5 @@ async def read_my_groups(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    # Просто передаем ID текущего авторизованного пользователя
+    # Просто передаем ID текущего авторизованного пользователя, получаем список
     return crud.get_user_groups(db, user_id=current_user.id)
