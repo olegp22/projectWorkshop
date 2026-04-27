@@ -10,7 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <link href="css/tailwind.css" rel="stylesheet">
-  <base target="_blank">
 </head>
 <body class="bg-white min-h-screen flex flex-col font-['Inter']">
 
@@ -27,7 +26,7 @@
         <img src="icons/profile.svg" alt="" class="w-5 h-5" onerror="this.parentElement.innerText='👤'">
       </button>
       <div class="flex items-center gap-1 cursor-pointer" id="profile-name">
-        <span class="text-sm text-black-700 font-medium">ФИО</span>
+        <span class="text-sm text-black-700 font-medium">Войти</span>
         <span class="text-xs" aria-hidden="true">▾</span>
       </div>
     </nav>
@@ -39,7 +38,7 @@
         <div class="flex-1">
           <h1 class="text-4xl font-bold text-indigo-900 mb-4">Экспертная проверка</h1>
           <p class="text-gray-600 mb-8 text-lg">Сервис сбора экспертной обратной связи по проектам</p>
-          <button id="startNowBtn" class="bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white px-8 py-3 rounded font-medium transition shadow-md cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500">
+          <button id="startNowBtn" class="bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white px-8 py-3 rounded font-medium transition shadow-md cursor-pointer">
             Начать сейчас
           </button>
         </div>
@@ -61,8 +60,8 @@
             <li>• получайте обратную связь</li>
             <li>• отслеживайте прогресс</li>
           </ul>
-          <button id="student-login-btn" class="border-2 border-purple-400 text-purple-500 hover:bg-orange-50 active:bg-orange-100 px-6 py-2 rounded font-medium transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-400">
-            Войти
+          <button class="login-btn-student border-2 border-purple-400 text-purple-500 hover:bg-orange-50 active:bg-orange-100 px-6 py-2 rounded font-medium transition cursor-pointer">
+            Войти как студент
           </button>
         </div>
       </div>
@@ -77,8 +76,8 @@
             <li>• оценивайте по критериям</li>
             <li>• оставляйте обратную связь</li>
           </ul>
-          <button id="expert-login-btn" class="border-2 border-purple-400 text-purple-500 hover:bg-orange-50 active:bg-orange-100 px-6 py-2 rounded font-medium transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-400">
-            Войти
+          <button class="login-btn-expert border-2 border-purple-400 text-purple-500 hover:bg-orange-50 active:bg-orange-100 px-6 py-2 rounded font-medium transition cursor-pointer">
+            Войти как эксперт
           </button>
         </div>
         <div class="w-48 h-48 shrink-0 bg-indigo-100 rounded-lg flex items-center justify-center text-4xl order-1 md:order-2">
@@ -94,90 +93,77 @@
     </div>
   </footer>
 
-  <div id="auth-modal-overlay" class="fixed inset-0 hidden items-center justify-center p-4 z-50 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+  <!-- МОДАЛЬНОЕ ОКНО АВТОРИЗАЦИИ -->
+  <div id="auth-modal-overlay" class="fixed inset-0 hidden items-center justify-center p-4 z-50 bg-black/50" role="dialog" aria-modal="true">
     <div class="bg-white shadow-2xl max-w-sm w-full relative border border-purple-400 rounded-none">
-      <button id="close-auth-btn" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition cursor-pointer" aria-label="Закрыть окно">
+      <button id="close-auth-btn" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition" aria-label="Закрыть окно">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
         </svg>
       </button>
-
       <div class="p-6 pt-8">
-        <h2 id="auth-title" class="sr-only">Форма входа и регистрации</h2>
         <div class="flex mb-5">
-          <button id="tab-login" class="flex-1 pb-2 text-center text-sm font-medium text-orange-500 border-b-2 border-orange-500 transition cursor-pointer">
-            Вход
-          </button>
-          <button id="tab-register" class="flex-1 pb-2 text-center text-sm font-medium text-gray-500 border-b border-gray-300 hover:text-gray-700 transition cursor-pointer">
-            Регистрация
-          </button>
+          <button id="tab-login" class="flex-1 pb-2 text-center text-sm font-medium text-orange-500 border-b-2 border-orange-500 transition">Вход</button>
+          <button id="tab-register" class="flex-1 pb-2 text-center text-sm font-medium text-gray-500 border-b border-gray-300 hover:text-gray-700 transition">Регистрация</button>
         </div>
-
-        <div id="auth-error" class="hidden mb-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600" role="alert"></div>
+        <div id="auth-error" class="hidden mb-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600"></div>
 
         <form id="login-form" class="space-y-3" novalidate>
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1" for="auth-email">Email</label>
-            <input type="email" id="auth-email" placeholder="example@mail.ru" required autocomplete="email" class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400 transition">
+            <input type="email" id="auth-email" placeholder="example@mail.ru" required class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1" for="auth-password">Пароль</label>
-            <input type="password" id="auth-password" placeholder="Введите пароль" required minlength="3" autocomplete="current-password" class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400 transition">
+            <input type="password" id="auth-password" placeholder="Введите пароль" required class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
           </div>
-          <div class="flex items-center justify-between text-xs">
-            <label class="flex items-center cursor-pointer">
-              <input type="checkbox" class="mr-1.5 w-3.5 h-3.5 text-orange-500 border-gray-300 rounded focus:ring-orange-400">
-              <span class="text-gray-600">Запомнить меня</span>
-            </label>
-            <a href="#" class="text-orange-500 hover:text-orange-600">Забыли пароль?</a>
-          </div>
-          <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white py-2 text-sm font-medium transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500">
-            Войти
-          </button>
+          <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 text-sm font-medium transition">Войти</button>
         </form>
 
         <form id="register-form" class="space-y-3 hidden" novalidate>
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1" for="reg-email">Email</label>
-            <input type="email" id="reg-email" placeholder="example@mail.ru" required autocomplete="email" class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400 transition">
+            <input type="email" id="reg-email" placeholder="example@mail.ru" required class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1" for="reg-password">Пароль</label>
-            <input type="password" id="reg-password" required minlength="3" autocomplete="new-password" class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400 transition">
+            <input type="password" id="reg-password" required class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1" for="reg-password-confirm">Подтвердите пароль</label>
-            <input type="password" id="reg-password-confirm" required autocomplete="new-password" class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400 transition">
+            <input type="password" id="reg-password-confirm" required class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
           </div>
           <div class="flex items-start">
-            <input type="checkbox" id="reg-terms" required class="mt-0.5 mr-1.5 w-3.5 h-3.5 text-orange-500 border-gray-300 rounded focus:ring-orange-400">
-            <label for="reg-terms" class="text-xs text-gray-600 leading-tight">
-              Я согласен с <a href="#" class="text-orange-500 hover:text-orange-600 underline">условиями использования</a>
-            </label>
+            <input type="checkbox" id="reg-terms" required class="mt-0.5 mr-1.5 w-3.5 h-3.5 text-orange-500">
+            <label for="reg-terms" class="text-xs text-gray-600">Я согласен с условиями использования</label>
           </div>
-          <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white py-2 text-sm font-medium transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500">
-            Зарегистрироваться
-          </button>
+          <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 text-sm font-medium transition">Зарегистрироваться</button>
         </form>
-
-        <div class="relative my-4">
-          <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-gray-300"></div>
-          </div>
-          <div class="relative flex justify-center text-xs">
-            <span class="px-2 bg-white text-gray-500">или</span>
-          </div>
-        </div>
-
-        <button class="w-full flex items-center justify-center px-4 py-2 border border-orange-400 text-orange-500 text-sm font-medium hover:bg-orange-50 active:bg-orange-100 transition cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-400">
-          <img src="icons/urfu.svg" alt="" class="w-5 h-5">
-          Войти с учётной записью УрФУ
-        </button>
       </div>
     </div>
   </div>
 
-  <script src="js/app.js"></script>
-  <script src="js/auth.js"></script>
+  <!-- ПОДКЛЮЧЕНИЕ МОДУЛЕЙ -->
+  <script type="module">
+    import { initAuthModal } from './js/auth-module.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Инициализация модального окна (логин/регистрация)
+      initAuthModal();
+
+      // Кнопка "Начать сейчас" – плавный скролл к блоку студента
+      const startBtn = document.getElementById('startNowBtn');
+      if (startBtn) {
+        startBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const studentSection = document.getElementById('student-section');
+          if (studentSection) {
+            studentSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      }
+    });
+  </script>
+
 </body>
 </html>
