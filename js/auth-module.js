@@ -210,8 +210,7 @@ export function initAuthModal() {
                     email, 
                     password, 
                     name: firstName, 
-                    surname: lastName,
-                    patronymic: patronymic
+                    surname: lastName
                 });
                 showAuthError('Регистрация успешна! Теперь войдите.', true);
                 setTimeout(() => switchAuthTab('login'), 1500);

@@ -2,8 +2,8 @@ import { authAPI, usersAPI, groupsAPI } from './api.js';
 import { requireAuth } from './auth-module.js';
 
 let currentGroupId = null;
-let currentUser = { id: null, full_name: '', email: '', last_name: '', first_name: '' };
-let groupsList = []; // храним список групп для быстрого доступа
+// Храним актуальные поля из UserResponse
+let currentUser = { id: null, name: '', surname: '', patronymic: '', email: '' };
 
 function showToast(message, isError = false) {
     const toast = document.createElement('div');
@@ -27,13 +27,26 @@ function escapeHtml(str) {
 async function loadCurrentUser() {
     try {
         const user = await usersAPI.getMe();
-        currentUser = user;
-        const displayName = user.full_name || user.email || 'Пользователь';
+        currentUser = {
+            id: user.id,
+            name: user.name || '',
+            surname: user.surname || '',
+            patronymic: user.patronymic || '',
+            email: user.email || ''
+        };
+
+        const displayName = (user.name && user.surname)
+            ? `${user.name} ${user.surname}`
+            : (user.name || user.email || 'Пользователь');
+
         document.getElementById('userNameDisplay').innerText = displayName;
         document.getElementById('headerUserName').innerText = displayName;
-        document.getElementById('profileLastName').value = user.last_name || '';
-        document.getElementById('profileFirstName').value = user.first_name || '';
+
+        document.getElementById('profileFirstName').value = user.name || '';
+        document.getElementById('profileLastName').value = user.surname || '';
         document.getElementById('profileEmail').value = user.email || '';
+        const patronymicField = document.getElementById('profilePatronymic');
+        if (patronymicField) patronymicField.value = user.patronymic || '';
     } catch (error) {
         console.error('Ошибка загрузки пользователя:', error);
         document.getElementById('headerUserName').innerText = 'Гость';
@@ -57,6 +70,10 @@ function renderGroupsList(groups) {
     const detailsContainer = document.getElementById('groupsListDetails');
     const renderInto = (parent, activeId) => {
         if (!parent) return;
+        if (groups.length === 0) {
+            parent.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">У вас пока нет групп</p>';
+            return;
+        }
         parent.innerHTML = '';
         groups.forEach(group => {
             const isActive = group.id === activeId;
@@ -83,30 +100,24 @@ async function openGroupDetails(groupId) {
         if (!group) throw new Error('Группа не найдена');
         document.getElementById('currentGroupNameSpan').innerText = group.name;
 
-        // Показываем инвайт-токены
         const studentInviteField = document.getElementById('studentInviteField');
         const expertInviteField = document.getElementById('expertInviteField');
         if (studentInviteField) {
-            const baseUrl = window.location.origin;
             studentInviteField.value = group.student_invite_token 
-                ? `${baseUrl}/groups/join/${group.student_invite_token}`
+                ? group.student_invite_token
                 : 'Токен не сгенерирован (создайте новую группу)';
         }
         if (expertInviteField) {
             expertInviteField.value = group.reviewer_invite_token 
-                ? `${baseUrl}/groups/join/${group.reviewer_invite_token}`
+                ? group.reviewer_invite_token
                 : 'Токен не сгенерирован (создайте новую группу)';
         }
 
-        // Загружаем участников
         const members = await groupsAPI.getMembers(groupId);
         renderMembers(members);
 
-        // Переключаем секцию
         document.querySelectorAll('.section-content').forEach(sec => sec.classList.remove('active'));
         document.getElementById('sectionGroupDetails').classList.add('active');
-        
-        // Обновляем список групп для подсветки активной
         await loadGroups();
     } catch (error) {
         showToast('Не удалось загрузить группу', true);
@@ -117,21 +128,23 @@ function renderMembers(members) {
     const container = document.getElementById('membersListArea');
     if (!container) return;
     container.innerHTML = members.map(m => `
-        <div class="flex justify-between items-center py-2 px-2 border-b border-gray-100 last:border-0" data-member-id="${m.id}">
-            <span class="text-gray-800 text-sm">${escapeHtml(m.full_name || m.name || m.email)}</span>
+        <div class="flex justify-between items-center py-2 px-2 border-b border-gray-100 last:border-0" data-member-id="${m.user_id}">
+            <span class="text-gray-800 text-sm">${escapeHtml((m.name + ' ' + m.surname).trim() || m.email || m.user_id)}</span>
             <span class="text-gray-500 text-xs font-medium bg-gray-100 px-2 py-0.5">${escapeHtml(m.role || 'участник')}</span>
         </div>
     `).join('');
 
-    // Заполняем выпадающий список для удаления
     const dropdown = document.getElementById('removeMemberDropdown');
     if (dropdown) {
-        dropdown.innerHTML = members.map(m => `
-            <div class="remove-member-option px-3 py-2 text-sm text-gray-700 hover:bg-orange-50 cursor-pointer border-b border-orange-100" data-member-id="${m.id}" data-member-name="${escapeHtml(m.full_name || m.name || m.email)}">
-                ${escapeHtml(m.full_name || m.name || m.email)} — ${escapeHtml(m.role || 'участник')}
+        dropdown.innerHTML = members.map(m => {
+            const full = (m.name + ' ' + m.surname).trim() || m.email || m.user_id;
+            return `
+            <div class="remove-member-option px-3 py-2 text-sm text-gray-700 hover:bg-orange-50 cursor-pointer border-b border-orange-100"
+                 data-member-id="${m.user_id}" data-member-name="${escapeHtml(full)}">
+                ${escapeHtml(full)} — ${escapeHtml(m.role || 'участник')}
             </div>
-        `).join('');
-        
+        `;}).join('');
+
         document.querySelectorAll('.remove-member-option').forEach(opt => {
             opt.onclick = async (e) => {
                 e.stopPropagation();
@@ -156,6 +169,9 @@ function renderMembers(members) {
 document.getElementById('createGroupBtn').onclick = async () => {
     const name = document.getElementById('newGroupName').value.trim();
     if (!name) { showToast('Введите название группы', true); return; }
+    const btn = document.getElementById('createGroupBtn');
+    btn.disabled = true;
+    btn.textContent = 'Создание...';
     try {
         const newGroup = await groupsAPI.createGroup(name);
         showToast(`Группа "${name}" создана!`);
@@ -164,10 +180,13 @@ document.getElementById('createGroupBtn').onclick = async () => {
         await openGroupDetails(newGroup.id);
     } catch (error) {
         showToast('Ошибка создания группы: ' + error.message, true);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Создать новую группу';
     }
 };
 
-// Присоединение по коду (GET /groups/join/{token})
+// Присоединение по коду
 document.getElementById('joinGroupBtn').onclick = async () => {
     const code = document.getElementById('joinCodeInput').value.trim();
     if (!code) { showToast('Введите код приглашения', true); return; }
@@ -176,8 +195,6 @@ document.getElementById('joinGroupBtn').onclick = async () => {
         showToast(result.message || 'Вы присоединились к группе!');
         document.getElementById('joinCodeInput').value = '';
         await loadGroups();
-        // Если вернулся id группы, открываем её (в API нет, но можно перезагрузить список)
-        // Для простоты просто обновим список и закроем детали
         document.querySelectorAll('.section-content').forEach(sec => sec.classList.remove('active'));
         document.getElementById('sectionGroups').classList.add('active');
         currentGroupId = null;
@@ -186,7 +203,7 @@ document.getElementById('joinGroupBtn').onclick = async () => {
     }
 };
 
-// Добавление участника (заглушка, т.к. бэкенд не генерирует инвайт-ссылки)
+// Добавление участника
 document.getElementById('addMemberBtn').onclick = () => {
     showToast('Для добавления участника скопируйте код приглашения из группы (функция в разработке)', false);
 };
@@ -214,13 +231,14 @@ document.getElementById('backToGroupsBtn').onclick = async () => {
     currentGroupId = null;
 };
 
-// Сохранение профиля
+// Сохранение профиля – исправлено под UserUpdate
 document.getElementById('saveProfileBtn').onclick = async () => {
-    const lastName = document.getElementById('profileLastName').value;
-    const firstName = document.getElementById('profileFirstName').value;
-    const email = document.getElementById('profileEmail').value;
+    const name = document.getElementById('profileFirstName').value.trim();
+    const surname = document.getElementById('profileLastName').value.trim();
+    const email = document.getElementById('profileEmail').value.trim();
+    const patronymic = document.getElementById('profilePatronymic')?.value.trim();
     try {
-        await usersAPI.updateProfile({ last_name: lastName, first_name: firstName, email });
+        await usersAPI.updateProfile({ name, surname, patronymic, email });
         showToast('Профиль обновлен');
         await loadCurrentUser();
     } catch (error) {
@@ -228,7 +246,7 @@ document.getElementById('saveProfileBtn').onclick = async () => {
     }
 };
 
-// Смена пароля (заглушка, т.к. эндпоинта нет)
+// Смена пароля
 document.getElementById('changePasswordBtn').onclick = () => {
     showToast('Функция смены пароля временно недоступна', true);
 };
@@ -245,7 +263,7 @@ profileNameBtn?.addEventListener('click', (e) => { e.stopPropagation(); togglePr
 profileIconBtn?.addEventListener('click', (e) => { e.stopPropagation(); toggleProfileMenu(); });
 document.addEventListener('click', () => profileDropdownMenu?.classList.remove('show'));
 
-// Переключение секций через меню
+// Переключение секций
 document.querySelectorAll('[data-section]').forEach(el => {
     el.onclick = () => {
         const sec = el.dataset.section;
@@ -275,7 +293,6 @@ document.getElementById('logoutBtn').onclick = () => {
     window.location.href = '/index.html';
 };
 
-// Инициализация страницы
 async function init() {
     if (!requireAuth()) return;
     await loadCurrentUser();
