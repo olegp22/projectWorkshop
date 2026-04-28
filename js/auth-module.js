@@ -169,10 +169,21 @@ export function initAuthModal() {
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             hideAuthError();
+            const firstName = document.getElementById('reg-first-name').value.trim();
+            const lastName = document.getElementById('reg-last-name').value.trim();
             const email = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value;
             const confirm = document.getElementById('reg-password-confirm').value;
             const terms = document.getElementById('reg-terms').checked;
+
+            if (!firstName) {
+                showAuthError('Введите имя');
+                return;
+            }
+            if (!lastName) {
+                showAuthError('Введите фамилию');
+                return;
+            }
             if (!email || !isValidEmail(email)) {
                 showAuthError('Введите корректный email');
                 return;
@@ -190,9 +201,16 @@ export function initAuthModal() {
                 return;
             }
             try {
-                await authAPI.register({ email, password, first_name: '', last_name: '' });
+                await authAPI.register({ 
+                    email, 
+                    password, 
+                    first_name: firstName, 
+                    last_name: lastName
+                });
                 showAuthError('Регистрация успешна! Теперь войдите.', true);
                 setTimeout(() => switchAuthTab('login'), 1500);
+                document.getElementById('reg-first-name').value = '';
+                document.getElementById('reg-last-name').value = '';
                 document.getElementById('reg-email').value = '';
                 document.getElementById('reg-password').value = '';
                 document.getElementById('reg-password-confirm').value = '';
