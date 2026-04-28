@@ -185,6 +185,10 @@ export function initAuthModal() {
                 showAuthError('Введите фамилию');
                 return;
             }
+            if (!patronymic) {
+                showAuthError('Введите отчество');
+                return;
+            }
             if (!email || !isValidEmail(email)) {
                 showAuthError('Введите корректный email');
                 return;
@@ -205,13 +209,15 @@ export function initAuthModal() {
                 await authAPI.register({ 
                     email, 
                     password, 
-                    first_name: firstName, 
-                    last_name: lastName
+                    name: firstName, 
+                    surname: lastName,
+                    patronymic: patronymic
                 });
                 showAuthError('Регистрация успешна! Теперь войдите.', true);
                 setTimeout(() => switchAuthTab('login'), 1500);
                 document.getElementById('reg-first-name').value = '';
                 document.getElementById('reg-last-name').value = '';
+                document.getElementById('reg-patronymic').value = '';
                 document.getElementById('reg-email').value = '';
                 document.getElementById('reg-password').value = '';
                 document.getElementById('reg-password-confirm').value = '';
