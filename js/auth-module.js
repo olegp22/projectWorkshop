@@ -155,7 +155,7 @@ export function initAuthModal() {
             }
             try {
                 await authAPI.login(email, password);
-                window.location.href = '/expert.html';
+                window.location.href = 'Front/expert.html';
             } catch (err) {
                 showAuthError(err.message);
                 document.getElementById('auth-password').value = '';
