@@ -171,6 +171,7 @@ export function initAuthModal() {
             hideAuthError();
             const firstName = document.getElementById('reg-first-name').value.trim();
             const lastName = document.getElementById('reg-last-name').value.trim();
+            const patronymic = document.getElementById('reg-patronymic').value.trim();
             const email = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value;
             const confirm = document.getElementById('reg-password-confirm').value;
