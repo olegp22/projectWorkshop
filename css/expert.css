@@ -1,0 +1,96 @@
+/* === СКРОЛЛБАР для блока "Мои группы" === */
+.groups-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #9333ea #f3e8ff;
+}
+.groups-scrollbar::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+.groups-scrollbar::-webkit-scrollbar-track {
+  background: #f3e8ff;
+  border-radius: 0px;
+}
+.groups-scrollbar::-webkit-scrollbar-thumb {
+  background: #9333ea;
+  border-radius: 0px;
+}
+.groups-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #7e22ce;
+}
+.groups-scrollbar::-webkit-scrollbar-button {
+  background: #c4b5fd;
+  height: 12px;
+  display: block;
+}
+
+/* === СКРОЛЛБАР для выпадающего списка "Удалить участника" (оранжевый) === */
+.remove-dropdown-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #f97316 #fff1e6;
+}
+.remove-dropdown-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+.remove-dropdown-scrollbar::-webkit-scrollbar-track {
+  background: #fff1e6;
+  border-radius: 0px;
+}
+.remove-dropdown-scrollbar::-webkit-scrollbar-thumb {
+  background: #f97316;
+  border-radius: 0px;
+}
+.remove-dropdown-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #ea580c;
+}
+
+/* === СКРОЛЛБАР для списка участников (фиолетовый) === */
+.members-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #a855f7 #f1f1f1;
+}
+.members-scrollbar::-webkit-scrollbar {
+  width: 12px;
+}
+.members-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+.members-scrollbar::-webkit-scrollbar-thumb {
+  background: #a855f7;
+  border-radius: 0px;
+}
+
+/* Общие стили */
+.section-content { display: none; }
+.section-content.active { display: block; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.group-item { transition: all 0.2s; }
+.group-item.active { background-color: #9333ea; color: white; border-color: #9333ea; }
+.group-item.active .group-name { color: white; }
+.group-item.active .group-role { color: #e9d5ff; }
+.group-item.active .group-divider { background: rgba(255,255,255,0.5); }
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #1f2937;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+}
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.dropdown-menu {
+  display: none;
+}
+.dropdown-menu.show {
+  display: block;
+}
