@@ -1,22 +1,20 @@
 /* === СКРОЛЛБАР для блока "Мои группы" === */
 .groups-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: #9333ea #f3e8ff;
+  scrollbar-width: auto;
+  scrollbar-color: #581c87 #f5f0ff;
 }
 .groups-scrollbar::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 20px;
 }
 .groups-scrollbar::-webkit-scrollbar-track {
-  background: #f3e8ff;
-  border-radius: 0px;
+  background: #f5f0ff;;
 }
 .groups-scrollbar::-webkit-scrollbar-thumb {
-  background: #9333ea;
-  border-radius: 0px;
+  background: #7935F0;
+  border-radius: 0;
 }
 .groups-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #7e22ce;
+  background: #4a1570;
 }
 .groups-scrollbar::-webkit-scrollbar-button {
   background: #c4b5fd;
