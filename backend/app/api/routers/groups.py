@@ -3,13 +3,13 @@ from sqlalchemy.orm import Session
 
 from app.schemas import GroupCreate,GroupResponse,CriterionResponse ,MemberResponse, CriterionCreate,UserGroupResponse,\
     SubmissionCreate,SubmissionResponse, ReviewCreate, GradeDetailResponse, SubmissionFullDetails\
-    ,SubmissionCommentUpdate, SubmissionLinkUpdate
+    ,SubmissionCommentUpdate, SubmissionLinkUpdate,ReviewerSubmissionResponse
 from app.db.session import get_db
 import crud
-from app.models.group import Group, GroupMember, Criterion
+from app.models.group import Group, GroupMember, Criterion,GroupMode
 from app.core.auth import create_access_token
 from app.api.deps import get_current_user
-from app.models.submission import Submission
+from app.models.submission import Submission, SubmissionReviewer
 
 
 groups_router = APIRouter(prefix="/groups", tags=["Groups"])
@@ -26,6 +26,11 @@ async def make_group(
     if existing_group:
         raise HTTPException(status_code=400, detail="Группа с таким именем уже есть")
 
+    if group.count_of_inspectors<=0:
+        raise HTTPException(
+        status_code=400,
+        detail="Количество проверяющих должно быть больше 0"
+    )
   
     new_group = crud.create_group(db, group, current_user.id)
     return new_group
@@ -208,12 +213,30 @@ async def upload_work(
     if not is_member:
         raise HTTPException(status_code=403, detail="Вы не являетесь студентом этой группы")
 
-    new_submission = crud.create_submission(db, submission, student_id=current_user.id)
+    group=db.query(Group).filter(Group.id == submission.group_id).first()
+
+    if not group:
+        raise HTTPException(status_code=400, detail="Группа не найдена")
     
-    if not new_submission:
-        raise HTTPException(status_code=400, detail="В группе пока нет проверяющих")
+
+    if group.group_mode==GroupMode.CLASSIC:
+
+        new_submission = crud.create_submission_classic(db, submission, student_id=current_user.id)
         
-    return new_submission
+        if not new_submission:
+            raise HTTPException(status_code=400, detail="В группе пока нет проверяющих")
+            
+        return new_submission
+
+    elif group.group_mode==GroupMode.P2P:
+         
+        new_submission = crud.create_submission_p2p(db, submission, student_id=current_user.id)
+        
+        if not new_submission:
+            raise HTTPException(status_code=400, detail="В группе пока нет проверяющих")
+            
+        return new_submission
+    
 
 
 # Оценка работы (для проверяющего)
@@ -225,12 +248,23 @@ async def review_work(
     current_user = Depends(get_current_user)
 ):
     # Проверяем, назначена ли эта работа именно этому проверяющему
-    db_submission = db.query(Submission).filter_by(id=submission_id, reviewer_id=current_user.id).first()
-    
-    if not db_submission:
-        raise HTTPException(status_code=403, detail="Эта работа не назначена вам на проверку")
+    review_link = db.query(SubmissionReviewer).filter(
+        SubmissionReviewer.submission_id == submission_id,
+        SubmissionReviewer.reviewer_id == current_user.id
+    ).first()
 
-    return crud.submit_review(db, submission_id, review)
+    if not review_link:
+        raise HTTPException(
+            status_code=403,
+            detail="Эта работа не назначена вам"
+        )
+
+    return crud.submit_review(
+        db,
+        submission_id,
+        current_user.id,
+        review
+    )
 
 #показ оценивания 
 @groups_router.get("/submissions/{submission_id}", response_model=SubmissionFullDetails)
@@ -298,3 +332,17 @@ async def change_reviewer_comment(
         raise HTTPException(status_code=403, detail="Вы не являетесь проверяющим этой работы")
 
     return crud.update_submission_comment(db, submission_id, data.comment)
+
+
+@groups_router.get(
+    "/my-reviews",
+    response_model=list[ReviewerSubmissionResponse]
+)
+async def my_reviews(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    return crud.get_reviewer_submissions(
+        db,
+        reviewer_id=current_user.id
+    )

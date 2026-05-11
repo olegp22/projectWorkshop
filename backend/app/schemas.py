@@ -1,7 +1,12 @@
 from typing import Annotated
 from pydantic import BaseModel, EmailStr, Field, SecretStr
 import uuid
-#валидация данных 
+import enum
+#валидация данных
+ 
+class GroupMode(str, enum.Enum):
+    CLASSIC = "classic"
+    P2P = "p2p"
 
 #валидация для пользователь
 class UserCreate(BaseModel):
@@ -29,7 +34,7 @@ class UserGroupResponse(BaseModel):
     id: int
     name: str
     role: str  # "creator", "reviewer" или "student"
-
+    group_mode: GroupMode
     class Config:
         from_attributes = True
 
@@ -45,11 +50,17 @@ class UserUpdate(BaseModel):
 #валидация для групп
 class GroupCreate(BaseModel):
     name: str
+    group_mode: GroupMode
+    count_of_inspectors: int = Field(default=1)
 
+
+#данные, которые возвращаются при создании шруппы 
 class GroupResponse(BaseModel):
     id: int
     name: str
     creator_id: int
+    group_mode: GroupMode 
+    count_of_inspectors: int = Field(default=1)
     reviewer_invite_token: str
     student_invite_token: str
 
@@ -103,10 +114,9 @@ class SubmissionResponse(BaseModel):
     id: int
     link: str
     student_id: int
-    reviewer_id: int | None
     status: str
-    reviewer_comment: str | None
-
+    reviewers_count: int
+    
     class Config:
         from_attributes = True
 
@@ -116,7 +126,7 @@ class GradeDetailResponse(BaseModel):
     score: int
 
 # Полный отчет о проверке для студента
-class SubmissionFullDetails(BaseModel):
+class SubmissionFullDetails1111(BaseModel):
     id: int
     link: str
     status: str
@@ -133,3 +143,26 @@ class SubmissionLinkUpdate(BaseModel):
 # Схема для обновления комментария (для преподавателя)
 class SubmissionCommentUpdate(BaseModel):
     comment: str
+
+class ReviewerSubmissionResponse(BaseModel):
+    submission_id: int
+    link: str
+    student_id: int
+    group_id: int
+    status: str
+
+    class Config:
+        from_attributes = True
+
+
+class ReviewDetails(BaseModel):
+    reviewer_id: int
+    comment: str | None
+    status: str
+    grades: list[GradeDetailResponse]
+
+class SubmissionFullDetails(BaseModel):
+    id: int
+    link: str
+    status: str
+    reviews: list[ReviewDetails]
