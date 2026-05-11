@@ -333,7 +333,7 @@ async def change_reviewer_comment(
 
     return crud.update_submission_comment(db, submission_id, data.comment)
 
-
+#показывает все работы, которые тебе надо проверить
 @groups_router.get(
     "/my-reviews",
     response_model=list[ReviewerSubmissionResponse]
