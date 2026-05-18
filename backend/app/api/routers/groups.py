@@ -282,8 +282,10 @@ async def read_submission_results(
     # Сначала найдем саму работу в БД для проверки владельца
     raw_sub = db.query(Submission).filter(Submission.id == submission_id).first()
     group = db.query(Group).filter(Group.id == raw_sub.group_id).first()
-
-    if raw_sub.student_id != current_user.id and group.creator_id != current_user.id:
+    reviewers=db.query(SubmissionReviewer).filter(SubmissionReviewer.id == raw_sub.id).all()
+    reviewer_ids = [r.reviewer_id for r in reviewers]
+    if raw_sub.student_id != current_user.id and group.creator_id != current_user.id\
+          and current_user.id in reviewer_ids:
         raise HTTPException(status_code=403, detail="У вас нет доступа к результатам этой работы")
 
     return details
@@ -311,7 +313,16 @@ async def change_submission_link(
     if submission.status == "graded":
         raise HTTPException(status_code=400, detail="Нельзя менять ссылку, работа уже проверена")
 
-    return crud.update_submission_link(db, submission_id, data.link)
+    count_of_inspectors=db.query(Group).filter(Group.id == submission.group_id).first()
+
+    new_submission=crud.update_submission_link(db, submission_id, data.link)
+    return {
+        "id": new_submission.id,
+        "link": new_submission.link,
+        "student_id": new_submission.student_id,
+        "status": new_submission.status,
+        "reviewers_count": count_of_inspectors.count_of_inspectors
+    }
 
 
 # 2. Изменение комментария преподавателем
