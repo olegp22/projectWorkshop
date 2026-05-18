@@ -20,7 +20,27 @@ class UserEntrance(BaseModel):
     email: EmailStr
     password: SecretStr
 
+
+class UserLog(BaseModel):
+    access_token: str
+    token_type: str
+    name: str
+    surname: str
+    patronymic: str
+
 class UserResponse(BaseModel):
+    id: int
+    email: EmailStr
+    name: str
+    surname: str
+    patronymic: str
+    access_token: str
+    token_type: str
+    
+    class Config:
+        from_attributes = True
+
+class UserToChange(BaseModel):
     id: int
     email: EmailStr
     name: str
@@ -29,6 +49,10 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
 class UserGroupResponse(BaseModel):
     id: int

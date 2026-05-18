@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.schemas import UserCreate, UserResponse, UserEntrance,GroupCreate,GroupResponse,\
-    MemberResponse
+    MemberResponse, UserLog,Token
 from app.db.session import get_db
 import crud
 from app.models.group import Group, GroupMember
@@ -13,7 +13,7 @@ from app.api.deps import get_current_user
 
 auth_router  = APIRouter(prefix="/auth", tags=["Authentication"])
 #----------ручка для входа----------
-@auth_router.post("/login")
+@auth_router.post("/login", response_model=Token)
 def login(user_data: UserEntrance, db: Session = Depends(get_db)):
 
     user_in_db = crud.get_user_by_email(db, email=user_data.email)
@@ -35,3 +35,4 @@ def login(user_data: UserEntrance, db: Session = Depends(get_db)):
         "access_token": access_token,
         "token_type": "bearer"
     }
+

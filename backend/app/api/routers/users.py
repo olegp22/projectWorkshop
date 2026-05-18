@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.schemas import UserCreate, UserResponse, UserEntrance,GroupCreate,GroupResponse,\
-    MemberResponse, UserUpdate
+    MemberResponse, UserUpdate,UserToChange
 from app.db.session import get_db
 import crud
 from app.models.group import Group, GroupMember
@@ -21,10 +21,20 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
             detail="Пользователь с таким email уже существует"
         )
     new_user = crud.create_user(db, user)
-    return new_user
+    access_token = create_access_token({"user_id": new_user.id})
+
+    return {
+        "id": new_user.id,
+        "email": new_user.email,
+        "name": new_user.name,
+        "surname": new_user.surname,
+        "patronymic": new_user.patronymic,
+        "access_token": access_token,
+        "token_type": "bearer"
+        }
 
 #--------------ручка для изменнения почты и ФИО------------------
-@users_router.put("/me", response_model=UserResponse)
+@users_router.put("/me", response_model=UserToChange)
 async def update_profile(
     userChang: UserUpdate, 
     db: Session = Depends(get_db),
@@ -44,3 +54,9 @@ async def update_profile(
     return updated_user
     
 
+#hручка на возврат данных пользователя
+
+@users_router.get("/me", response_model=UserResponse)
+async def get_my_profile(current_user = Depends(get_current_user)):
+   
+    return current_user
