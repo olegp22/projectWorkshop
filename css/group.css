@@ -1,0 +1,177 @@
+.groups-scrollbar::-webkit-scrollbar {
+  width: 16px;
+}
+
+.groups-scrollbar::-webkit-scrollbar-track {
+  background: #f5f0ff;
+  border-radius: 8px;
+}
+
+.groups-scrollbar::-webkit-scrollbar-thumb {
+  background: #8d51f3;
+  border-radius: 8px;
+  border: 3px solid #f5f0ff;
+}
+
+.groups-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6d28d9;
+}
+
+.groups-scrollbar::-webkit-scrollbar-button {
+  display: block;
+  height: 16px;
+  width: 16px;
+  background-color: #c4b5fd;
+  background-size: 10px 10px;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 8px;
+}
+
+.groups-scrollbar::-webkit-scrollbar-button:hover {
+  background-color: #a78bfa;
+}
+
+.groups-scrollbar::-webkit-scrollbar-button:start:decrement {
+  background-image: url("../icons/up.svg");
+}
+
+.groups-scrollbar::-webkit-scrollbar-button:end:increment {
+  background-image: url("../icons/down.svg");
+}
+
+.groups-scrollbar::-webkit-scrollbar-button:vertical:start:increment,
+.groups-scrollbar::-webkit-scrollbar-button:vertical:end:decrement {
+  display: none;
+}
+
+.members-scrollbar::-webkit-scrollbar {
+  width: 12px;
+}
+
+.members-scrollbar::-webkit-scrollbar-track {
+  background: #f5f0ff;
+  border-radius: 6px;
+}
+
+.members-scrollbar::-webkit-scrollbar-thumb {
+  background: #8d51f3;
+  border-radius: 6px;
+  border: 2px solid #f5f0ff;
+}
+
+.members-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6d28d9;
+}
+
+.remove-dropdown-scrollbar::-webkit-scrollbar {
+  width: 12px;
+}
+
+.remove-dropdown-scrollbar::-webkit-scrollbar-track {
+  background: #fff1e6;
+  border-radius: 6px;
+}
+
+.remove-dropdown-scrollbar::-webkit-scrollbar-thumb {
+  background: #f97316;
+  border-radius: 6px;
+  border: 2px solid #fff1e6;
+}
+
+.remove-dropdown-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #ea580c;
+}
+
+.group-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.group-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 20px;
+  background-color: #c4b5fd;
+  margin: 0 12px;
+}
+
+.group-role {
+  flex-shrink: 0;
+  width: 80px;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role-btn {
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+  justify-content: center;
+}
+
+#roleIndicator {
+  background-color: #1f2937;
+  color: #f97316;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.section-content { display: none; }
+.section-content.active { display: block; }
+
+.hidden { display: none !important; }
+
+.groups-scrollbar {
+  scrollbar-width: 16px;
+  scrollbar-color: #8d51f3 #f5f0ff;
+}
+
+.members-scrollbar {
+  scrollbar-width: 12px;
+  scrollbar-color: #8d51f3 #f5f0ff;
+}
+
+.remove-dropdown-scrollbar {
+  scrollbar-width: 12px;
+  scrollbar-color: #f97316 #fff1e6;
+}
+
+.members-scrollbar,
+.groups-scrollbar,
+.remove-dropdown-scrollbar {
+  overflow-y: scroll !important;
+}
+
+/* Hide scrollbar when not needed but keep functionality */
+.members-scrollbar::-webkit-scrollbar,
+.groups-scrollbar::-webkit-scrollbar,
+.remove-dropdown-scrollbar::-webkit-scrollbar {
+  display: block;
+}
+
+.mode-btn.is-active {
+  background-color: #ffffff !important;
+  color: #f97316 !important;
+  border-color: #f97316 !important;
+}
+
+/* Убираем браузерную вторую рамку при нажатии */
+.mode-btn:focus,
+.mode-btn:focus-visible {
+  outline: none;
+}

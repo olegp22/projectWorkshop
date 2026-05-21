@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Настройки профиля — ФидбэК</title>
+  <link href="css/tailwind.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/group.css">
+  <link rel="stylesheet" href="css/notification.css">
+</head>
+<body class="bg-white font-sans antialiased flex flex-col min-h-screen">
+
+  <div id="layout-header"></div>
+
+  <main class="flex-1 max-w-6xl w-full mx-auto px-6 py-8">
+    <h1 class="text-2xl font-semibold text-gray-800 mb-6">Настройки профиля</h1>
+    <div class="border-b border-gray-200 flex gap-6 mb-6">
+      <button class="settings-tab pb-2 text-sm font-medium text-orange-500 border-b-2 border-orange-500 transition" data-tab="personal">Личные данные</button>
+      <button class="settings-tab pb-2 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition" data-tab="password">Изменить пароль</button>
+    </div>
+    <div id="tabPersonal" class="tab-panel active max-w-md space-y-4">
+      <div>
+        <label class="block text-xs text-gray-600 mb-1">Фамилия</label>
+        <div class="relative">
+          <input type="text" id="profileLastName" class="w-full px-3 py-2 border border-gray-300 text-sm rounded focus:border-orange-400 focus:outline-none">
+          <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          </span>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs text-gray-600 mb-1">Имя</label>
+        <div class="relative">
+          <input type="text" id="profileFirstName" class="w-full px-3 py-2 border border-gray-300 text-sm rounded focus:border-orange-400 focus:outline-none">
+          <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          </span>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs text-gray-600 mb-1">Отчество</label>
+        <div class="relative">
+          <input type="text" id="profilePatronymic" class="w-full px-3 py-2 border border-gray-300 text-sm rounded focus:border-orange-400 focus:outline-none" placeholder="Иванович">
+          <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          </span>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs text-gray-600 mb-1">Email</label>
+        <div class="relative">
+          <input type="email" id="profileEmail" class="w-full px-3 py-2 border border-gray-300 text-sm rounded focus:border-orange-400 focus:outline-none">
+          <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          </span>
+        </div>
+      </div>
+      <button id="saveProfileBtn" class="bg-orange-500 text-white px-6 py-2 text-sm font-medium rounded hover:bg-orange-600 transition">Сохранить</button>
+    </div>
+    <div id="tabPassword" class="tab-panel hidden max-w-md space-y-4">
+      <div>
+        <label class="block text-xs text-gray-600 mb-1">Текущий пароль</label>
+        <input type="password" id="currentPassword" class="w-full px-3 py-2 border border-gray-300 text-sm rounded focus:border-orange-400 focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-xs text-gray-600 mb-1">Новый пароль</label>
+        <input type="password" id="newPassword" class="w-full px-3 py-2 border border-gray-300 text-sm rounded focus:border-orange-400 focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-xs text-gray-600 mb-1">Подтвердите новый пароль</label>
+        <input type="password" id="confirmPassword" class="w-full px-3 py-2 border border-gray-300 text-sm rounded focus:border-orange-400 focus:outline-none">
+      </div>
+      <button id="changePasswordBtn" class="bg-orange-500 text-white px-6 py-2 text-sm font-medium rounded hover:bg-orange-600 transition">Изменить пароль</button>
+    </div>
+  </main>
+
+  <div id="layout-footer"></div>
+
+  <script type="module" src="js/layout-loader.js"></script>
+  <script type="module" src="js/settings.js"></script>
+</body>
+</html>

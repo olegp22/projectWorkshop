@@ -1,0 +1,81 @@
+/* review-detail.css — стили страницы оценки проекта */
+
+/* ─── Шкала оценок ─── */
+.score-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #e5e7eb;        /* gray-200 */
+  color: #7c3aed;                   /* purple-600 */
+  border: 2px solid transparent;
+  user-select: none;
+}
+
+.score-circle:hover {
+  background-color: #ddd6fe;        /* purple-200 */
+}
+
+.score-circle.active {
+  background-color: #7c3aed;        /* purple-600 */
+  color: #ffffff;
+  border-color: #7c3aed;
+}
+
+.score-line {
+  flex: 1;
+  height: 2px;
+  background-color: #d1d5db;        /* gray-300 */
+  margin: 0 4px;
+  min-width: 8px;
+}
+
+/* ─── Оранжевый скроллбар для dropdown удаления критериев ─── */
+.remove-dropdown-scrollbar::-webkit-scrollbar {
+  width: 12px;
+  display: block;
+}
+
+.remove-dropdown-scrollbar::-webkit-scrollbar-track {
+  background: #fff1e6;
+  border-radius: 6px;
+}
+
+.remove-dropdown-scrollbar::-webkit-scrollbar-thumb {
+  background: #f97316;
+  border-radius: 6px;
+  border: 2px solid #fff1e6;
+}
+
+.remove-dropdown-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #ea580c;
+}
+
+.remove-dropdown-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #f97316 #fff1e6;
+  overflow-y: scroll !important;
+}
+
+/* ─── Вспомогательные ─── */
+.criteria-dropdown {
+  position: relative;
+}
+
+/* Contest voting buttons */
+.contest-score {
+  transition: all 0.2s ease;
+}
+
+.contest-score.active,
+.contest-score.bg-purple-500 {
+  background-color: #7c3aed;
+  border-color: #7c3aed;
+  color: #ffffff;
+}

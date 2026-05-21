@@ -1,7 +1,5 @@
-// Единый API-клиент для работы с бэкендом FastAPI
 const API_BASE = 'http://localhost:8000';
 
-// Хранение токена
 let authToken = localStorage.getItem('access_token') || '';
 
 function setAuthToken(token) {
@@ -31,15 +29,13 @@ async function request(endpoint, method = 'GET', body = null, needsAuth = true) 
 
     try {
         const response = await fetch(`${API_BASE}${endpoint}`, options);
-        
-        // Если 401 – неавторизован, очищаем токен и выбрасываем ошибку
+
         if (response.status === 401) {
-          setAuthToken('');
-          // Редирект на страницу входа, если мы не там
-          if (typeof window !== 'undefined' && !window.location.pathname.includes('/index.html')) {
-            window.location.href = '/index.html';
-          }
-          throw new Error('Сессия истекла. Пожалуйста, войдите снова.');
+            setAuthToken('');
+            if (typeof window !== 'undefined' && !window.location.pathname.includes('/index.html')) {
+                window.location.href = '/index.html';
+            }
+            throw new Error('Сессия истекла. Пожалуйста, войдите снова.');
         }
 
         const data = await response.json();
@@ -53,7 +49,6 @@ async function request(endpoint, method = 'GET', body = null, needsAuth = true) 
     }
 }
 
-// ============= Авторизация =============
 export const authAPI = {
     async login(email, password) {
         const data = await request('/auth/login', 'POST', { email, password }, false);
@@ -64,15 +59,14 @@ export const authAPI = {
     },
 
     async register(userData) {
-        // userData должен содержать email, password, first_name?, last_name?
-        // По схеме UserCreate: email, password, first_name?, last_name?
         return await request('/users/register', 'POST', userData, false);
     },
 
     logout() {
         setAuthToken('');
-        localStorage.removeItem('userRole'); // очищаем старые ключи
+        localStorage.removeItem('userRole');
         localStorage.removeItem('userName');
+        localStorage.removeItem('feedback_user_profile');
     },
 
     getToken() {
@@ -84,54 +78,145 @@ export const authAPI = {
     }
 };
 
-// ============= Пользователи =============
 export const usersAPI = {
     async getMe() {
-        return await request('/users/me', 'GET');
+        const stored = loadFromStorage();
+        if (stored) return stored;
+
+        try {
+            const user = await request('/users/me', 'GET');
+            saveProfileToStorage(user);
+            return user;
+        } catch (error) {
+            console.warn('Не удалось загрузить профиль с сервера:', error.message);
+            try {
+                const token = authToken.split('.')[1];
+                const payload = JSON.parse(atob(token));
+                return {
+                    id: payload.user_id,
+                    email: payload.sub || 'user@example.com',
+                    name: 'Пользователь',
+                    surname: ''
+                };
+            } catch {
+                throw new Error('Не удалось получить данные пользователя');
+            }
+        }
     },
 
     async updateProfile(data) {
-        // data: { email?, first_name?, last_name? }
-        return await request('/users/me', 'PUT', data);
+        const result = await request('/users/me', 'PUT', data);
+        saveProfileToStorage(result);
+        return result;
     },
 
     async changePassword(current_password, new_password) {
-        // В вашем бэкенде эндпоинт для смены пароля отсутствует.
-        // Если добавите – раскомментируйте:
-        // return await request('/users/change-password', 'POST', { current_password, new_password });
         throw new Error('Смена пароля временно недоступна');
     }
 };
 
-// ============= Группы =============
+function loadFromStorage() {
+    try {
+        const raw = localStorage.getItem('feedback_user_profile');
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+}
+
+export function saveProfileToStorage(profile) {
+    if (!profile) {
+        localStorage.removeItem('feedback_user_profile');
+        return;
+    }
+    localStorage.setItem('feedback_user_profile', JSON.stringify({
+        id: profile.id,
+        name: profile.name,
+        surname: profile.surname,
+        patronymic: profile.patronymic,
+        email: profile.email,
+        updatedAt: Date.now()
+    }));
+}
+
 export const groupsAPI = {
-    // Получить все группы текущего пользователя
     async getMyGroups() {
         return await request('/groups/my', 'GET');
     },
 
-    // Создать новую группу
-    async createGroup(name) {
-        return await request('/groups', 'POST', { name });
+    async createGroup(name, groupMode = 'classic', countOfInspectors = 1) {
+        return await request('/groups', 'POST', { 
+            name, 
+            group_mode: groupMode, 
+            count_of_inspectors: countOfInspectors 
+        });
     },
 
-    // Присоединиться по токену (код приглашения)
     async joinGroupByToken(token) {
         return await request(`/groups/join/${token}`, 'GET');
     },
 
-    // Получить список участников группы
     async getMembers(groupId) {
         return await request(`/groups/${groupId}/members`, 'GET');
     },
 
-    // Удалить участника из группы (только создатель)
     async removeMember(groupId, userId) {
         return await request(`/groups/${groupId}/members/${userId}`, 'DELETE');
     },
 
-    // Получить критерии группы (если нужно)
     async getCriteria(groupId) {
         return await request(`/groups/${groupId}/criteria`, 'GET');
+    },
+
+    async createCriterion(groupId, data) {
+        return await request(`/groups/${groupId}/criteria`, 'POST', data);
+    },
+
+    async updateCriterion(groupId, criterionId, data) {
+        return await request(`/groups/${groupId}/criteria/${criterionId}`, 'PUT', data);
+    },
+
+    async deleteCriterion(groupId, criterionId) {
+        return await request(`/groups/${groupId}/criteria/${criterionId}`, 'DELETE');
+    },
+
+    async getMyReviews() {
+        return await request('/groups/my-reviews', 'GET');
+    },
+
+    async getGroupSubmissions(groupId) {
+        try {
+            const allReviews = await request('/groups/my-reviews', 'GET');
+            if (Array.isArray(allReviews)) {
+                return allReviews.filter(r => r.group_id == groupId);
+            }
+            return [];
+        } catch (error) {
+            console.warn('Не удалось загрузить работы группы:', error.message);
+            return [];
+        }
+    },
+
+    async submitWork(link, groupId) {
+        return await request('/groups/submit', 'POST', { link, group_id: groupId });
+    },
+
+    async getSubmission(submissionId) {
+        return await request(`/groups/submissions/${submissionId}`, 'GET');
+    },
+
+    async reviewWork(submissionId, comment, grades) {
+        return await request(`/groups/submissions/${submissionId}/review`, 'POST', {
+            comment,
+            grades
+        });
+    },
+
+    async updateSubmissionLink(submissionId, link) {
+        return await request(`/groups/submissions/${submissionId}/link`, 'PUT', { link });
+    },
+
+    async updateSubmissionComment(submissionId, comment) {
+        return await request(`/groups/submissions/${submissionId}/comment`, 'PUT', { comment });
     }
 };

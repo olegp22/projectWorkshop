@@ -1,0 +1,34 @@
+.notification-dropdown {
+  position: fixed;
+  z-index: 100;
+}
+
+/* Кастомный скроллбар */
+.notification-list::-webkit-scrollbar {
+  width: 8px;
+}
+.notification-list::-webkit-scrollbar-track {
+  background: #fff1e6;
+  border-radius: 4px;
+}
+.notification-list::-webkit-scrollbar-thumb {
+  background: #f97316;
+  border-radius: 4px;
+}
+
+/* Firefox */
+.notification-list {
+  scrollbar-width: thin;
+  scrollbar-color: #f97316 #fff1e6;
+}
+
+.notification-empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 16px;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

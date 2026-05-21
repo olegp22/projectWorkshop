@@ -1,4 +1,4 @@
-import { authAPI, usersAPI } from './api.js';
+import { authAPI, usersAPI, saveProfileToStorage } from './api.js';
 
 let lastFocusedElement = null;
 
@@ -103,6 +103,76 @@ function switchAuthTab(tab) {
     }
 }
 
+export async function initAuthHeader() {
+  const guestNav = document.getElementById('guestNav');
+  const loggedNav = document.getElementById('loggedNav');
+  const headerUserName = document.getElementById('headerUserName');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  if (!guestNav || !loggedNav) return;
+
+  if (authAPI.isAuthenticated()) {
+    // Показываем авторизованную навигацию
+    guestNav.classList.add('hidden');
+    loggedNav.classList.remove('hidden');
+    loggedNav.classList.add('flex');
+
+    // Загружаем имя пользователя
+    try {
+      const user = await usersAPI.getMe();
+      const displayName = (user.name && user.surname)
+        ? `${user.name} ${user.surname}`
+        : (user.name || user.email || 'Пользователь');
+      if (headerUserName) headerUserName.innerText = displayName;
+    } catch (error) {
+      if (headerUserName) headerUserName.innerText = 'Пользователь';
+    }
+
+    // Обработчик выхода
+    if (logoutBtn) {
+      logoutBtn.onclick = () => {
+        authAPI.logout();
+        window.location.reload();
+      };
+    }
+
+    // Инициализация выпадающего меню профиля
+    const profileIconBtn = document.getElementById('profile-btn');
+    const profileDropdownMenu = document.getElementById('profileDropdown');
+
+    function toggleProfileMenu() {
+      profileDropdownMenu?.classList.toggle('hidden');
+    }
+
+    if (profileIconBtn) {
+      profileIconBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleProfileMenu();
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (profileDropdownMenu && !profileDropdownMenu.contains(e.target) && e.target !== profileIconBtn) {
+        profileDropdownMenu.classList.add('hidden');
+      }
+    });
+
+  } else {
+    // Показываем гостевую навигацию
+    guestNav.classList.remove('hidden');
+    loggedNav.classList.add('hidden');
+    loggedNav.classList.remove('flex');
+
+    // Гостевой клик открывает модалку
+    const guestNavEl = document.getElementById('guestNav');
+    if (guestNavEl) {
+      guestNavEl.addEventListener('click', () => {
+        openAuthModal();
+      });
+    }
+  }
+}
+
 export function initAuthModal() {
     const profileBtn = document.getElementById('profile-btn');
     const profileName = document.getElementById('profile-name');
@@ -121,21 +191,13 @@ export function initAuthModal() {
     if (tabLogin) tabLogin.addEventListener('click', () => switchAuthTab('login'));
     if (tabRegister) tabRegister.addEventListener('click', () => switchAuthTab('register'));
 
-    // === ИСПРАВЛЕНИЕ: привязка к кнопкам с классами login-btn-student и login-btn-expert ===
-    const studentBtn = document.querySelector('.login-btn-student');
-    const expertBtn = document.querySelector('.login-btn-expert');
-    if (studentBtn) {
-        studentBtn.addEventListener('click', (e) => {
+    // Привязка ко всем кнопкам входа/регистрации на странице
+    document.querySelectorAll('.login-btn-expert').forEach(btn => {
+        btn.addEventListener('click', (e) => {
             e.preventDefault();
             openAuthModal();
         });
-    }
-    if (expertBtn) {
-        expertBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            openAuthModal();
-        });
-    }
+    });
 
     // Обработка формы входа
     const loginForm = document.getElementById('login-form');
@@ -155,7 +217,16 @@ export function initAuthModal() {
             }
             try {
                 await authAPI.login(email, password);
-                window.location.href = 'expert.html';
+
+                // Проверяем, был ли pending join-токен
+                const pendingJoin = localStorage.getItem('pending_join_token');
+                if (pendingJoin) {
+                    localStorage.removeItem('pending_join_token');
+                    window.location.href = `group.html?join=${pendingJoin}`;
+                    return;
+                }
+
+                window.location.href = 'group.html';
             } catch (err) {
                 showAuthError(err.message);
                 document.getElementById('auth-password').value = '';
@@ -193,8 +264,9 @@ export function initAuthModal() {
                 showAuthError('Введите корректный email');
                 return;
             }
-            if (!password || password.length < 3) {
-                showAuthError('Пароль должен быть не менее 3 символов');
+            // Синхронизировано с бэкендом: min_length=8
+            if (!password || password.length < 8) {
+                showAuthError('Пароль должен быть не менее 8 символов');
                 return;
             }
             if (password !== confirm) {
@@ -206,13 +278,29 @@ export function initAuthModal() {
                 return;
             }
             try {
-                await authAPI.register({ 
+                const result = await authAPI.register({ 
                     email, 
                     password, 
                     name: firstName, 
                     surname: lastName,
                     patronymic: patronymic
                 });
+
+                // Сохраняем профиль в хранилище (бэкенд не имеет GET /users/me)
+                saveProfileToStorage({
+                    id: result.id,
+                    name: firstName,
+                    surname: lastName,
+                    patronymic: patronymic,
+                    email: email
+                });
+
+                // Сохраняем токен из ответа регистрации
+                if (result.access_token) {
+                    authAPI.logout(); // очистим старый
+                    localStorage.setItem('access_token', result.access_token);
+                }
+
                 showAuthError('Регистрация успешна! Теперь войдите.', true);
                 setTimeout(() => switchAuthTab('login'), 1500);
                 document.getElementById('reg-first-name').value = '';
@@ -227,12 +315,4 @@ export function initAuthModal() {
             }
         });
     }
-}
-
-export function requireAuth() {
-    if (!authAPI.isAuthenticated()) {
-        window.location.href = '/index.html';
-        return false;
-    }
-    return true;
 }
