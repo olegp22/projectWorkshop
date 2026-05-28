@@ -240,7 +240,7 @@ async def upload_work(
 
 
 # Оценка работы (для проверяющего)
-@groups_router.post("/submissions/{submission_id}/review")
+@groups_router.post("/submissions/{submission_id}/review", response_model=SubmissionFullDetails)
 async def review_work(
     submission_id: int,
     review: ReviewCreate,
@@ -338,8 +338,10 @@ async def change_reviewer_comment(
     if not submission:
         raise HTTPException(status_code=404, detail="Работа не найдена")
 
+    reviewer=db.query(SubmissionReviewer).filter(submission.id==SubmissionReviewer.submission_id).first()
+
     # Проверка: только назначенный ревьюер может менять комментарий
-    if submission.reviewer_id != current_user.id:
+    if reviewer.reviewer_id != current_user.id:
         raise HTTPException(status_code=403, detail="Вы не являетесь проверяющим этой работы")
 
     return crud.update_submission_comment(db, submission_id, data.comment)

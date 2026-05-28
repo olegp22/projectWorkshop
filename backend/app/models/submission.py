@@ -1,6 +1,7 @@
 from app.db.base import Base
 from sqlalchemy import Column, Integer, String, ForeignKey, Text
 from sqlalchemy.orm import relationship
+
 class Submission(Base):
     __tablename__ = "submissions"
 

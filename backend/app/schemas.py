@@ -139,7 +139,7 @@ class SubmissionResponse(BaseModel):
     link: str
     student_id: int
     status: str
-    reviewers_count: int
+    reviewers_count: int | None = None
     
     class Config:
         from_attributes = True
@@ -150,8 +150,11 @@ class GradeDetailResponse(BaseModel):
     score: int
 
 # Полный отчет о проверке для студента
-class SubmissionFullDetails1111(BaseModel):
-    id: int
+class SubmissionFullDetails(BaseModel):
+    id_submission: int
+    id_submission_reviewer: int
+    student_id: int
+    reviewer_id: int
     link: str
     status: str
     reviewer_comment: str | None
@@ -185,8 +188,4 @@ class ReviewDetails(BaseModel):
     status: str
     grades: list[GradeDetailResponse]
 
-class SubmissionFullDetails(BaseModel):
-    id: int
-    link: str
-    status: str
-    reviews: list[ReviewDetails]
+

@@ -56,7 +56,7 @@ async def update_profile(
 
 #hручка на возврат данных пользователя
 
-@users_router.get("/me", response_model=UserResponse)
+@users_router.get("/me", response_model=UserToChange)
 async def get_my_profile(current_user = Depends(get_current_user)):
    
     return current_user

@@ -384,7 +384,26 @@ def submit_review(db: Session, submission_id: int, reviewer_id: int, review_data
 
     db.commit()
     db.refresh(db_submission)
-    return db_submission
+
+    grade_detail = []
+    for g in review_data.grades:
+        criterion = db.query(Criterion).filter(Criterion.id == g.criterion_id).first()
+        grade_detail.append({
+            "criterion_name": criterion.name,
+            "score": g.score
+        })
+
+    review_sumbitted = {
+        "id_submission": db_submission.id,
+        "id_submission_reviewer": review_link.id,
+        "student_id": db_submission.student_id,
+        "reviewer_id": reviewer_id,
+        "link": db_submission.link,
+        "status": db_submission.status,
+        "reviewer_comment": review_link.comment,
+        "grades": grade_detail
+    }
+    return review_sumbitted
 
 #вывод оценивания по критериям
 def get_submission_details(db: Session, submission_id: int):
