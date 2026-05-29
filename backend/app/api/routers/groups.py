@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.schemas import GroupCreate,GroupResponse,CriterionResponse ,MemberResponse, CriterionCreate,UserGroupResponse,\
     SubmissionCreate,SubmissionResponse, ReviewCreate, GradeDetailResponse, SubmissionFullDetails\
-    ,SubmissionCommentUpdate, SubmissionLinkUpdate,ReviewerSubmissionResponse
+    ,SubmissionCommentUpdate, SubmissionLinkUpdate,ReviewerSubmissionResponse, SubmissionReviewersResponse
 from app.db.session import get_db
 import crud
 from app.models.group import Group, GroupMember, Criterion,GroupMode
@@ -267,7 +267,7 @@ async def review_work(
     )
 
 #показ оценивания 
-@groups_router.get("/submissions/{submission_id}", response_model=SubmissionFullDetails)
+@groups_router.get("/submissions/{submission_id}", response_model=SubmissionReviewersResponse)
 async def read_submission_results(
     submission_id: int,
     db: Session = Depends(get_db),

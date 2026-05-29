@@ -425,8 +425,8 @@ def get_submission_details(db: Session, submission_id: int):
     for review in reviews:
 
         grades = db.query(
-            Grade.score,
-            Criterion.name.label("criterion_name")
+            Criterion.name.label("criterion_name"),
+            Grade.score
         ).join(
             Criterion,
             Grade.criterion_id == Criterion.id
@@ -435,18 +435,27 @@ def get_submission_details(db: Session, submission_id: int):
             Grade.reviewer_id == review.reviewer_id
         ).all()
 
+        
+
         reviews_result.append({
             "reviewer_id": review.reviewer_id,
             "comment": review.comment,
             "status": review.status,
-            "grades": grades
+            "grades": [
+                {
+                    "criterion_name": g.criterion_name,
+                    "score": g.score
+                }
+                for g in grades
+            ]
         })
 
     return {
-        "id": submission.id,
+        "submission_id": submission.id,
         "link": submission.link,
         "status": submission.status,
-        "reviews": reviews_result
+        "student_id": submission.student_id,
+        "reviewrs": reviews_result
     }
 
 

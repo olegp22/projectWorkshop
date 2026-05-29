@@ -189,3 +189,14 @@ class ReviewDetails(BaseModel):
     grades: list[GradeDetailResponse]
 
 
+class SubmissionReviewersResponse(BaseModel):
+    submission_id: int
+    link: str
+    status: str
+    student_id: int
+    reviewrs: list[ReviewDetails]
+
+    class Config:
+        from_attributes = True
+
+        
