@@ -140,10 +140,20 @@ class SubmissionResponse(BaseModel):
     student_id: int
     status: str
     reviewers_count: int | None = None
-    
+    comment: str 
+
     class Config:
         from_attributes = True
 
+class UbdateSubmissionResponse(BaseModel):
+    submission_id: int
+    link: str
+    student_id: int
+    status: str
+    comment: str 
+
+    class Config:
+        from_attributes = True
 
 class GradeDetailResponse(BaseModel):
     criterion_name: str

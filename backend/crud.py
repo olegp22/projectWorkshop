@@ -475,7 +475,13 @@ def update_submission_comment(db: Session, submission_id: int, new_comment: str)
         submission.reviewer_comment = new_comment
         db.commit()
         db.refresh(submission)
-    return submission
+    return {
+        "submission_id": submission.id,
+        "link": submission.link,
+        "student_id": submission.student_id,
+        "status": submission.status,
+        "comment": new_comment     
+    }
 
 def get_reviews_for_user(db: Session, reviewer_id: int):
 

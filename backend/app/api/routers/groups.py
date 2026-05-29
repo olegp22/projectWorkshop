@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.schemas import GroupCreate,GroupResponse,CriterionResponse ,MemberResponse, CriterionCreate,UserGroupResponse,\
     SubmissionCreate,SubmissionResponse, ReviewCreate, GradeDetailResponse, SubmissionFullDetails\
-    ,SubmissionCommentUpdate, SubmissionLinkUpdate,ReviewerSubmissionResponse, SubmissionReviewersResponse
+    ,SubmissionCommentUpdate, SubmissionLinkUpdate,ReviewerSubmissionResponse, SubmissionReviewersResponse,UbdateSubmissionResponse
 from app.db.session import get_db
 import crud
 from app.models.group import Group, GroupMember, Criterion,GroupMode
@@ -326,7 +326,7 @@ async def change_submission_link(
 
 
 # 2. Изменение комментария преподавателем
-@groups_router.put("/submissions/{submission_id}/comment", response_model=SubmissionResponse)
+@groups_router.put("/submissions/{submission_id}/comment", response_model=UbdateSubmissionResponse)
 async def change_reviewer_comment(
     submission_id: int,
     data: SubmissionCommentUpdate,
