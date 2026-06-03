@@ -3,10 +3,9 @@ from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from jose import JWTError
 from app.db.session import get_db
-from crud import get_user_by_id
-from app.core.config import SECRET_KEY, ALGORITHM, DATABASE_URL
+from app.crud import get_user_by_id
+from app.core.config import SECRET_KEY, ALGORITHM
 
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 день
