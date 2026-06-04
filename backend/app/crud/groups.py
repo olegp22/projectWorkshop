@@ -15,7 +15,8 @@ def create_group(db: Session, group_data: GroupCreate, creator_id: int):
         name=group_data.name,
         creator_id=creator_id,
         group_mode=group_data.group_mode,
-        count_of_inspectors=group_data.count_of_inspectors,
+        count_of_inspectors_expert =group_data.count_of_inspectors_expert,
+        count_of_inspectors_student =group_data.count_of_inspectors_student,
         reviewer_invite_token=reviewer_token,
         student_invite_token=student_token,
     )

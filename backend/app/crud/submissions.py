@@ -8,6 +8,10 @@ from app.schemas.notifications import TypeMassege
 
 
 def create_submission_classic(db: Session, submission_data: SubmissionCreate, student_id: int):
+    group = db.query(Group).filter(Group.id == submission_data.group_id).first()
+    if not group:
+        return None
+    
     reviewers = (
         db.query(GroupMember)
         .filter(
@@ -29,10 +33,10 @@ def create_submission_classic(db: Session, submission_data: SubmissionCreate, st
         )
         .group_by(GroupMember.user_id)
         .order_by("total")
-        .first()
+        .limit(group.count_of_inspectors_expert)
+        .all()
     )
 
-    assigned_reviewer_id = reviewer_counts.user_id if reviewer_counts else reviewers[0].user_id
 
     db_submission = Submission(
         link=submission_data.link,
@@ -44,21 +48,21 @@ def create_submission_classic(db: Session, submission_data: SubmissionCreate, st
     db.commit()
     db.refresh(db_submission)
 
-    db_reviewer = SubmissionReviewer(
-        submission_id=db_submission.id,
-        reviewer_id=assigned_reviewer_id,
-        status="pending",
-    )
-    db.add(db_reviewer)
-    db.commit()
+    for reviewer in reviewer_counts:
+        db_reviewer = SubmissionReviewer(
+            submission_id=db_submission.id,
+            reviewer_id=reviewer.user_id,
+            status="pending",
+        )
+        create_notification(
+            db,
+            db_reviewer.reviewer_id,
+            f"Вам назначили работу на проверку в группе '{group.name}'",
+            TypeMassege.NEW_WORK,
+        )
+        db.add(db_reviewer)
 
-    group = db.query(Group).filter(Group.id == submission_data.group_id).first()
-    create_notification(
-        db,
-        db_reviewer.reviewer_id,
-        f"Вам назначили работу на проверку в группе '{group.name}'",
-        TypeMassege.NEW_WORK,
-    )
+    db.commit()
 
     return {
         "id": db_submission.id,
@@ -66,7 +70,7 @@ def create_submission_classic(db: Session, submission_data: SubmissionCreate, st
         "group_id": db_submission.group_id,
         "student_id": db_submission.student_id,
         "status": db_submission.status,
-        "reviewers_count": 1,
+        "reviewers_count": len(reviewer_counts),
     }
 
 
@@ -108,7 +112,7 @@ def create_submission_p2p(db: Session, submission_data: SubmissionCreate, studen
         )
         .group_by(GroupMember.user_id)
         .order_by("total")
-        .limit(group.count_of_inspectors)
+        .limit(group.count_of_inspectors_student)
         .all()
     )
 
@@ -137,6 +141,125 @@ def create_submission_p2p(db: Session, submission_data: SubmissionCreate, studen
         "reviewers_count": len(reviewer_counts),
     }
 
+
+def create_submission_contest(db: Session, submission_data: SubmissionCreate, student_id: int):
+    group = db.query(Group).filter(Group.id == submission_data.group_id).first()
+    if not group:
+        return None
+    
+    students = (
+        db.query(GroupMember)
+        .filter(
+            GroupMember.group_id == submission_data.group_id,
+            GroupMember.role == "student",
+            GroupMember.user_id != student_id,
+        )
+        .all()
+    )
+
+    if not students:
+        return None
+
+    db_submission = Submission(
+        link=submission_data.link,
+        group_id=submission_data.group_id,
+        student_id=student_id,
+        status="pending",
+    )
+    db.add(db_submission)
+    db.commit()
+    db.refresh(db_submission)
+
+    reviewer_counts_student = (
+        db.query(GroupMember.user_id, func.count(SubmissionReviewer.id).label("total"))
+        .outerjoin(SubmissionReviewer, GroupMember.user_id == SubmissionReviewer.reviewer_id)
+        .filter(
+            GroupMember.group_id == submission_data.group_id,
+            GroupMember.role == "student",
+            GroupMember.user_id != student_id,
+        )
+        .group_by(GroupMember.user_id)
+        .order_by("total")
+        .limit(group.count_of_inspectors_student)
+        .all()
+    )
+
+    for reviewer in reviewer_counts_student:
+        db_reviewer = SubmissionReviewer(
+            submission_id=db_submission.id,
+            reviewer_id=reviewer.user_id,
+            status="pending",
+        )
+        create_notification(
+            db,
+            db_reviewer.reviewer_id,
+            f"Вам назначили работу на проверку в группе '{group.name}'",
+            TypeMassege.NEW_WORK,
+        )
+        db.add(db_reviewer)
+
+    db.commit()
+
+    reviewers = (
+        db.query(GroupMember)
+        .filter(
+            GroupMember.group_id == submission_data.group_id,
+            GroupMember.role == "reviewer",
+        )
+        .all()
+    )
+
+    if not reviewers:
+        return None
+
+    reviewer_counts_expert = (
+        db.query(GroupMember.user_id, func.count(SubmissionReviewer.id).label("total"))
+        .outerjoin(SubmissionReviewer, GroupMember.user_id == SubmissionReviewer.reviewer_id)
+        .filter(
+            GroupMember.group_id == submission_data.group_id,
+            GroupMember.role == "reviewer",
+        )
+        .group_by(GroupMember.user_id)
+        .order_by("total")
+        .limit(group.count_of_inspectors_expert)
+        .all()
+    )
+
+
+    db_submission = Submission(
+        link=submission_data.link,
+        group_id=submission_data.group_id,
+        student_id=student_id,
+        status="pending",
+    )
+    db.add(db_submission)
+    db.commit()
+    db.refresh(db_submission)
+
+    for reviewer in reviewer_counts_expert:
+        db_reviewer = SubmissionReviewer(
+            submission_id=db_submission.id,
+            reviewer_id=reviewer.user_id,
+            status="pending",
+        )
+        create_notification(
+            db,
+            db_reviewer.reviewer_id,
+            f"Вам назначили работу на проверку в группе '{group.name}'",
+            TypeMassege.NEW_WORK,
+        )
+        db.add(db_reviewer)
+
+    db.commit()
+
+    return {
+        "id": db_submission.id,
+        "link": db_submission.link,
+        "group_id": db_submission.group_id,
+        "student_id": db_submission.student_id,
+        "status": db_submission.status,
+        "reviewers_count": len(reviewer_counts_student)+len(reviewer_counts_expert),
+    }
 
 def submit_review(db: Session, submission_id: int, reviewer_id: int, review_data: ReviewCreate):
     db_submission = db.query(Submission).filter(Submission.id == submission_id).first()

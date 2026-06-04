@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.schemas import GroupCreate, GroupResponse, MemberResponse, UserGroupResponse
 from app.db.session import get_db
 from app.crud import create_group, get_group_participants, remove_member_from_db, get_user_groups, create_notification
-from app.models.group import Group, GroupMember
+from app.models.group import Group, GroupMember, GroupMode
 from app.api.deps import get_current_user
 from app.schemas.notifications import TypeMassege
 
@@ -24,12 +24,35 @@ async def make_group(
     if existing_group:
         raise HTTPException(status_code=400, detail="Группа с таким именем уже есть")
 
-    if group.count_of_inspectors <= 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Количество проверяющих должно быть больше 0",
-        )
+    if group.group_mode==GroupMode.CLASSIC:
+        if group.count_of_inspectors_expert <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Количество проверяющих должно быть больше 0",
+            )
+        if group.count_of_inspectors_student > 0:
+            raise HTTPException(
+                status_code = 400, 
+                detail="В выбранам вам режиме студенты не могут проверять работы"
+                )
 
+    elif group.group_mode==GroupMode.P2P:
+        if group.count_of_inspectors_student <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Количество проверяющих должно быть больше 0",
+            )
+        if group.count_of_inspectors_expert > 0:
+            raise HTTPException(
+                status_code = 400, 
+                detail="В выбранам вам режиме эксперты не могут проверять работы"
+                )
+    
+    else:
+        if group.count_of_inspectors_expert+group.count_of_inspectors_student<=0:
+            raise HTTPException(
+                status_code = 400,
+                detail = "В группе должен быть хотябы один проверяющий")
     return create_group(db, group, current_user.id)
 
 

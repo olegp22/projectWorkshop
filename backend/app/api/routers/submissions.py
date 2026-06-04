@@ -21,6 +21,7 @@ from app.crud import (
     update_submission_link,
     update_submission_comment,
     get_reviewer_submissions,
+    create_submission_contest
 )
 from app.models.group import Group, GroupMember, GroupMode
 from app.models.submission import Submission, SubmissionReviewer
@@ -41,17 +42,21 @@ async def upload_work(
         user_id=current_user.id,
         role="student",
     ).first()
+
     if not is_member:
         raise HTTPException(status_code=403, detail="Вы не являетесь студентом этой группы")
 
     group = db.query(Group).filter(Group.id == submission.group_id).first()
+
     if not group:
         raise HTTPException(status_code=400, detail="Группа не найдена")
 
     if group.group_mode == GroupMode.CLASSIC:
         new_submission = create_submission_classic(db, submission, student_id=current_user.id)
-    else:
+    elif group.group_mode == GroupMode.P2P:
         new_submission = create_submission_p2p(db, submission, student_id=current_user.id)
+    else:
+        new_submission = create_submission_contest(db, submission, student_id=current_user.id)
 
     if not new_submission:
         raise HTTPException(status_code=400, detail="В группе пока нет проверяющих")

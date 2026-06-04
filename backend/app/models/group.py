@@ -3,10 +3,8 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Text,UniqueCon
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 import enum
+from app.schemas.groups import GroupMode
 
-class GroupMode(str, enum.Enum):
-    CLASSIC = "classic"
-    P2P = "p2p"
 
 #запрос в бд для создание таблица с групой
 class Group(Base):
@@ -16,8 +14,8 @@ class Group(Base):
     name = Column(String, unique=True, nullable=False)
     creator_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     group_mode = Column(Enum(GroupMode),default=GroupMode.CLASSIC, nullable=False)
-    count_of_inspectors= Column(Integer, default=1, nullable=False)
-
+    count_of_inspectors_expert = Column(Integer, default=0)
+    count_of_inspectors_student = Column(Integer, default=0)
     # Токены для инвайт-ссылок
     reviewer_invite_token = Column(String, unique=True, nullable=False)
     student_invite_token = Column(String, unique=True, nullable=False)

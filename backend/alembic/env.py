@@ -4,6 +4,7 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+from sqlalchemy import text
 
 from alembic import context
 
@@ -31,6 +32,25 @@ target_metadata = Base.metadata
 # Настройка логирования
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
+
+
+def update_group_inspectors(connection) -> None:
+    connection.execute(text(
+        """
+        UPDATE groups
+        SET
+            count_of_inspectors_expert = CASE
+                WHEN group_mode = 'CLASSIC' THEN count_of_inspectors
+                ELSE 0
+            END,
+            count_of_inspectors_student = CASE
+                WHEN group_mode = 'P2P' THEN count_of_inspectors
+                ELSE 0
+            END
+        WHERE count_of_inspectors IS NOT NULL
+        """
+    ))
+
 
 def run_migrations_offline() -> None:
     """Запуск миграций в 'offline' режиме."""
@@ -61,6 +81,9 @@ def run_migrations_online() -> None:
 
         with context.begin_transaction():
             context.run_migrations()
+            # NOTE: do not run data-migration SQL here; run it in explicit Alembic
+            # revision scripts. Calling update_group_inspectors at env import
+            # time caused failures when schema columns were not yet present.
 
 if context.is_offline_mode():
     run_migrations_offline()

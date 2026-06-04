@@ -22,7 +22,6 @@ class SubmissionResponse(BaseModel):
     student_id: int
     status: str
     reviewers_count: int | None = None
-    comment: str
 
     class Config:
         from_attributes = True
