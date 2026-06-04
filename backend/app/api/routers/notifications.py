@@ -9,7 +9,7 @@ from app.crud import get_notifications_for_user, get_notification_anread, notifi
 notifications_router = APIRouter(prefix="/notification", tags=["Notifications"])
 
 
-# Получает уведомления текущего пользователя
+# Получает уведомления текущего пользователя и делает их прочитанными
 @notifications_router.get("/my", response_model=list[NotificationResponse])
 async def get_my_notifications(
     db: Session = Depends(get_db),
