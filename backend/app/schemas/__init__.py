@@ -31,6 +31,7 @@ from .submissions import (
     SubmissionReviewersResponse,
 )
 from .notifications import TypeMassege, CreateNotification, NotificationResponse
+from .rating import RatingResponse
 
 __all__ = [
     "UserCreate",
@@ -62,4 +63,5 @@ __all__ = [
     "TypeMassege",
     "CreateNotification",
     "NotificationResponse",
+    "RatingResponse",
 ]
