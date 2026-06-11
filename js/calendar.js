@@ -247,11 +247,28 @@ async function loadParticipants() {
   try {
     const groups = await groupsAPI.getMyGroups();
     if (groups && groups.length > 0) {
-      const members = await groupsAPI.getMembers(groups[0].id);
-      availableParticipants = members.map(m => ({
-        id: m.user_id,
-        name: `${m.name || ''} ${m.surname || ''}`.trim() || m.email || `User ${m.user_id}`
-      }));
+      // Загружаем участников из ВСЕХ групп, убираем дубликаты
+      const allMembers = [];
+      const seenIds = new Set();
+
+      for (const group of groups) {
+        try {
+          const members = await groupsAPI.getMembers(group.id);
+          for (const m of members) {
+            if (!seenIds.has(m.user_id)) {
+              seenIds.add(m.user_id);
+              allMembers.push({
+                id: m.user_id,
+                name: `${m.name || ''} ${m.surname || ''}`.trim() || m.email || `User ${m.user_id}`
+              });
+            }
+          }
+        } catch (e) {
+          console.warn(`Не удалось загрузить участников группы ${group.id}:`, e.message);
+        }
+      }
+
+      availableParticipants = allMembers;
     }
   } catch (error) {
     console.log('Не удалось загрузить участников групп:', error.message);

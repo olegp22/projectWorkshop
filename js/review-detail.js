@@ -272,9 +272,9 @@ async function loadProject() {
             updateContestTotal();
           }
         } else {
-          // Classic/P2P: маппим по criterion_id
+          // Classic/P2P: маппим по criterion_name (бэкенд возвращает только его)
           myReview.grades.forEach(g => {
-            const c = criteria.find(x => x.id === g.criterion_id || x.name === g.criterion_name);
+            const c = criteria.find(x => x.name === g.criterion_name);
             if (c) c.score = g.score;
           });
           renderCriteriaList('criteriaList');

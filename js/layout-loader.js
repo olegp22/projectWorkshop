@@ -68,36 +68,6 @@ function renderFallbackFooter() {
   `;
 }
 
-function removeSearchIcon() {
-  const allSvgs = document.querySelectorAll('svg');
-  allSvgs.forEach(svg => {
-    const paths = svg.querySelectorAll('path');
-    const hasSearchPath = Array.from(paths).some(p => {
-      const d = p.getAttribute('d') || '';
-      return (d.includes('M21') && d.includes('C21')) || 
-             (d.includes('m21') && d.includes('c21')) ||
-             d.includes('circle') ||
-             (d.length > 50 && d.includes('M') && d.includes('L'));
-    });
-
-    if (hasSearchPath) {
-      const btn = svg.closest('button') || svg.closest('a') || svg.parentElement;
-      if (btn) {
-        btn.remove();
-        console.log('[LayoutLoader] Удалена иконка поиска');
-      }
-    }
-  });
-
-  document.querySelectorAll('button, a').forEach(el => {
-    const label = (el.getAttribute('aria-label') || el.getAttribute('title') || '').toLowerCase();
-    if (label.includes('поиск') || label.includes('search')) {
-      el.remove();
-      console.log('[LayoutLoader] Удалена кнопка поиска по aria-label/title');
-    }
-  });
-}
-
 async function initLayout() {
   console.log('[LayoutLoader] Начинаем загрузку layout...');
 
@@ -108,7 +78,7 @@ async function initLayout() {
 
   await new Promise(r => setTimeout(r, 0));
 
-  removeSearchIcon();
+  // removeSearchIcon() удалён — кнопка поиска убрана из header.html
 
   document.querySelectorAll('a[target="_blank"]').forEach(a => {
     const href = a.getAttribute('href') || '';
