@@ -89,7 +89,6 @@ function createCell(dayNum, isOtherMonth, dayEvents = []) {
   numSpan.innerText = dayNum;
   cell.appendChild(numSpan);
 
-  // Контейнер для мероприятий со скроллом
   const eventsContainer = document.createElement('div');
   eventsContainer.className = 'cell-events-scroll overflow-y-auto mt-1';
   eventsContainer.style.maxHeight = '60px';
@@ -98,18 +97,16 @@ function createCell(dayNum, isOtherMonth, dayEvents = []) {
   if (!isOtherMonth && dayEvents.length > 0) {
     dayEvents.forEach((evt) => {
       const evDiv = document.createElement('div');
-      // Уменьшенные блоки мероприятий
       evDiv.className = 'mt-1 px-2 py-1 text-xs rounded cursor-pointer transition text-center truncate bg-white border border-orange-500 text-gray-900';
       evDiv.innerText = evt.topic;
       evDiv.addEventListener('click', (e) => {
         e.stopPropagation();
         closeTooltip();
-        
-        // Блок становится оранжевым с белым текстом
+
         evDiv.classList.remove('bg-white', 'text-gray-900');
         evDiv.classList.add('bg-orange-500', 'text-white');
         lastClickedEventElement = evDiv;
-        
+
         showEventTooltip(evt, evDiv, cell);
       });
       eventsContainer.appendChild(evDiv);
@@ -151,7 +148,7 @@ function showEventTooltip(event, eventElement, cellElement) {
   const top = eventElement.offsetTop + eventElement.offsetHeight + 4;
   tooltip.style.top = `${top}px`;
   tooltip.style.left = `${eventElement.offsetLeft}px`;
-  
+
   cellElement.appendChild(tooltip);
   activeEventBlock = tooltip;
 
@@ -328,16 +325,11 @@ document.getElementById('saveEventBtn').onclick = () => {
   const endTime = document.getElementById('eventTimeEnd').value.trim();
 
   if (!topic) { showToast('Введите тему мероприятия', true); return; }
-  if (!dateStr) { showToast('Введите дату', true); return; }
-
-  const parts = dateStr.split('/');
-  if (parts.length !== 3) { showToast('Неверный формат даты. Используйте ДД/ММ/ГГГГ', true); return; }
-
-  const formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+  if (!dateStr) { showToast('Выберите дату', true); return; }
 
   events.push({
     id: Date.now(),
-    date: formattedDate,
+    date: dateStr,
     topic,
     place,
     startTime,
@@ -355,15 +347,7 @@ async function init() {
   await loadCurrentUser();
   await loadParticipants();
 
-  const y = currentDate.getFullYear();
-  const m = String(currentDate.getMonth() + 1).padStart(2, '0');
-  events = [
-    { id: 1, date: `${y}-${m}-02`, topic: 'мероприятие 1', place: 'Ауд. 101', startTime: '10:00', endTime: '12:00', participants: ['Участник 1', 'Участник 2'] },
-    { id: 2, date: `${y}-${m}-02`, topic: 'мероприятие 2', place: 'Ауд. 102', startTime: '14:00', endTime: '16:00', participants: ['Участник 3', 'Участник 4'] },
-    { id: 3, date: `${y}-${m}-02`, topic: 'мероприятие 3', place: 'Ауд. 103', startTime: '16:00', endTime: '18:00', participants: ['Участник 5'] },
-    { id: 4, date: `${y}-${m}-02`, topic: 'мероприятие 4', place: 'Ауд. 104', startTime: '18:00', endTime: '20:00', participants: ['Участник 6'] },
-    { id: 5, date: `${y}-${m}-04`, topic: 'мероприятие 5', place: 'Ауд. 303', startTime: '09:00', endTime: '11:00', participants: ['Участник 1', 'Участник 2', 'Участник 3', 'Участник 4', 'Участник 5'] },
-  ];
+  events = [];
 
   renderCalendar();
 }

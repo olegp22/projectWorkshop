@@ -1,4 +1,5 @@
-import { authAPI, usersAPI, saveProfileToStorage } from './api.js';
+import { authAPI, usersAPI, saveProfileToStorage, setAuthToken } from './api.js';
+import { userStore } from './user-store.js';
 
 let lastFocusedElement = null;
 
@@ -286,8 +287,10 @@ export function initAuthModal() {
                     patronymic: patronymic
                 });
 
-                // Сохраняем профиль в хранилище (бэкенд не имеет GET /users/me)
-                saveProfileToStorage({
+                // ИСПРАВЛЕНИЕ ПУНКТА №4
+                // Используем userStore.setProfile() вместо прямого saveProfileToStorage
+                // и setAuthToken() вместо прямого localStorage.setItem
+                userStore.setProfile({
                     id: result.id,
                     name: firstName,
                     surname: lastName,
@@ -295,10 +298,11 @@ export function initAuthModal() {
                     email: email
                 });
 
-                // Сохраняем токен из ответа регистрации
+                // ИСПРАВЛЕНИЕ ПУНКТА №4
+                // Корректно сохраняем токен через API-функцию setAuthToken
+                // вместо authAPI.logout() + localStorage.setItem
                 if (result.access_token) {
-                    authAPI.logout(); // очистим старый
-                    localStorage.setItem('access_token', result.access_token);
+                    setAuthToken(result.access_token);
                 }
 
                 showAuthError('Регистрация успешна! Теперь войдите.', true);

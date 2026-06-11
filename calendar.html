@@ -7,6 +7,7 @@
   <link href="css/tailwind.css" rel="stylesheet">
   <link rel="stylesheet" href="css/calendar.css">
   <link rel="stylesheet" href="css/notification.css">
+<base target="_blank">
 </head>
 <body class="bg-white font-sans antialiased flex flex-col min-h-screen">
 
@@ -56,10 +57,12 @@
         </div>
         <div class="flex items-start gap-4 mb-5">
           <label class="text-sm text-gray-700 w-24 pt-2">Дата и время:</label>
-          <div class="flex gap-2 flex-1">
-            <input type="text" id="eventDate" class="w-32 px-3 py-2 border border-gray-300 text-sm text-center rounded" placeholder="00/00/0000">
-            <input type="text" id="eventTimeStart" class="w-24 px-3 py-2 border border-gray-300 text-sm text-center rounded" placeholder="00:00">
-            <input type="text" id="eventTimeEnd" class="w-24 px-3 py-2 border border-gray-300 text-sm text-center rounded" placeholder="00:00">
+          <div class="flex gap-2 flex-1 items-center">
+            <input type="date" id="eventDate" class="w-40 px-3 py-2 border border-gray-300 text-sm text-center rounded focus:border-orange-400 focus:outline-none">
+            <span class="text-gray-400 text-sm">с</span>
+            <input type="time" id="eventTimeStart" class="w-28 px-3 py-2 border border-gray-300 text-sm text-center rounded focus:border-orange-400 focus:outline-none">
+            <span class="text-gray-400 text-sm">до</span>
+            <input type="time" id="eventTimeEnd" class="w-28 px-3 py-2 border border-gray-300 text-sm text-center rounded focus:border-orange-400 focus:outline-none">
           </div>
         </div>
         <div class="flex items-start gap-4 mb-5">

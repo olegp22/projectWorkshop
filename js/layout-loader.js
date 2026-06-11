@@ -13,7 +13,6 @@ async function loadComponent(url, selector) {
     console.log(`[LayoutLoader] ${url} загружен успешно`);
   } catch (err) {
     console.error(`[LayoutLoader] Ошибка загрузки ${url}:`, err);
-    // Fallback: render minimal header/footer inline
     if (selector === '#layout-header') {
       placeholder.outerHTML = renderFallbackHeader();
     } else if (selector === '#layout-footer') {
@@ -70,13 +69,11 @@ function renderFallbackFooter() {
 }
 
 function removeSearchIcon() {
-  // Ищем SVG с path лупы (характерные команды: M21, C21, circle)
   const allSvgs = document.querySelectorAll('svg');
   allSvgs.forEach(svg => {
     const paths = svg.querySelectorAll('path');
     const hasSearchPath = Array.from(paths).some(p => {
       const d = p.getAttribute('d') || '';
-      // Лупа обычно содержит круг + палку
       return (d.includes('M21') && d.includes('C21')) || 
              (d.includes('m21') && d.includes('c21')) ||
              d.includes('circle') ||
@@ -92,7 +89,6 @@ function removeSearchIcon() {
     }
   });
 
-  // Также ищем по aria-label / title
   document.querySelectorAll('button, a').forEach(el => {
     const label = (el.getAttribute('aria-label') || el.getAttribute('title') || '').toLowerCase();
     if (label.includes('поиск') || label.includes('search')) {
@@ -110,13 +106,10 @@ async function initLayout() {
     loadComponent('components/footer.html', '#layout-footer')
   ]);
 
-  // Ждём следующего тика, чтобы DOM точно обновился после outerHTML
   await new Promise(r => setTimeout(r, 0));
 
-  // Удаляем иконку поиска
   removeSearchIcon();
 
-  // Убираем target="_blank" у внутренних ссылок
   document.querySelectorAll('a[target="_blank"]').forEach(a => {
     const href = a.getAttribute('href') || '';
     if (
@@ -128,19 +121,29 @@ async function initLayout() {
     }
   });
 
-  // Убираем <base target="_blank"> если есть
   const baseTag = document.querySelector('base[target="_blank"]');
   if (baseTag) {
     baseTag.removeAttribute('target');
     console.log('[LayoutLoader] Удален target="_blank" из <base>');
   }
 
+  const isAuthPage = window.location.pathname.includes('index.html') || 
+                     window.location.pathname === '/' ||
+                     window.location.pathname.endsWith('/');
+  const hasToken = !!localStorage.getItem('access_token');
+
+  if (!isAuthPage && !hasToken) {
+    console.log('[LayoutLoader] Нет токена, редирект на index.html');
+    window.location.href = 'index.html';
+    return;
+  }
+
   console.log('[LayoutLoader] guestNav найден?', !!document.getElementById('guestNav'));
   console.log('[LayoutLoader] loggedNav найден?', !!document.getElementById('loggedNav'));
-  console.log('[LayoutLoader] access_token в localStorage?', !!localStorage.getItem('access_token'));
+  console.log('[LayoutLoader] access_token в localStorage?', hasToken);
 
   try {
-    const { initAuthHeader } = await import('./auth-module.js?v=4');
+    const { initAuthHeader } = await import('./auth-module.js?v=5');
     await initAuthHeader();
     console.log('[LayoutLoader] initAuthHeader выполнен');
   } catch (err) {
@@ -148,7 +151,7 @@ async function initLayout() {
   }
 
   try {
-    const { initNotifications } = await import('./notification.js?v=4');
+    const { initNotifications } = await import('./notification.js?v=5');
     initNotifications();
     console.log('[LayoutLoader] initNotifications выполнен');
   } catch (err) {

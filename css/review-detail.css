@@ -1,42 +1,376 @@
 /* review-detail.css — стили страницы оценки проекта */
 
-/* ─── Шкала оценок ─── */
-.score-circle {
-  width: 40px;
+/* === КРИТЕРИЙ === */
+.criteria-item {
+  padding-bottom: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.criteria-item:last-child {
+  border-bottom: none;
+}
+
+/* Шапка критерия — название + описание слева, макс. балл справа */
+.criteria-header {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.criteria-header-left {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.criteria-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+}
+
+.criteria-desc {
+  font-size: 13px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.criteria-max {
+  font-size: 12px;
+  color: #8b5cf6;
+  font-weight: 500;
+  background: #eef2ff;
+  padding: 3px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* === ШКАЛА ОЦЕНОК (критерии) === */
+.criteria-scale {
+  position: relative;
+  width: 100%;
+  padding: 32px 0 12px 0;
+}
+
+.scale-track {
+  position: relative;
+  width: 100%;
+  height: 48px;
+  cursor: pointer;
+}
+
+.scale-track.large {
   height: 40px;
+}
+
+/* Линия шкалы */
+.scale-line {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  right: 14px;
+  height: 4px;
+  background: #8b5cf6;
+  border-radius: 2px;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+/* Контейнер для меток */
+.scale-marks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  z-index: 2;
+}
+
+/* Кнопка значения на шкале */
+.scale-btn {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
+  background: #8b5cf6;
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  background-color: #e5e7eb;        /* gray-200 */
-  color: #7c3aed;                   /* purple-600 */
-  border: 2px solid transparent;
   user-select: none;
+  transition: all 0.2s ease;
+  z-index: 3;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(139, 92, 246, 0.4);
 }
 
-.score-circle:hover {
-  background-color: #ddd6fe;        /* purple-200 */
+.scale-btn:hover {
+  transform: translate(-50%, -50%) scale(1.15);
+  background: #7c3aed;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.5);
 }
 
-.score-circle.active {
-  background-color: #7c3aed;        /* purple-600 */
-  color: #ffffff;
-  border-color: #7c3aed;
+/* Текст внутри кнопки */
+.scale-btn-text {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
 }
 
-.score-line {
-  flex: 1;
-  height: 2px;
-  background-color: #d1d5db;        /* gray-300 */
-  margin: 0 4px;
-  min-width: 8px;
+/* Активное (выбранное) значение */
+.scale-btn.active {
+  background: #f97316;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.5);
+  transform: translate(-50%, -50%) scale(1.15);
 }
 
-/* ─── Оранжевый скроллбар для dropdown удаления критериев ─── */
+.scale-btn.active:hover {
+  background: #ea580c;
+}
+
+/* Конечные точки (первое и последнее значение) — увеличенные */
+.scale-btn.endpoint {
+  width: 44px;
+  height: 44px;
+}
+
+.scale-btn.endpoint .scale-btn-text {
+  font-size: 14px;
+}
+
+/* Редкие шаги (для больших шкал) — меньше */
+.scale-btn.sparse {
+  width: 28px;
+  height: 28px;
+}
+
+.scale-btn.sparse .scale-btn-text {
+  font-size: 10px;
+}
+
+.scale-btn.sparse.endpoint {
+  width: 36px;
+  height: 36px;
+}
+
+.scale-btn.sparse.endpoint .scale-btn-text {
+  font-size: 12px;
+}
+
+/* Очень большие шкалы (100+) — ещё меньше */
+.scale-btn.large {
+  width: 22px;
+  height: 22px;
+  border-width: 2px;
+}
+
+.scale-btn.large .scale-btn-text {
+  font-size: 9px;
+}
+
+.scale-btn.large.endpoint {
+  width: 30px;
+  height: 30px;
+}
+
+.scale-btn.large.endpoint .scale-btn-text {
+  font-size: 10px;
+}
+
+/* Маркер выбранного значения (плавающий над шкалой) */
+.scale-marker {
+  position: absolute;
+  top: -28px;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f97316;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.4);
+  z-index: 5;
+  transition: left 0.3s ease;
+  border: 3px solid #fff;
+}
+
+.scale-marker::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid #f97316;
+}
+
+.scale-marker-text {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.scale-marker.large {
+  width: 48px;
+  height: 48px;
+  top: -36px;
+}
+
+.scale-marker.large .scale-marker-text {
+  font-size: 14px;
+}
+
+/* Строка с input для точного ввода */
+.scale-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-left: 12px;
+}
+
+.scale-input-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.scale-input {
+  width: 80px;
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.scale-input:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+/* === КОНКУРСНАЯ ШКАЛА (1–10) === */
+.contest-scale {
+  position: relative;
+  width: 100%;
+  height: 56px;
+  padding: 0 20px;
+}
+
+.contest-scale-line {
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  right: 20px;
+  height: 4px;
+  background: #8b5cf6;
+  border-radius: 2px;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.contest-scale-marks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  z-index: 2;
+}
+
+.contest-scale-btn {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  z-index: 3;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(139, 92, 246, 0.4);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.contest-scale-btn:hover {
+  transform: translate(-50%, -50%) scale(1.2);
+  background: #7c3aed;
+}
+
+.contest-scale-btn.active {
+  background: #f97316;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.5);
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+.contest-scale-marker {
+  position: absolute;
+  top: -32px;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f97316;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.4);
+  z-index: 5;
+  transition: left 0.3s ease;
+  border: 3px solid #fff;
+}
+
+.contest-scale-marker::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid #f97316;
+}
+
+.contest-scale-marker span {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.contest-score-display {
+  text-align: center;
+  margin-top: 16px;
+}
+
+/* Оранжевый скроллбар для dropdown удаления критериев */
 .remove-dropdown-scrollbar::-webkit-scrollbar {
   width: 12px;
   display: block;
@@ -63,19 +397,19 @@
   overflow-y: scroll !important;
 }
 
-/* ─── Вспомогательные ─── */
-.criteria-dropdown {
-  position: relative;
+/* Микрофон в поле обратной связи */
+#voiceFeedbackBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
 }
 
-/* Contest voting buttons */
-.contest-score {
-  transition: all 0.2s ease;
+#voiceFeedbackBtn:hover {
+  color: #7c3aed;
 }
 
-.contest-score.active,
-.contest-score.bg-purple-500 {
-  background-color: #7c3aed;
-  border-color: #7c3aed;
-  color: #ffffff;
+/* Управление критериями (организатор) */
+#criteriaManagerBlock {
+  transition: all 0.3s ease;
 }

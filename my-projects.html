@@ -3,41 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Проверка работ — ФидбэК</title>
+  <title>Мои проекты — ФидбэК</title>
   <link href="css/tailwind.css" rel="stylesheet">
   <link rel="stylesheet" href="css/notification.css">
   <link rel="stylesheet" href="css/review.css">
+<base target="_blank">
 </head>
 <body class="bg-white font-sans antialiased flex flex-col min-h-screen">
 
   <div id="layout-header"></div>
 
-  <main class="flex-1 max-w-6xl w-full mx-auto px-6 py-8" id="reviewMain">
+  <main class="flex-1 max-w-6xl w-full mx-auto px-6 py-8" id="myProjectsMain">
     <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
-      <h1 class="text-2xl font-semibold text-gray-800">Группа <span id="groupName" class="text-orange-500">*Название группы*</span></h1>
+      <h1 class="text-2xl font-semibold text-gray-800">Мои проекты</h1>
       <a href="group.html" class="border-2 border-orange-500 text-orange-500 hover:bg-orange-50 px-4 py-1.5 text-sm font-medium rounded transition">Мои группы</a>
-    </div>
-
-    <!-- Прогресс-бар (скрыт в режиме конкурса) -->
-    <div class="mb-6" id="progressBlock">
-      <div class="flex items-center gap-4 mb-2">
-        <span class="text-sm text-gray-700 font-medium">Прогресс</span>
-        <div class="flex-1 progress-track">
-          <div class="progress-fill" id="progressBar" style="width: 0%;"></div>
-          <div class="progress-text" id="progressText">0%</div>
-        </div>
-      </div>
-      <div class="text-right">
-        <span class="text-xs text-gray-500" id="progressCounter">0 из 0 проверено</span>
-      </div>
     </div>
 
     <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
       <div class="flex gap-2" id="filterContainer">
         <button class="filter-btn is-active bg-orange-500 px-4 py-1 rounded text-sm font-medium transition cursor-pointer text-white" data-filter="all">Все</button>
-        <button class="filter-btn px-4 py-1 rounded text-sm font-medium transition cursor-pointer bg-orange-500 text-white opacity-70 hover:opacity-100" data-filter="urgent">Срочные</button>
         <button class="filter-btn px-4 py-1 rounded text-sm font-medium transition cursor-pointer bg-orange-500 text-white opacity-70 hover:opacity-100" data-filter="reviewing">На проверке</button>
-        <button class="filter-btn px-4 py-1 rounded text-sm font-medium transition cursor-pointer bg-orange-500 text-white opacity-70 hover:opacity-100" data-filter="archive">Архив</button>
+        <button class="filter-btn px-4 py-1 rounded text-sm font-medium transition cursor-pointer bg-orange-500 text-white opacity-70 hover:opacity-100" data-filter="archive">Оцененные</button>
       </div>
       <div class="flex items-center gap-2 cursor-pointer" id="sortToggle">
         <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>
@@ -50,6 +36,6 @@
   <div id="layout-footer"></div>
 
   <script type="module" src="js/layout-loader.js"></script>
-  <script type="module" src="js/review.js"></script>
+  <script type="module" src="js/my-projects.js"></script>
 </body>
 </html>

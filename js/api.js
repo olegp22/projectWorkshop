@@ -2,7 +2,7 @@ const API_BASE = 'http://localhost:8000';
 
 let authToken = localStorage.getItem('access_token') || '';
 
-function setAuthToken(token) {
+export function setAuthToken(token) {
     authToken = token;
     if (token) {
         localStorage.setItem('access_token', token);
@@ -10,6 +10,60 @@ function setAuthToken(token) {
         localStorage.removeItem('access_token');
     }
 }
+
+// === НОРМАЛИЗАЦИЯ ОТВЕТОВ БЭКЕНДА ===
+// Бэкенд возвращает поля с опечатками и UPPERCASE enum'ами — нормализуем рекурсивно
+
+function deepNormalize(obj) {
+    if (!obj || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(deepNormalize);
+
+    // Опечатка: reviewrs → reviews
+    if ('reviewrs' in obj && !('reviews' in obj)) {
+        obj.reviews = obj.reviewrs;
+        delete obj.reviewrs;
+    }
+
+    // Опечатка: type_massege → type_message
+    if ('type_massege' in obj && !('type_message' in obj)) {
+        obj.type_message = obj.type_massege;
+        delete obj.type_massege;
+    }
+
+    // UPPERCASE group_mode → lowercase
+    if (typeof obj.group_mode === 'string') {
+        obj.group_mode = obj.group_mode.toLowerCase();
+    }
+
+    // UPPERCASE role → lowercase
+    if (typeof obj.role === 'string') {
+        obj.role = obj.role.toLowerCase();
+    }
+
+    // UPPERCASE status → lowercase
+    if (typeof obj.status === 'string') {
+        obj.status = obj.status.toLowerCase();
+    }
+
+    // UPPERCASE type_message → lowercase
+    if (typeof obj.type_message === 'string') {
+        obj.type_message = obj.type_message.toLowerCase();
+    }
+
+    // Нормализуем вложенные объекты
+    Object.keys(obj).forEach(key => {
+        if (obj[key] && typeof obj[key] === 'object') {
+            obj[key] = deepNormalize(obj[key]);
+        }
+    });
+
+    return obj;
+}
+
+function normalizeResponse(data) {
+    return deepNormalize(data);
+}
+// === /НОРМАЛИЗАЦИЯ ===
 
 async function request(endpoint, method = 'GET', body = null, needsAuth = true) {
     const headers = {
@@ -42,7 +96,9 @@ async function request(endpoint, method = 'GET', body = null, needsAuth = true) 
         if (!response.ok) {
             throw new Error(data.detail || `Ошибка ${response.status}`);
         }
-        return data;
+
+        // Нормализуем ответ перед возвратом
+        return normalizeResponse(data);
     } catch (error) {
         console.error(`API request failed: ${endpoint}`, error);
         throw error;
@@ -67,6 +123,7 @@ export const authAPI = {
         localStorage.removeItem('userRole');
         localStorage.removeItem('userName');
         localStorage.removeItem('feedback_user_profile');
+        localStorage.removeItem('my_submissions');
     },
 
     getToken() {
@@ -144,12 +201,28 @@ export const groupsAPI = {
         return await request('/groups/my', 'GET');
     },
 
-    async createGroup(name, groupMode = 'classic', countOfInspectors = 1) {
-        return await request('/groups', 'POST', { 
-            name, 
-            group_mode: groupMode, 
-            count_of_inspectors: countOfInspectors 
-        });
+    async createGroup(name, groupMode = 'classic', countOfInspectors = 1, countOfStudentInspectors = null) {
+        let count_of_inspectors_expert = 0;
+        let count_of_inspectors_student = 0;
+
+        if (groupMode === 'classic') {
+            count_of_inspectors_expert = countOfInspectors;
+            count_of_inspectors_student = 0;
+        } else if (groupMode === 'p2p') {
+            count_of_inspectors_expert = 0;
+            count_of_inspectors_student = countOfInspectors;
+        } else if (groupMode === 'contest') {
+            count_of_inspectors_expert = countOfInspectors;
+            count_of_inspectors_student = countOfStudentInspectors !== null ? countOfStudentInspectors : countOfInspectors;
+        }
+
+        const body = {
+            name,
+            group_mode: groupMode,
+            count_of_inspectors_expert,
+            count_of_inspectors_student
+        };
+        return await request('/groups', 'POST', body);
     },
 
     async joinGroupByToken(token) {
@@ -184,21 +257,14 @@ export const groupsAPI = {
         return await request('/groups/my-reviews', 'GET');
     },
 
-    async getGroupSubmissions(groupId) {
-        try {
-            const allReviews = await request('/groups/my-reviews', 'GET');
-            if (Array.isArray(allReviews)) {
-                return allReviews.filter(r => r.group_id == groupId);
-            }
-            return [];
-        } catch (error) {
-            console.warn('Не удалось загрузить работы группы:', error.message);
-            return [];
-        }
+    async getReviewerSubmissionsByGroup(groupId) {
+        const allReviews = await request('/groups/my-reviews', 'GET');
+        return Array.isArray(allReviews) ? allReviews.filter(r => r.group_id == groupId) : [];
     },
 
     async submitWork(link, groupId) {
-        return await request('/groups/submit', 'POST', { link, group_id: groupId });
+        const result = await request('/groups/submit', 'POST', { link, group_id: groupId });
+        return result;
     },
 
     async getSubmission(submissionId) {
@@ -218,5 +284,16 @@ export const groupsAPI = {
 
     async updateSubmissionComment(submissionId, comment) {
         return await request(`/groups/submissions/${submissionId}/comment`, 'PUT', { comment });
+    },
+
+    async getRating(groupId) {
+        try {
+            return await request(`/rating?group_id=${groupId}`, 'GET');
+        } catch (error) {
+            if (error.message && (error.message.includes('400') || error.message.includes('не может быть рейтинга'))) {
+                return null;
+            }
+            throw error;
+        }
     }
 };

@@ -1,5 +1,4 @@
-// notification.js — модуль уведомлений v3
-console.log('[notification.js] loaded v3');
+console.log('[notification.js] loaded v4-fix (API integration)');
 
 let notifications = [];
 let notificationDropdown = null;
@@ -23,7 +22,15 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
 
 async function loadNotifications() {
   try {
-    notifications = [];
+    const rawNotifications = await apiRequest('/notification/my', 'GET');
+    
+    notifications = (rawNotifications || []).map(n => ({
+      id: n.id,
+      text: n.text,
+      type: n.type_message || n.type_massege || 'new_work',
+      read: n.is_read,
+      created_at: n.created_at
+    }));
   } catch (error) {
     console.error('Ошибка загрузки уведомлений:', error.message);
     notifications = [];
@@ -37,7 +44,6 @@ function renderNotifications() {
   if (!list) return;
 
   if (notifications.length === 0) {
-    // inline-стили + класс из notification.css — работает в любом случае
     list.innerHTML = `
       <div class="notification-empty" style="padding:48px 24px;text-align:center;color:#9ca3af;font-size:16px;min-height:140px;display:flex;align-items:center;justify-content:center;">
         Нет уведомлений
@@ -47,22 +53,30 @@ function renderNotifications() {
 
   list.innerHTML = notifications.map(n => {
     let text = '';
-    if (n.type === 'review') {
-      text = `<strong class="font-semibold text-gray-900">${esc(n.expert_name || n.expertName)}</strong> проверил(а) Ваш проект<br>
-              Вы получили <strong class="font-semibold text-gray-900">${n.score}</strong> баллов из <strong class="font-semibold text-gray-900">${n.max_score || n.maxScore}</strong>`;
-    } else if (n.type === 'added_to_group') {
-      text = `<strong class="font-semibold text-gray-900">${esc(n.organizer_name || n.organizerName)}</strong> добавил(а) Вас в группу<br>
-              <strong class="font-semibold text-gray-900">«${esc(n.group_name || n.groupName)}»</strong>`;
+    
+    if (n.type === 'new_assessment') {
+      text = `<strong class="font-semibold text-gray-900">Новая оценка</strong><br>${esc(n.text)}`;
+    } else if (n.type === 'change_assessment') {
+      text = `<strong class="font-semibold text-gray-900">Изменение оценки</strong><br>${esc(n.text)}`;
+    } else if (n.type === 'new_work') {
+      text = `<strong class="font-semibold text-gray-900">Новая работа</strong><br>${esc(n.text)}`;
+    } else if (n.type === 'new_member') {
+      text = `<strong class="font-semibold text-gray-900">Новый участник</strong><br>${esc(n.text)}`;
+    } else if (n.type === 'removal_from_the_group') {
+      text = `<strong class="font-semibold text-gray-900">Удаление из группы</strong><br>${esc(n.text)}`;
     } else {
-      text = esc(n.text || n.message || 'Новое уведомление');
+      text = esc(n.text || 'Новое уведомление');
     }
 
     const isUnread = !n.read;
+    // created_at не возвращается бэкендом (нет в NotificationResponse)
+    const dateHtml = '';
+    
     return `
       <div class="px-4 py-3 border-b border-gray-100 cursor-pointer transition-colors hover:bg-orange-50 ${isUnread ? 'bg-orange-50 border-l-4 border-l-orange-500' : ''}"
            data-id="${n.id}">
         <div class="text-sm text-gray-700 leading-relaxed">${text}</div>
-        <div class="text-xs text-gray-400 mt-1">${esc(n.created_at || n.date || '')}${n.time ? ', ' + esc(n.time) : ''}</div>
+        ${dateHtml}
       </div>`;
   }).join('');
 
@@ -71,10 +85,35 @@ function renderNotifications() {
   });
 }
 
+function formatDate(dateValue) {
+  if (!dateValue) return '';
+  try {
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch {
+    return String(dateValue);
+  }
+}
+
 async function markAsRead(id) {
   const n = notifications.find(x => x.id === id);
   if (!n || n.read) return;
-  try { n.read = true; } catch (error) { console.error('Ошибка отметки прочитанным:', error.message); }
+  
+  n.read = true;
+  
+  try {
+    await loadNotifications();
+  } catch (error) {
+    console.error('Ошибка синхронизации уведомлений:', error.message);
+  }
+  
   renderNotifications();
   updateBadge();
 }
@@ -82,7 +121,14 @@ async function markAsRead(id) {
 async function markAllAsRead() {
   const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
   if (unreadIds.length === 0) return;
-  try { notifications.forEach(n => n.read = true); } catch (error) { console.error('Ошибка отметки всех прочитанными:', error.message); }
+  
+  try {
+    notifications.forEach(n => n.read = true);
+    await loadNotifications();
+  } catch (error) {
+    console.error('Ошибка отметки всех прочитанными:', error.message);
+  }
+  
   renderNotifications();
   updateBadge();
 }
@@ -124,7 +170,7 @@ function toggleDropdown(e) {
 
 function esc(str) {
   if (!str) return '';
-  return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<<':'&lt;','>':'&gt;'}[m]));
+  return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
 }
 
 function initNotifications() {

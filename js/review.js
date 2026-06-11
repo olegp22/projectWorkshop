@@ -1,17 +1,30 @@
 import { groupsAPI } from './api.js';
-import { loadCurrentUser, showToast, escapeHtml } from './review-core.js';
+import { loadCurrentUser, showToast, escapeHtml, loadGroupCriteria } from './review-core.js';
 
 let currentGroupId = null;
-let currentGroupMode = 'classic'; // classic | p2p | contest
+let currentGroupMode = 'classic';
+let currentUserRole = null;
+let currentUserId = null;
+let groupCriteria = [];
 let projects = [];
 let currentFilter = 'all';
 let sortAsc = false;
 
-// ── Загрузка информации о группе ──
+function getUserIdFromToken() {
+  const token = localStorage.getItem('access_token');
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.user_id || null;
+  } catch {
+    return null;
+  }
+}
+
 async function loadGroupInfo() {
   const params = new URLSearchParams(window.location.search);
   currentGroupId = params.get('group');
-  currentGroupMode = params.get('mode') || 'classic';
+  currentUserId = getUserIdFromToken();
 
   if (!currentGroupId) {
     showToast('Группа не выбрана', true);
@@ -22,59 +35,46 @@ async function loadGroupInfo() {
     const groups = await groupsAPI.getMyGroups();
     const group = groups.find(g => g.id == currentGroupId);
     if (group) {
+      // === ИСПРАВЛЕНИЕ: group_mode берём из API, URL — fallback ===
+      currentGroupMode = (group.group_mode || 'classic').toLowerCase();
+      const urlMode = params.get('mode');
+      if (urlMode && !group.group_mode) {
+        currentGroupMode = urlMode;
+      }
+
+      currentUserRole = (group.role || 'member').toLowerCase();
       const nameEl = document.getElementById('groupName');
       if (nameEl) {
         if (currentGroupMode === 'contest') {
           nameEl.innerHTML = `${escapeHtml(group.name)} <span class="text-sm text-gray-500">(конкурс)</span>`;
+        } else if (currentGroupMode === 'p2p') {
+          nameEl.innerHTML = `${escapeHtml(group.name)} <span class="text-sm text-gray-500">(peer-to-peer)</span>`;
         } else {
           nameEl.innerText = escapeHtml(group.name);
         }
       }
+    }
+
+    try {
+      groupCriteria = await groupsAPI.getCriteria(currentGroupId);
+    } catch (e) {
+      console.warn('Не удалось загрузить критерии:', e.message);
+      groupCriteria = [];
     }
   } catch (error) {
     console.error('Ошибка загрузки группы:', error);
   }
 }
 
-// ── Мок-проекты ──
-function generateMockProjects() {
-  if (currentGroupMode === 'contest') {
-    return [
-      { id: 1, name: 'Проект «Альфа»', author: 'Иванов И.И.', status: 'pending', date: '2026-05-10', voted: false, score: null },
-      { id: 2, name: 'Проект «Бета»', author: 'Петров П.П.', status: 'voted', date: '2026-05-09', voted: true, score: 8 },
-      { id: 3, name: 'Проект «Гамма»', author: 'Сидоров С.С.', status: 'pending', date: '2026-05-08', voted: false, score: null },
-      { id: 4, name: 'Проект «Дельта»', author: 'Козлова А.А.', status: 'voted', date: '2026-05-11', voted: true, score: 9 },
-      { id: 5, name: 'Проект «Эпсилон»', author: 'Новиков Д.Д.', status: 'pending', date: '2026-05-07', voted: false, score: null },
-      { id: 6, name: 'Проект «Зета»', author: 'Морозова Е.Е.', status: 'voted', date: '2026-05-06', voted: true, score: 7 },
-      { id: 7, name: 'Проект «Эта»', author: 'Волков А.А.', status: 'pending', date: '2026-05-12', voted: false, score: null },
-      { id: 8, name: 'Проект «Тета»', author: 'Лебедева О.О.', status: 'voted', date: '2026-05-13', voted: true, score: 10 },
-    ];
-  }
-  return [
-    { id: 1, name: 'Проект «Альфа»', author: 'Иванов И.И.', status: 'reviewing', date: '2026-05-10', deadline: '2026-05-15', totalCriteria: 5, scoredCriteria: 2 },
-    { id: 2, name: 'Проект «Бета»', author: 'Петров П.П.', status: 'urgent', date: '2026-05-09', deadline: '2026-05-12', totalCriteria: 4, scoredCriteria: 4 },
-    { id: 3, name: 'Проект «Гамма»', author: 'Сидоров С.С.', status: 'archive', date: '2026-05-08', deadline: '2026-05-10', totalCriteria: 6, scoredCriteria: 6 },
-    { id: 4, name: 'Проект «Дельта»', author: 'Козлова А.А.', status: 'reviewing', date: '2026-05-11', deadline: '2026-05-18', totalCriteria: 5, scoredCriteria: 0 },
-    { id: 5, name: 'Проект «Эпсилон»', author: 'Новиков Д.Д.', status: 'urgent', date: '2026-05-07', deadline: '2026-05-11', totalCriteria: 3, scoredCriteria: 3 },
-    { id: 6, name: 'Проект «Зета»', author: 'Морозова Е.Е.', status: 'archive', date: '2026-05-06', deadline: '2026-05-09', totalCriteria: 5, scoredCriteria: 5 },
-    { id: 7, name: 'Проект «Эта»', author: 'Волков А.А.', status: 'reviewing', date: '2026-05-12', deadline: '2026-05-20', totalCriteria: 4, scoredCriteria: 1 },
-    { id: 8, name: 'Проект «Тета»', author: 'Лебедева О.О.', status: 'reviewing', date: '2026-05-13', deadline: '2026-05-19', totalCriteria: 5, scoredCriteria: 3 },
-  ];
-}
-
-// ── Рендер списка проектов ──
 function renderProjects() {
   const container = document.getElementById('projectsList');
   if (!container) return;
 
+  container.className = 'projects-grid';
+
   const filtered = currentFilter === 'all'
     ? projects
-    : projects.filter(p => {
-        if (currentGroupMode === 'contest') {
-          return currentFilter === 'pending' ? !p.voted : p.voted;
-        }
-        return p.status === currentFilter;
-      });
+    : projects.filter(p => p.status === currentFilter);
 
   if (filtered.length === 0) {
     container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #9ca3af; padding: 32px 0;">Нет проектов для отображения</div>';
@@ -82,50 +82,30 @@ function renderProjects() {
     return;
   }
 
-  if (currentGroupMode === 'contest') {
-    container.innerHTML = filtered.map(p => `
-      <div class="project-card" data-status="${p.voted ? 'voted' : 'pending'}" data-id="${p.id}">
-        <div class="card-content">
-          <p class="card-row"><span class="card-label">Проект:</span> ${escapeHtml(p.name)}</p>
-          <p class="card-row"><span class="card-label">Студент:</span> ${escapeHtml(p.author)}</p>
-          ${p.voted 
-            ? `<p class="card-row"><span class="card-label">Ваш балл:</span> <span class="text-orange-600 font-bold text-lg">${p.score}/10</span></p>`
-            : '<p class="card-row text-orange-600 font-medium">⚡ Ожидает вашего голоса</p>'
-          }
-        </div>
-        <button class="review-btn">${p.voted ? 'Изменить голос' : 'Голосовать'}</button>
+  container.innerHTML = filtered.map(p => `
+    <div class="project-card" data-status="${p.status}" data-id="${p.id}">
+      <div class="card-content">
+        <p class="card-row"><span class="card-label">Дедлайн:</span> ${escapeHtml(p.deadline)}</p>
+        <p class="card-row"><span class="card-label">Проект:</span> ${escapeHtml(p.name)}</p>
+        <p class="card-row"><span class="card-label">Студент:</span> ${escapeHtml(p.author)}</p>
+        <p class="card-row"><span class="card-label">Прогресс:</span> ${p.scoredCriteria} из ${p.totalCriteria} критериев оценено</p>
       </div>
-    `).join('');
-  } else {
-    container.innerHTML = filtered.map(p => `
-      <div class="project-card" data-status="${p.status}" data-id="${p.id}">
-        <div class="card-content">
-          <p class="card-row"><span class="card-label">Дедлайн:</span> ${escapeHtml(p.deadline)}</p>
-          <p class="card-row"><span class="card-label">Проект:</span> ${escapeHtml(p.name)}</p>
-          <p class="card-row"><span class="card-label">Студент:</span> ${escapeHtml(p.author)}</p>
-          <p class="card-row"><span class="card-label">Прогресс:</span> ${p.scoredCriteria} из ${p.totalCriteria} критериев оценено</p>
-        </div>
-        <button class="review-btn">Перейти к оценке</button>
-      </div>
-    `).join('');
-  }
+      <button class="review-btn">Перейти к оценке</button>
+    </div>
+  `).join('');
 
   container.querySelectorAll('[data-id]').forEach(card => {
     card.addEventListener('click', () => {
       const projectId = card.dataset.id;
-      const modeParam = currentGroupMode === 'contest' ? '&mode=contest' : '';
+      const modeParam = currentGroupMode !== 'classic' ? `&mode=${currentGroupMode}` : '';
       window.location.href = `review-detail.html?group=${currentGroupId}&project=${projectId}${modeParam}`;
     });
   });
 
-  const checked = filtered.filter(p => {
-    if (currentGroupMode === 'contest') return p.voted;
-    return p.scoredCriteria === p.totalCriteria;
-  }).length;
+  const checked = filtered.filter(p => p.status === 'archive').length;
   updateProgress(checked, filtered.length);
 }
 
-// ── Прогресс-бар ──
 function updateProgress(checked, total) {
   const bar = document.getElementById('progressBar');
   const text = document.getElementById('progressText');
@@ -135,27 +115,20 @@ function updateProgress(checked, total) {
   const percent = total > 0 ? Math.round((checked / total) * 100) : 0;
   bar.style.width = `${percent}%`;
   text.innerText = `${percent}%`;
-  
-  if (currentGroupMode === 'contest') {
-    counter.innerText = `${checked} из ${total} проголосовано`;
-  } else {
-    counter.innerText = `${checked} из ${total} проверено`;
-  }
+  counter.innerText = `${checked} из ${total} проверено`;
 }
 
-// ── Фильтры ──
 function setupFilters() {
   const container = document.getElementById('filterContainer');
   if (!container) return;
 
-  // Contest: заменяем фильтры
-  if (currentGroupMode === 'contest') {
-    container.innerHTML = `
-      <button class="filter-btn is-active bg-orange-500 px-4 py-1 rounded text-sm font-medium transition cursor-pointer text-white" data-filter="all">Все</button>
-      <button class="filter-btn px-4 py-1 rounded text-sm font-medium transition cursor-pointer bg-orange-500 text-white opacity-70 hover:opacity-100" data-filter="pending">На голосовании</button>
-      <button class="filter-btn px-4 py-1 rounded text-sm font-medium transition cursor-pointer bg-orange-500 text-white opacity-70 hover:opacity-100" data-filter="voted">Проголосовано</button>
-    `;
-  }
+  // Все режимы используют одинаковые фильтры по статусу проверки
+  container.innerHTML = `
+    <button class="filter-btn is-active bg-orange-500 px-4 py-1 rounded text-sm font-medium transition cursor-pointer text-white" data-filter="all">Все</button>
+    <button class="filter-btn px-4 py-1 rounded text-sm font-medium transition cursor-pointer bg-orange-500 text-white opacity-70 hover:opacity-100" data-filter="urgent">Срочные</button>
+    <button class="filter-btn px-4 py-1 rounded text-sm font-medium transition cursor-pointer bg-orange-500 text-white opacity-70 hover:opacity-100" data-filter="reviewing">На проверке</button>
+    <button class="filter-btn px-4 py-1 rounded text-sm font-medium transition cursor-pointer bg-orange-500 text-white opacity-70 hover:opacity-100" data-filter="archive">Архив</button>
+  `;
 
   const buttons = container.querySelectorAll('.filter-btn');
   buttons.forEach(btn => {
@@ -172,7 +145,6 @@ function setupFilters() {
   });
 }
 
-// ── Сортировка ──
 function setupSort() {
   const sortToggle = document.getElementById('sortToggle');
   if (!sortToggle) return;
@@ -189,28 +161,80 @@ function setupSort() {
   });
 }
 
-// ── Инициализация ──
+// === ИСПРАВЛЕНИЕ ПУНКТ 1: ПРОГРЕСС ПРОВЕРКИ ===
+// getMyReviews возвращает [{submission_id, link, student_id, group_id, status}]
+// status === 'graded' означает что работа полностью проверена ВСЕМИ проверяющими
+// Для определения "проверил ли Я" — нужно смотреть status конкретного reviewer'а
+// Но getMyReviews не даёт reviewer-specific status
+// 
+// Решение: для каждой работы загружаем полные детали через getSubmission
+// и проверяем, есть ли среди reviews запись с reviewer_id === currentUserId и status === 'graded'
+
+async function loadProjectsWithProgress() {
+  try {
+    const reviews = await groupsAPI.getMyReviews();
+    const totalCriteriaCount = groupCriteria.length || 0;
+
+    // Фильтруем только работы текущей группы
+    const groupReviews = reviews.filter(r => r.group_id == currentGroupId);
+
+    // Загружаем детали каждой работы для определения прогресса
+    const projectsWithDetails = await Promise.all(
+      groupReviews.map(async (r) => {
+        let myReviewStatus = 'pending';
+        let scoredCount = 0;
+
+        try {
+          const submission = await groupsAPI.getSubmission(r.submission_id);
+          // Используем reviews (нормализованный api.js)
+          const myReview = submission.reviews?.find(
+            rev => rev.reviewer_id === currentUserId
+          );
+          if (myReview) {
+            myReviewStatus = myReview.status || 'pending';
+            // Считаем уникальные criterion_id по которым есть оценка
+            if (myReview.grades && Array.isArray(myReview.grades)) {
+              const uniqueCriteria = new Set(
+                myReview.grades.map(g => g.criterion_id).filter(Boolean)
+              );
+              scoredCount = uniqueCriteria.size;
+            }
+          }
+        } catch (e) {
+          console.warn(`Не удалось загрузить детали работы ${r.submission_id}:`, e.message);
+          // Fallback: если submission полностью проверена, считаем что и я проверил
+          if (r.status === 'graded') {
+            myReviewStatus = 'graded';
+            scoredCount = totalCriteriaCount;
+          }
+        }
+
+        const isFullyReviewed = myReviewStatus === 'graded' || scoredCount >= totalCriteriaCount;
+
+        return {
+          id: r.submission_id,
+          name: `Проект #${r.submission_id}`,
+          author: `Студент #${r.student_id}`,
+          status: isFullyReviewed ? 'archive' : 'reviewing',
+          date: new Date().toISOString(),
+          deadline: '—',
+          totalCriteria: totalCriteriaCount,
+          scoredCriteria: scoredCount
+        };
+      })
+    );
+
+    projects = projectsWithDetails;
+  } catch (error) {
+    console.warn('Не удалось загрузить работы:', error.message);
+    projects = [];
+  }
+}
+
 async function init() {
   await loadCurrentUser();
   await loadGroupInfo();
-
-  try {
-    const reviews = await groupsAPI.getMyReviews();
-    projects = reviews.map(r => ({
-      id: r.submission_id,
-      name: `Проект #${r.submission_id}`,
-      author: `Студент #${r.student_id}`,
-      status: r.status === 'graded' ? 'archive' : 'reviewing',
-      date: new Date().toISOString(),
-      deadline: '—',
-      totalCriteria: 5,
-      scoredCriteria: r.status === 'graded' ? 5 : 0
-    }));
-  } catch (error) {
-    console.warn('Не удалось загрузить работы, используем моки:', error.message);
-    projects = generateMockProjects();
-  }
-
+  await loadProjectsWithProgress();
   setupFilters();
   setupSort();
   renderProjects();

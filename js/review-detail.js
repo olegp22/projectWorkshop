@@ -5,7 +5,7 @@ import {
   loadProjectSubmission,
   renderCriteriaList,
   updateTotalScore,
-  initReviewPage,
+  handleFinishReview,
   showToast,
   escapeHtml,
   criteria
@@ -13,7 +13,10 @@ import {
 
 let currentGroupId = null;
 let currentProjectId = null;
-let isContest = false;
+let currentGroupMode = 'classic';
+let currentUserRole = null;
+let currentUserId = null;
+let contestScore = null;
 
 function getUserIdFromToken() {
   const token = localStorage.getItem('access_token');
@@ -26,11 +29,106 @@ function getUserIdFromToken() {
   }
 }
 
+function initContestScale() {
+  const block = document.getElementById('contestScaleBlock');
+  const marks = document.getElementById('contestScaleMarks');
+  if (!block || !marks) return;
+
+  block.classList.remove('hidden');
+
+  const steps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  marks.innerHTML = steps.map(v => {
+    const percent = ((v - 1) / 9) * 100;
+    const isActive = contestScore === v;
+    return `
+      <div class="contest-scale-btn ${isActive ? 'active' : ''}" 
+           data-score="${v}"
+           style="left: ${percent}%;">
+        <span>${v}</span>
+      </div>
+    `;
+  }).join('');
+
+  const marker = document.getElementById('contestMarker');
+  const markerValue = document.getElementById('contestMarkerValue');
+  const selectedDisplay = document.getElementById('contestSelectedScore');
+
+  if (contestScore !== null) {
+    const percent = ((contestScore - 1) / 9) * 100;
+    marker.style.left = `${percent}%`;
+    marker.classList.remove('hidden');
+    markerValue.innerText = contestScore;
+    selectedDisplay.innerText = contestScore;
+  } else {
+    marker.classList.add('hidden');
+    selectedDisplay.innerText = '—';
+  }
+
+  marks.querySelectorAll('.contest-scale-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      contestScore = parseInt(btn.dataset.score);
+      initContestScale();
+      updateContestTotal();
+    });
+  });
+}
+
+function updateContestTotal() {
+  const totalEl = document.getElementById('totalScore');
+  const maxEl = document.getElementById('maxTotalScore');
+  if (totalEl) totalEl.innerText = contestScore !== null ? contestScore : '**';
+  if (maxEl) maxEl.innerText = '10';
+}
+
+// === ИСПРАВЛЕНИЕ ПУНКТ 4: ПОДГОТОВКА ОЦЕНОК ДЛЯ ОТПРАВКИ ===
+// Бэкенд submit_review требует grades: [{criterion_id, score}]
+// Contest-режим: если критериев нет — показываем ошибку (организатор должен настроить)
+// Если критерии есть — маппим оценку на первый критерий
+
+function prepareGradesForSubmit() {
+  if (currentGroupMode === 'contest') {
+    if (contestScore === null) {
+      showToast('Выберите оценку на шкале', true);
+      return null;
+    }
+
+    // Contest: маппим на первый критерий, если есть
+    if (criteria.length > 0) {
+      return [{
+        criterion_id: criteria[0].id,
+        score: contestScore
+      }];
+    }
+
+    // Нет критериев — ошибка
+    showToast('Конкурсный режим требует настроенных критериев. Обратитесь к организатору.', true);
+    return null;
+  }
+
+  // Classic / P2P: обычные критерии
+  if (criteria.length === 0) {
+    showToast('Критерии оценки не настроены организатором', true);
+    return null;
+  }
+
+  const grades = criteria.map(c => ({
+    criterion_id: c.id,
+    score: c.score
+  })).filter(g => g.score !== null);
+
+  if (grades.length === 0) {
+    showToast('Оцените хотя бы один критерий', true);
+    return null;
+  }
+
+  return grades;
+}
+
 async function loadProject() {
   const params = new URLSearchParams(window.location.search);
   currentGroupId = params.get('group');
   currentProjectId = params.get('project');
-  isContest = params.get('mode') === 'contest';
+  currentUserId = getUserIdFromToken();
 
   if (!currentGroupId || !currentProjectId) {
     showToast('Проект или группа не выбраны', true);
@@ -38,53 +136,26 @@ async function loadProject() {
   }
 
   try {
+    // === ИСПРАВЛЕНИЕ: group_mode берём из API, URL — fallback ===
     const groups = await groupsAPI.getMyGroups();
     const group = groups.find(g => g.id == currentGroupId);
     if (group) {
-      const nameEl = document.getElementById('groupName');
-      if (nameEl) {
-        if (isContest) {
-          nameEl.innerHTML = `Проект #${currentProjectId} <span class="text-sm text-gray-500">(конкурс)</span>`;
-        }
+      currentGroupMode = (group.group_mode || 'classic').toLowerCase();
+      const urlMode = params.get('mode');
+      if (urlMode && !group.group_mode) {
+        currentGroupMode = urlMode;
       }
+      currentUserRole = (group.role || 'member').toLowerCase();
+    } else {
+      currentGroupMode = params.get('mode') || 'classic';
     }
 
-    if (isContest) {
-      // Contest: скрываем критерии, показываем голосование
-      document.getElementById('criteriaList').classList.add('hidden');
-      document.getElementById('contestVoting').classList.remove('hidden');
-      document.getElementById('totalScore').parentElement.classList.add('hidden'); // скрываем "Итоговый балл"
-      
-      // Загружаем submission для проверки статуса
-      const submission = await loadProjectSubmission(currentProjectId);
-      if (submission) {
-        document.getElementById('projectName').innerText = `Проект #${submission.id}`;
-        const linkEl = document.getElementById('projectDownloadLink');
-        linkEl.href = submission.link;
-        linkEl.innerText = submission.link;
-        
-        const currentUserId = getUserIdFromToken();
-        const myReview = submission.reviews?.find(r => r.reviewer_id === currentUserId);
-        if (myReview?.comment) {
-          document.getElementById('feedbackText').value = myReview.comment;
-        }
-        if (myReview?.grades?.length > 0) {
-          const score = myReview.grades[0].score;
-          highlightContestScore(score);
-        }
-      } else {
-        document.getElementById('projectName').innerText = 'Проект «Конкурс»';
-        const linkEl = document.getElementById('projectDownloadLink');
-        linkEl.href = 'https://example.com/project-contest';
-        linkEl.innerText = 'https://example.com/project-contest';
-      }
-
-      initContestVoting();
-      return;
+    const modeBadge = document.getElementById('modeBadge');
+    if (modeBadge) {
+      if (currentGroupMode === 'contest') modeBadge.innerText = '(конкурс)';
+      else if (currentGroupMode === 'p2p') modeBadge.innerText = '(peer-to-peer)';
+      else modeBadge.innerText = '';
     }
-
-    // Classic/P2P: стандартная логика
-    await loadGroupCriteria(currentGroupId);
 
     const submission = await loadProjectSubmission(currentProjectId);
     if (submission) {
@@ -93,103 +164,181 @@ async function loadProject() {
       linkEl.href = submission.link;
       linkEl.innerText = submission.link;
 
-      const currentUserId = getUserIdFromToken();
+      // Загружаем критерии для ВСЕХ режимов (нужны и для contest)
+      await loadGroupCriteria(currentGroupId);
+
+      // === ИСПРАВЛЕНИЕ ПУНКТ 4: Contest без критериев — блокируем отправку ===
+      const feedbackBlock = document.getElementById('feedbackBlock');
+      const criteriaListBlock = document.getElementById('criteriaList');
+      const contestScaleBlock = document.getElementById('contestScaleBlock');
+      const finishBtn = document.getElementById('finishReviewBtn');
+
+      if (currentGroupMode === 'contest') {
+        // Конкурс: скрываем обратную связь, показываем шкалу 1-10
+        if (feedbackBlock) feedbackBlock.classList.add('hidden');
+        if (criteriaListBlock) criteriaListBlock.classList.add('hidden');
+
+        if (criteria.length === 0) {
+          // Нет критериев — показываем сообщение и блокируем
+          if (contestScaleBlock) {
+            contestScaleBlock.innerHTML = `
+              <div class="text-center py-8">
+                <div class="text-5xl mb-4">⚠️</div>
+                <p class="text-lg font-semibold text-gray-700 mb-2">Критерии не настроены</p>
+                <p class="text-sm text-gray-500">Организатор должен добавить хотя бы один критерий оценки для конкурсного режима.</p>
+              </div>
+            `;
+            contestScaleBlock.classList.remove('hidden');
+          }
+          if (finishBtn) {
+            finishBtn.disabled = true;
+            finishBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            finishBtn.innerText = 'Оценка недоступна';
+          }
+          // Скрываем итоговый балл
+          const totalScoreEl = document.getElementById('totalScore');
+          const maxTotalEl = document.getElementById('maxTotalScore');
+          if (totalScoreEl) totalScoreEl.innerText = '—';
+          if (maxTotalEl) maxTotalEl.innerText = '—';
+          return;
+        }
+
+        if (contestScaleBlock) {
+          contestScaleBlock.classList.remove('hidden');
+          // Очищаем возможное сообщение об ошибке
+          contestScaleBlock.innerHTML = `
+            <label class="block text-sm text-gray-700 mb-4">Ваша оценка (1–10):</label>
+            <div class="contest-scale" id="contestScale">
+              <div class="contest-scale-line"></div>
+              <div class="contest-scale-marks" id="contestScaleMarks"></div>
+              <div class="contest-scale-marker hidden" id="contestMarker">
+                <span id="contestMarkerValue">5</span>
+              </div>
+            </div>
+            <div class="contest-score-display mt-4 text-center">
+              <span class="text-sm text-gray-600">Выбрано:</span>
+              <span id="contestSelectedScore" class="text-2xl font-bold text-orange-500 ml-2">—</span>
+              <span class="text-sm text-gray-500">/ 10</span>
+            </div>
+          `;
+          initContestScale();
+        }
+        updateContestTotal();
+      } else {
+        // Classic / P2P: обратная связь + критерии
+        if (feedbackBlock) feedbackBlock.classList.remove('hidden');
+        if (criteriaListBlock) criteriaListBlock.classList.remove('hidden');
+        if (contestScaleBlock) contestScaleBlock.classList.add('hidden');
+
+        // Проверяем, есть ли критерии
+        if (criteria.length === 0) {
+          if (criteriaListBlock) {
+            criteriaListBlock.innerHTML = `
+              <div class="text-center py-8">
+                <div class="text-5xl mb-4">⚠️</div>
+                <p class="text-lg font-semibold text-gray-700 mb-2">Критерии не настроены</p>
+                <p class="text-sm text-gray-500">Организатор должен добавить критерии оценки.</p>
+              </div>
+            `;
+          }
+          if (finishBtn) {
+            finishBtn.disabled = true;
+            finishBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            finishBtn.innerText = 'Оценка недоступна';
+          }
+          const totalScoreEl = document.getElementById('totalScore');
+          const maxTotalEl = document.getElementById('maxTotalScore');
+          if (totalScoreEl) totalScoreEl.innerText = '—';
+          if (maxTotalEl) maxTotalEl.innerText = '—';
+          return;
+        }
+
+        renderCriteriaList('criteriaList');
+        updateTotalScore('totalScore', 'maxTotalScore');
+      }
+
+      // Загружаем предыдущую оценку пользователя, если есть
       const myReview = submission.reviews?.find(r => r.reviewer_id === currentUserId);
-      
       if (myReview?.comment) {
         document.getElementById('feedbackText').value = myReview.comment;
       }
-
       if (myReview?.grades?.length > 0) {
-        myReview.grades.forEach(g => {
-          const c = criteria.find(x => x.id === g.criterion_id || x.name === g.criterion_name);
-          if (c) c.score = g.score;
-        });
+        if (currentGroupMode === 'contest') {
+          // Contest: берём score из первой оценки
+          const firstGrade = myReview.grades[0];
+          if (firstGrade && firstGrade.score !== undefined) {
+            contestScore = firstGrade.score;
+            initContestScale();
+            updateContestTotal();
+          }
+        } else {
+          // Classic/P2P: маппим по criterion_id
+          myReview.grades.forEach(g => {
+            const c = criteria.find(x => x.id === g.criterion_id || x.name === g.criterion_name);
+            if (c) c.score = g.score;
+          });
+          renderCriteriaList('criteriaList');
+          updateTotalScore('totalScore', 'maxTotalScore');
+        }
       }
 
       if (submission.status === 'graded') {
         showToast('Эта работа уже оценена. Вы можете изменить свою оценку.');
       }
-    } else {
-      document.getElementById('projectName').innerText = 'Проект «Альфа»';
-      const linkEl = document.getElementById('projectDownloadLink');
-      linkEl.href = 'https://example.com/project-alpha';
-      linkEl.innerText = 'https://example.com/project-alpha';
     }
 
-    renderCriteriaList('criteriaList');
-    updateTotalScore('totalScore', 'maxTotalScore');
+    // === ИСПРАВЛЕНИЕ: finishBtn обработчик ===
+    const finishBtn = document.getElementById('finishReviewBtn');
+    if (finishBtn) {
+      const isReadonly = params.get('readonly') === 'true';
+      if (isReadonly) {
+        finishBtn.style.display = 'none';
+      } else {
+        finishBtn.addEventListener('click', async () => {
+          // Проверяем, не заблокирована ли кнопка
+          if (finishBtn.disabled) return;
 
-    initReviewPage({
-      groupId: currentGroupId,
-      projectId: currentProjectId,
-      containerId: 'criteriaList',
-      finishBtnId: 'finishReviewBtn',
-      feedbackId: 'feedbackText',
-      onFinish: () => {
-        setTimeout(() => {
-          window.location.href = `review.html?group=${currentGroupId}`;
-        }, 1000);
+          finishBtn.disabled = true;
+          finishBtn.innerHTML = '<span class="animate-spin inline-block mr-1">⟳</span> Сохранение...';
+
+          // Формируем оценки в зависимости от режима
+          const feedback = currentGroupMode === 'contest' 
+            ? null 
+            : document.getElementById('feedbackText')?.value.trim() || null;
+
+          const grades = prepareGradesForSubmit();
+          if (!grades) {
+            finishBtn.disabled = false;
+            finishBtn.innerText = 'Завершить проверку';
+            return;
+          }
+
+          try {
+            await groupsAPI.reviewWork(currentProjectId, feedback, grades);
+            showToast('Оценка успешно сохранена!');
+            setTimeout(() => {
+              const modeParam = currentGroupMode !== 'classic' ? `&mode=${currentGroupMode}` : '';
+              window.location.href = `review.html?group=${currentGroupId}${modeParam}`;
+            }, 1000);
+          } catch (error) {
+            showToast('Ошибка сохранения: ' + error.message, true);
+            finishBtn.disabled = false;
+            finishBtn.innerText = 'Завершить проверку';
+          }
+        });
       }
-    });
+    }
+
+    const voiceBtn = document.getElementById('voiceFeedbackBtn');
+    if (voiceBtn) {
+      voiceBtn.addEventListener('click', () => {
+        showToast('Голосовые сообщения в разработке', true);
+      });
+    }
 
   } catch (error) {
     showToast('Ошибка загрузки проекта: ' + error.message, true);
   }
-}
-
-function highlightContestScore(score) {
-  document.querySelectorAll('.contest-score').forEach(btn => {
-    const btnScore = parseInt(btn.dataset.score);
-    if (btnScore === score) {
-      btn.classList.add('bg-purple-500', 'text-white');
-      btn.classList.remove('text-purple-700');
-    } else {
-      btn.classList.remove('bg-purple-500', 'text-white');
-      btn.classList.add('text-purple-700');
-    }
-  });
-}
-
-function initContestVoting() {
-  let selectedScore = null;
-
-  document.querySelectorAll('.contest-score').forEach(btn => {
-    btn.addEventListener('click', () => {
-      selectedScore = parseInt(btn.dataset.score);
-      highlightContestScore(selectedScore);
-    });
-  });
-
-  const finishBtn = document.getElementById('finishReviewBtn');
-  finishBtn.innerText = 'Сохранить голос';
-  
-  finishBtn.addEventListener('click', async () => {
-    if (!selectedScore) {
-      showToast('Выберите балл от 1 до 10', true);
-      return;
-    }
-
-    const feedback = document.getElementById('feedbackText')?.value.trim() || '';
-    
-    finishBtn.disabled = true;
-    finishBtn.innerHTML = '<span class="animate-spin inline-block mr-1">⟳</span> Сохранение...';
-
-    try {
-      await groupsAPI.reviewWork(currentProjectId, feedback, [{
-        criterion_id: 0,
-        score: selectedScore
-      }]);
-      showToast('Голос сохранён!');
-      setTimeout(() => {
-        window.location.href = `review.html?group=${currentGroupId}&mode=contest`;
-      }, 1000);
-    } catch (error) {
-      showToast('Ошибка: ' + error.message, true);
-      finishBtn.disabled = false;
-      finishBtn.innerText = 'Сохранить голос';
-    }
-  });
 }
 
 async function init() {

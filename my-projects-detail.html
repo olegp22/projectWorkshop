@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Результаты проекта — ФидбэК</title>
+  <link href="css/tailwind.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/notification.css">
+  <link rel="stylesheet" href="css/review-detail.css">
+  <style>
+    /* Readonly scale - exact same look as review-detail, but non-interactive */
+    .criteria-scale .scale-btn {
+      pointer-events: none !important;
+      cursor: default !important;
+    }
+    .criteria-scale .scale-track {
+      cursor: default !important;
+    }
+
+    /* Reviews table */
+    .reviews-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    .reviews-table th {
+      background: #7c3aed;
+      color: white;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .reviews-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 14px;
+      color: #374151;
+    }
+    .reviews-table tr:hover td {
+      background: #f9fafb;
+    }
+    .reviews-table .reviewer-name {
+      font-weight: 600;
+      color: #7c3aed;
+    }
+    .reviews-table .review-score {
+      font-weight: 700;
+      color: #f97316;
+    }
+    .reviews-table .review-comment {
+      max-width: 400px;
+      line-height: 1.5;
+    }
+    .reviews-empty {
+      text-align: center;
+      padding: 48px 24px;
+      color: #9ca3af;
+      font-size: 16px;
+    }
+
+
+  </style>
+<base target="_blank">
+</head>
+<body class="bg-white font-sans antialiased flex flex-col min-h-screen">
+
+  <div id="layout-header"></div>
+
+  <main class="flex-1 max-w-4xl w-full mx-auto px-6 py-8">
+    <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+      <h1 class="text-2xl font-semibold text-gray-800">
+        Результаты проекта <span id="projectName" class="text-orange-500">*Название проекта*</span>
+        <span id="modeBadge" class="text-sm text-gray-500 font-normal"></span>
+      </h1>
+      <a href="my-projects.html" class="border-2 border-orange-500 text-orange-500 hover:bg-orange-50 px-4 py-1.5 text-sm font-medium rounded transition">← Мои проекты</a>
+    </div>
+
+    <div class="mb-6">
+      <a href="#" id="projectDownloadLink" class="text-purple-600 text-sm hover:underline break-all" target="_blank">*ссылка на проект*</a>
+    </div>
+
+    <!-- Средний итоговый балл -->
+    <div class="text-center mb-6">
+      <p class="text-lg font-medium text-gray-800 mb-4">
+        Итоговый балл: <span id="avgTotalScore" class="font-bold">**</span>/<span id="avgMaxTotalScore" class="font-bold">**</span>
+      </p>
+    </div>
+
+    <!-- Критерии со средними баллами -->
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">Оценки по критериям</h2>
+    <div id="criteriaList" class="space-y-10 mb-8"></div>
+
+    <!-- Таблица отзывов -->
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">Обратная связь от проверяющих</h2>
+    <div id="reviewsTableBlock">
+      <table class="reviews-table">
+        <thead>
+          <tr>
+            <th>Проверяющий</th>
+            <th>Балл</th>
+            <th>Комментарий</th>
+          </tr>
+        </thead>
+        <tbody id="reviewsTableBody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <div id="layout-footer"></div>
+
+  <script type="module" src="js/layout-loader.js"></script>
+  <script type="module" src="js/my-projects-detail.js"></script>
+</body>
+</html>

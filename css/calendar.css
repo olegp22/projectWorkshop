@@ -38,3 +38,49 @@
   scrollbar-width: thin;
   scrollbar-color: #f97316 #fff1e6;
 }
+
+/* Стили для нативных input date/time */
+input[type="date"],
+input[type="time"] {
+  font-family: inherit;
+  color: #1f2937;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Firefox: скрываем стрелки, оставляем календарь */
+input[type="date"]::-moz-calendar-picker-indicator,
+input[type="time"]::-moz-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+/* Убираем spin-кнопки в Chrome для time */
+input[type="time"]::-webkit-inner-spin-button {
+  display: none;
+}
+
+/* Фокус */
+input[type="date"]:focus,
+input[type="time"]:focus {
+  border-color: #f97316;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+/* Placeholder-стиль для незаполненных полей */
+input[type="date"]:invalid,
+input[type="time"]:invalid {
+  color: #9ca3af;
+}
