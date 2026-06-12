@@ -7,6 +7,7 @@
   <link href="css/tailwind.css" rel="stylesheet">
   <link rel="stylesheet" href="css/group.css">
   <link rel="stylesheet" href="css/notification.css">
+<base target="_blank">
 </head>
 <body class="bg-white font-sans antialiased flex flex-col min-h-screen">
 
@@ -34,7 +35,14 @@
             <p class="text-xs text-red-500 mt-1">после нажатия выбранный режим становится оранжевым</p>
           </div>
 
-          <div id="p2pInspectorsBlock" class="hidden mb-5">
+                    <!-- НАСТРОЙКА КОЛИЧЕСТВА ЭКСПЕРТОВ (classic mode) -->
+          <div id="expertInspectorsBlock" class="mb-5">
+            <label class="text-sm font-medium text-gray-700 block mb-2">Количество экспертов на один проект</label>
+            <input type="number" id="expertInspectorsCount" class="w-32 px-4 py-2 border border-gray-300 text-sm focus:border-orange-400 focus:outline-none rounded" value="1" min="1" max="10">
+            <p class="text-xs text-gray-500 mt-1">Сколько экспертов будут проверять каждую работу</p>
+          </div>
+
+<div id="p2pInspectorsBlock" class="hidden mb-5">
             <label class="text-sm font-medium text-gray-700 block mb-2">Количество проверяющих на работу</label>
             <input type="number" id="p2pInspectorsCount" class="w-32 px-4 py-2 border border-gray-300 text-sm focus:border-orange-400 focus:outline-none rounded" value="2" min="1" max="10">
             <p class="text-xs text-gray-500 mt-1">Сколько студентов будут проверять каждую работу</p>

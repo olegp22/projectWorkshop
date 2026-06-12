@@ -84,3 +84,71 @@ input[type="date"]:invalid,
 input[type="time"]:invalid {
   color: #9ca3af;
 }
+
+/* === МОБИЛЬНЫЙ КАЛЕНДАРЬ === */
+@media (max-width: 640px) {
+  #calendarGrid {
+    grid-auto-rows: 80px !important;
+  }
+  
+  #calendarGrid > div {
+    padding: 4px !important;
+  }
+  
+  .cell-events-scroll {
+    max-height: 40px !important;
+  }
+  
+  .cell-events-scroll > div {
+    font-size: 10px !important;
+    padding: 1px 4px !important;
+    margin-top: 2px !important;
+  }
+  
+  #currentMonthYear {
+    font-size: 14px !important;
+  }
+  
+  #monthYearDisplay {
+    display: none !important;
+  }
+  
+  /* Форма создания события */
+  #sectionCreateEvent .flex {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  
+  #sectionCreateEvent label {
+    width: auto !important;
+    padding-top: 0 !important;
+  }
+  
+  #sectionCreateEvent input,
+  #sectionCreateEvent .flex-1 {
+    width: 100% !important;
+    max-width: none !important;
+  }
+  
+  #sectionCreateEvent .pl-28 {
+    padding-left: 0 !important;
+  }
+  
+  #participantsDropdownBtn {
+    max-width: none !important;
+  }
+  
+  #participantsDropdown {
+    max-width: none !important;
+  }
+}
+
+@media (max-width: 400px) {
+  #calendarGrid {
+    grid-auto-rows: 60px !important;
+  }
+  
+  #calendarGrid > div > div:first-child {
+    font-size: 11px !important;
+  }
+}

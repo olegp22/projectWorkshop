@@ -32,3 +32,17 @@
   align-items: center;
   justify-content: center;
 }
+
+/* === МОБИЛЬНЫЕ УВЕДОМЛЕНИЯ === */
+@media (max-width: 640px) {
+  .notification-dropdown {
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    top: 60px !important;
+  }
+  
+  .notification-dropdown > div {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}

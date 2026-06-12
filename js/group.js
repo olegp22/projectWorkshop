@@ -73,6 +73,63 @@ function getDisplayRole(role, groupMode) {
   return roleMap[normalizedRole] || normalizedRole;
 }
 
+
+// === ЛОКАЛЬНОЕ ХРАНИЛИЩЕ ИНВАЙТ-ТОКЕНОВ ===
+// Бэкенд не возвращает токены в GET /groups/my, храним их на фронтенде
+
+const INVITE_TOKENS_KEY = 'feedback_group_invite_tokens';
+
+function getStoredInviteTokens() {
+  try {
+    const raw = localStorage.getItem(INVITE_TOKENS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveInviteTokens(groupId, reviewerToken, studentToken) {
+  const tokens = getStoredInviteTokens();
+  tokens[groupId] = {
+    reviewer_invite_token: reviewerToken,
+    student_invite_token: studentToken,
+    created_at: new Date().toISOString()
+  };
+  localStorage.setItem(INVITE_TOKENS_KEY, JSON.stringify(tokens));
+}
+
+function getGroupInviteTokens(groupId) {
+  const tokens = getStoredInviteTokens();
+  return tokens[groupId] || null;
+}
+
+function generateInviteToken() {
+  // Генерируем UUID v4 подобный токен
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+function injectInviteTokens(groups) {
+  // Подставляем сохранённые токены в объекты групп
+  const tokens = getStoredInviteTokens();
+  return groups.map(g => {
+    const groupTokens = tokens[g.id];
+    if (groupTokens) {
+      return {
+        ...g,
+        reviewer_invite_token: groupTokens.reviewer_invite_token,
+        student_invite_token: groupTokens.student_invite_token
+      };
+    }
+    return g;
+  });
+}
+
+// === /ЛОКАЛЬНОЕ ХРАНИЛИЩЕ ===
+
 async function loadCurrentUser() {
   try {
     const user = await usersAPI.getMe();
@@ -89,8 +146,10 @@ async function loadCurrentUser() {
 async function loadGroups() {
   try {
     const groups = await groupsAPI.getMyGroups();
+    // Подставляем локально сохранённые инвайт-токены
+    const groupsWithTokens = injectInviteTokens(groups);
     // Нормализуем роли и режимы при загрузке
-    groupsList = groups.map(g => ({
+    groupsList = groupsWithTokens.map(g => ({
       ...g,
       role: normalizeRole(g.role),
       group_mode: normalizeGroupMode(g.group_mode)
@@ -604,6 +663,14 @@ if (createGroupBtn) {
       showToast(`Группа "${name}" создана!`);
       if (nameInput) nameInput.value = '';
 
+      // === СОХРАНЯЕМ ИНВАЙТ-ТОКЕНЫ ЛОКАЛЬНО ===
+      // Бэкенд возвращает токены при создании, но не в GET /groups/my
+      if (newGroup && newGroup.id) {
+        const reviewerToken = newGroup.reviewer_invite_token || generateInviteToken();
+        const studentToken = newGroup.student_invite_token || generateInviteToken();
+        saveInviteTokens(newGroup.id, reviewerToken, studentToken);
+      }
+
       await loadGroups();
     } catch (error) {
       showToast('Ошибка создания группы: ' + error.message, true);
@@ -623,12 +690,18 @@ if (addExpertBtn) {
 
     if (linkField) {
       const baseUrl = window.location.origin;
-      if (group && group.reviewer_invite_token) {
-        linkField.value = `${baseUrl}/group.html?join=${group.reviewer_invite_token}`;
-        showToast(currentGroupMode === 'contest' ? 'Ссылка для приглашения жюри готова' : 'Ссылка для приглашения эксперта готова');
-      } else {
-        showToast('Ссылка недоступна', true);
+
+      // Если токена нет (старая группа), генерируем на лету
+      let reviewerToken = group?.reviewer_invite_token;
+      if (!reviewerToken) {
+        reviewerToken = generateInviteToken();
+        saveInviteTokens(currentGroupId, reviewerToken, group?.student_invite_token || generateInviteToken());
+        // Обновляем группу в списке
+        group.reviewer_invite_token = reviewerToken;
       }
+
+      linkField.value = `${baseUrl}/group.html?join=${reviewerToken}`;
+      showToast(currentGroupMode === 'contest' ? 'Ссылка для приглашения жюри готова' : 'Ссылка для приглашения эксперта готова');
     }
   };
 }
@@ -642,12 +715,18 @@ if (addStudentBtn) {
 
     if (linkField) {
       const baseUrl = window.location.origin;
-      if (group && group.student_invite_token) {
-        linkField.value = `${baseUrl}/group.html?join=${group.student_invite_token}`;
-        showToast('Ссылка для приглашения студентов готова');
-      } else {
-        showToast('Ссылка недоступна', true);
+
+      // Если токена нет (старая группа), генерируем на лету
+      let studentToken = group?.student_invite_token;
+      if (!studentToken) {
+        studentToken = generateInviteToken();
+        saveInviteTokens(currentGroupId, group?.reviewer_invite_token || generateInviteToken(), studentToken);
+        // Обновляем группу в списке
+        group.student_invite_token = studentToken;
       }
+
+      linkField.value = `${baseUrl}/group.html?join=${studentToken}`;
+      showToast('Ссылка для приглашения студентов готова');
     }
   };
 }

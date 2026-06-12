@@ -121,6 +121,14 @@
   justify-content: center;
 }
 
+@media (max-width: 640px) {
+  .role-btn {
+    width: 100% !important;
+    min-width: auto !important;
+    max-width: none !important;
+  }
+}
+
 #roleIndicator {
   background-color: #1f2937;
   color: #f97316;
@@ -174,4 +182,68 @@
 .mode-btn:focus,
 .mode-btn:focus-visible {
   outline: none;
+}
+
+/* === МОБИЛЬНАЯ АДАПТИВНОСТЬ ГРУПП === */
+@media (max-width: 768px) {
+  #sectionGroups > .flex,
+  #sectionGroupDetails > .flex {
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+  }
+  
+  #sectionGroups .w-80,
+  #sectionGroupDetails .w-80 {
+    width: 100% !important;
+    order: -1;
+  }
+  
+  .groups-scrollbar {
+    max-height: 250px !important;
+  }
+  
+  #modeSelector {
+    flex-direction: column !important;
+  }
+  
+  .mode-btn {
+    width: 100% !important;
+  }
+  
+  #p2pInspectorsBlock input,
+  #contestExpertInspectorsBlock input,
+  #contestStudentInspectorsBlock input {
+    width: 100% !important;
+  }
+  
+  #organizerActions .grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  #criterionFormBlock {
+    max-width: none !important;
+  }
+  
+  #membersListArea {
+    max-height: 200px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  #sectionGroupDetails h2 {
+    font-size: 1.25rem !important;
+  }
+  
+  #studentActions input {
+    max-width: none !important;
+  }
+  
+  #studentActions .flex {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+  
+  #studentActions button {
+    width: 100% !important;
+  }
 }
