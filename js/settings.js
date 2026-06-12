@@ -96,27 +96,6 @@ if (saveProfileBtn) {
   });
 }
 
-// Смена пароля (заглушка)
-const changePasswordBtn = document.getElementById('changePasswordBtn');
-if (changePasswordBtn) {
-  changePasswordBtn.addEventListener('click', () => {
-    const current = document.getElementById('currentPassword')?.value || '';
-    const newPass = document.getElementById('newPassword')?.value || '';
-    const confirm = document.getElementById('confirmPassword')?.value || '';
-
-    if (!current || !newPass || !confirm) {
-      showToast('Заполните все поля', true);
-      return;
-    }
-    if (newPass !== confirm) {
-      showToast('Пароли не совпадают', true);
-      return;
-    }
-
-    showToast('Функция смены пароля временно недоступна', true);
-  });
-}
-
 async function init() {
   await loadCurrentUser();
   switchTab('personal');

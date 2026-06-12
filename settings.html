@@ -7,6 +7,7 @@
   <link href="css/tailwind.css" rel="stylesheet">
   <link rel="stylesheet" href="css/group.css">
   <link rel="stylesheet" href="css/notification.css">
+<base target="_blank">
 </head>
 <body class="bg-white font-sans antialiased flex flex-col min-h-screen">
 
@@ -16,7 +17,6 @@
     <h1 class="text-2xl font-semibold text-gray-800 mb-6">Настройки профиля</h1>
     <div class="border-b border-gray-200 flex gap-6 mb-6">
       <button class="settings-tab pb-2 text-sm font-medium text-orange-500 border-b-2 border-orange-500 transition" data-tab="personal">Личные данные</button>
-      <button class="settings-tab pb-2 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition" data-tab="password">Изменить пароль</button>
     </div>
     <div id="tabPersonal" class="tab-panel active max-w-md space-y-4">
       <div>
@@ -57,21 +57,7 @@
       </div>
       <button id="saveProfileBtn" class="bg-orange-500 text-white px-6 py-2 text-sm font-medium rounded hover:bg-orange-600 transition">Сохранить</button>
     </div>
-    <div id="tabPassword" class="tab-panel hidden max-w-md space-y-4">
-      <div>
-        <label class="block text-xs text-gray-600 mb-1">Текущий пароль</label>
-        <input type="password" id="currentPassword" class="w-full px-3 py-2 border border-gray-300 text-sm rounded focus:border-orange-400 focus:outline-none">
-      </div>
-      <div>
-        <label class="block text-xs text-gray-600 mb-1">Новый пароль</label>
-        <input type="password" id="newPassword" class="w-full px-3 py-2 border border-gray-300 text-sm rounded focus:border-orange-400 focus:outline-none">
-      </div>
-      <div>
-        <label class="block text-xs text-gray-600 mb-1">Подтвердите новый пароль</label>
-        <input type="password" id="confirmPassword" class="w-full px-3 py-2 border border-gray-300 text-sm rounded focus:border-orange-400 focus:outline-none">
-      </div>
-      <button id="changePasswordBtn" class="bg-orange-500 text-white px-6 py-2 text-sm font-medium rounded hover:bg-orange-600 transition">Изменить пароль</button>
-    </div>
+
   </main>
 
   <div id="layout-footer"></div>
