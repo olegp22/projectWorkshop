@@ -119,13 +119,15 @@ async def change_submission_link(
         raise HTTPException(status_code=400, detail="Нельзя менять ссылку, работа уже проверена")
 
     new_submission = update_submission_link(db, submission_id, data.link)
-    group = db.query(Group).filter(Group.id == submission.group_id).first()
+    # Посчитать фактическое количество назначенных проверяющих для этой работы
+    reviewers_count = db.query(SubmissionReviewer).filter(SubmissionReviewer.submission_id == new_submission.id).count()
+
     return {
         "id": new_submission.id,
         "link": new_submission.link,
         "student_id": new_submission.student_id,
         "status": new_submission.status,
-        "reviewers_count": group.count_of_inspectors if group else None,
+        "reviewers_count": reviewers_count,
     }
 
 
@@ -145,7 +147,7 @@ async def change_reviewer_comment(
     if not reviewer:
         raise HTTPException(status_code=403, detail="Вы не являетесь проверяющим этой работы")
 
-    return update_submission_comment(db, submission_id, data.comment)
+    return update_submission_comment(db, submission_id, current_user.id, data.comment)
 
 
 # Получает список работ для проверки текущим пользователем

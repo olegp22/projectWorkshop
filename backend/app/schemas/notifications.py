@@ -1,8 +1,9 @@
 from pydantic import BaseModel
 import enum
+from datetime import datetime
 
 
-class TypeMassege(str, enum.Enum):
+class TypeMessage(str, enum.Enum):
     NEW_ASSESSMENT = "new_assessment"
     CHANGED_ASSESSMENT = "change_assessment"
     NEW_WORK = "new_work"
@@ -13,14 +14,15 @@ class TypeMassege(str, enum.Enum):
 class CreateNotification(BaseModel):
     user_id: int
     text: str
-    type_massege: TypeMassege
+    type_message: TypeMessage
 
 
 class NotificationResponse(BaseModel):
     id: int
     text: str
-    type_massege: TypeMassege
+    type_message: TypeMessage
     is_read: bool
+    created_at: datetime
 
     class Config:
         from_attributes = True

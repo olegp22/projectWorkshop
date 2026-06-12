@@ -20,12 +20,7 @@ class Group(Base):
     reviewer_invite_token = Column(String, unique=True, nullable=False)
     student_invite_token = Column(String, unique=True, nullable=False)
 
-    __table_args__ = (
-        CheckConstraint(
-            "p2p_review_count > 0",
-            name="check_p2p_review_count_positive"
-        ),
-    )
+    
 
 #enum  с выбором роли в групе(создательб проверяющий студент)
 class UserRole(str, enum.Enum):

@@ -1,13 +1,13 @@
 from sqlalchemy.orm import Session
 from app.models.notification import Notification
-from app.schemas.notifications import TypeMassege, NotificationResponse
+from app.schemas.notifications import TypeMessage, NotificationResponse
 
 
-def create_notification(db: Session, user_id: int, text: str, type_massege: TypeMassege):
+def create_notification(db: Session, user_id: int, text: str, type_message: TypeMessage):
     db_notification = Notification(
         user_id=user_id,
         text=text,
-        type_massege=type_massege,
+        type_message=type_message,
     )
     db.add(db_notification)
     db.commit()

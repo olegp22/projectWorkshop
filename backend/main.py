@@ -7,6 +7,7 @@ from app.api.routers.submissions import submissions_router
 from app.api.routers.notifications import notifications_router
 from app.api.routers.rating import rating_router
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.routers.events import events_roters
 
 app = FastAPI()
 
@@ -38,3 +39,5 @@ app.include_router(submissions_router)
 app.include_router(notifications_router)
 
 app.include_router(rating_router)
+
+app.include_router(events_roters)

@@ -4,7 +4,7 @@ from app.models.group import Group, GroupMember
 from app.models.user import User
 from app.schemas.groups import GroupCreate
 from app.crud.notifications import create_notification
-from app.schemas.notifications import TypeMassege
+from app.schemas import TypeMessage, UserRole
 
 
 def create_group(db: Session, group_data: GroupCreate, creator_id: int):
@@ -23,6 +23,14 @@ def create_group(db: Session, group_data: GroupCreate, creator_id: int):
     db.add(db_group)
     db.commit()
     db.refresh(db_group)
+    new_member = GroupMember(
+        user_id=creator_id,
+        group_id=db_group.id,
+        role=UserRole.CREATOR,
+    )
+
+    db.add(new_member)
+    db.commit()
     return db_group
 
 
@@ -78,7 +86,7 @@ def remove_member_from_db(db: Session, group_id: int, user_id: int):
             db,
             user_id,
             f"Вас удалили из группы '{group.name}'",
-            TypeMassege.REMOVAL_FROM_THE_GROUP,
+            TypeMessage.REMOVAL_FROM_THE_GROUP,
         )
         db.delete(member)
         db.commit()

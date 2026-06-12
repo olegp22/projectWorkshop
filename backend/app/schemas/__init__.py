@@ -15,6 +15,7 @@ from .groups import (
     MemberResponse,
     CriterionCreate,
     CriterionResponse,
+    UserRole
 )
 from .submissions import (
     SubmissionCreate,
@@ -30,7 +31,12 @@ from .submissions import (
     ReviewDetails,
     SubmissionReviewersResponse,
 )
-from .notifications import TypeMassege, CreateNotification, NotificationResponse
+
+from .events import (
+    EventsResponse,
+    CreateEventsToUser
+)
+from .notifications import TypeMessage, CreateNotification, NotificationResponse
 from .rating import RatingResponse
 
 __all__ = [
@@ -60,8 +66,11 @@ __all__ = [
     "ReviewerSubmissionResponse",
     "ReviewDetails",
     "SubmissionReviewersResponse",
-    "TypeMassege",
+    "TypeMessage",
     "CreateNotification",
     "NotificationResponse",
     "RatingResponse",
+    "EventsResponse",
+    "CreateEventsToUser",
+    "UserRole",
 ]

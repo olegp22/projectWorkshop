@@ -18,6 +18,7 @@ from app.models.user import User
 from app.models.group import Group, GroupMember, Criterion
 from app.models.submission import Submission, Grade, SubmissionReviewer
 from app.models.notification import Notification
+from app.models.events import Events
 
 # Объект конфигурации Alembic
 config = context.config

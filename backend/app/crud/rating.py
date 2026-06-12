@@ -5,6 +5,8 @@ from app.schemas import RatingResponse, GroupMode
 from app.models.group import Group
 from app.models.submission import Submission, Grade
 from app.models.user import User
+from app.models.group import Criterion
+from sqlalchemy import func
 
 def create_rating(db: Session, group_id: int):
     submissions = db.query(Submission).filter(Submission.group_id == group_id).all()
@@ -27,13 +29,22 @@ def create_rating(db: Session, group_id: int):
     return sorted(rating, key = lambda r: r["total_score"], reverse = True)
 
 def get_score(db: Session, submission_id: int):
-    all_score = db.query(Grade).filter(Grade.submission_id == submission_id).all()
-    total_score=0
+    # Для каждого критерия считаем средний балл по всем проверкам, затем
+    # сумма средних / сумма max_score
+    rows = (
+        db.query(Grade.criterion_id, func.avg(Grade.score).label("avg_score"), Criterion.max_score)
+        .join(Criterion, Grade.criterion_id == Criterion.id)
+        .filter(Grade.submission_id == submission_id)
+        .group_by(Grade.criterion_id, Criterion.max_score)
+        .all()
+    )
 
-    if len(all_score) == 0:
+    if not rows:
         return 0
-    
-    for score in all_score:
-        total_score+=score.score
 
-    return total_score/len(all_score)
+    numerator = sum(r.avg_score for r in rows)
+    denominator = sum(r.max_score for r in rows)
+    if denominator == 0:
+        return 0
+
+    return numerator / denominator

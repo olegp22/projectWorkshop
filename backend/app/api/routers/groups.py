@@ -2,12 +2,12 @@
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.schemas import GroupCreate, GroupResponse, MemberResponse, UserGroupResponse
+from app.schemas import GroupCreate, GroupResponse, MemberResponse, UserGroupResponse, UserRole
 from app.db.session import get_db
 from app.crud import create_group, get_group_participants, remove_member_from_db, get_user_groups, create_notification
 from app.models.group import Group, GroupMember, GroupMode
 from app.api.deps import get_current_user
-from app.schemas.notifications import TypeMassege
+from app.schemas.notifications import TypeMessage
 
 
 groups_router = APIRouter(prefix="/groups", tags=["Groups"])
@@ -53,6 +53,7 @@ async def make_group(
             raise HTTPException(
                 status_code = 400,
                 detail = "В группе должен быть хотябы один проверяющий")
+
     return create_group(db, group, current_user.id)
 
 
@@ -106,7 +107,7 @@ async def join_by_invite(
         db,
         group.creator_id,
         f"В группу {group.name} вступил новый участник {current_user.name} {current_user.surname}. Его роль - {new_member.role}",
-        TypeMassege.NEW_MEMBER,
+        TypeMessage.NEW_MEMBER,
     )
 
     db.add(new_member)

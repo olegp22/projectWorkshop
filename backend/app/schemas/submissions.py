@@ -8,7 +8,7 @@ class SubmissionCreate(BaseModel):
 
 class GradeCreate(BaseModel):
     criterion_id: int
-    score: int = Field(ge=0, le=10)
+    score: int = Field(ge=0)
 
 
 class ReviewCreate(BaseModel):
@@ -39,8 +39,10 @@ class UbdateSubmissionResponse(BaseModel):
 
 
 class GradeDetailResponse(BaseModel):
+    criterion_id: int
     criterion_name: str
     score: int
+    max_score: int
 
 
 class SubmissionFullDetails(BaseModel):
@@ -88,7 +90,7 @@ class SubmissionReviewersResponse(BaseModel):
     link: str
     status: str
     student_id: int
-    reviewrs: list[ReviewDetails]
+    reviewers: list[ReviewDetails]
 
     class Config:
         from_attributes = True

@@ -7,6 +7,10 @@ class GroupMode(str, enum.Enum):
     P2P = "p2p"
     CONTEST = "contest"
 
+class UserRole(str, enum.Enum):
+    CREATOR = "creator"
+    REVIEWER = "reviewer"
+    STUDENT = "student"
 
 class GroupCreate(BaseModel):
     name: str
@@ -33,7 +37,7 @@ class MemberResponse(BaseModel):
     user_id: int
     name: str
     surname: str
-    role: str
+    role: UserRole
 
     class Config:
         from_attributes = True

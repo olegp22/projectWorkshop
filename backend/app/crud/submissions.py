@@ -4,7 +4,7 @@ from app.models.group import Group, GroupMember, Criterion
 from app.models.submission import Submission, SubmissionReviewer, Grade
 from app.schemas.submissions import SubmissionCreate, ReviewCreate
 from app.crud.notifications import create_notification
-from app.schemas.notifications import TypeMassege
+from app.schemas.notifications import TypeMessage
 
 
 def create_submission_classic(db: Session, submission_data: SubmissionCreate, student_id: int):
@@ -58,7 +58,7 @@ def create_submission_classic(db: Session, submission_data: SubmissionCreate, st
             db,
             db_reviewer.reviewer_id,
             f"Вам назначили работу на проверку в группе '{group.name}'",
-            TypeMassege.NEW_WORK,
+            TypeMessage.NEW_WORK,
         )
         db.add(db_reviewer)
 
@@ -126,7 +126,7 @@ def create_submission_p2p(db: Session, submission_data: SubmissionCreate, studen
             db,
             db_reviewer.reviewer_id,
             f"Вам назначили работу на проверку в группе '{group.name}'",
-            TypeMassege.NEW_WORK,
+            TypeMessage.NEW_WORK,
         )
         db.add(db_reviewer)
 
@@ -194,7 +194,7 @@ def create_submission_contest(db: Session, submission_data: SubmissionCreate, st
             db,
             db_reviewer.reviewer_id,
             f"Вам назначили работу на проверку в группе '{group.name}'",
-            TypeMassege.NEW_WORK,
+            TypeMessage.NEW_WORK,
         )
         db.add(db_reviewer)
 
@@ -226,16 +226,7 @@ def create_submission_contest(db: Session, submission_data: SubmissionCreate, st
     )
 
 
-    db_submission = Submission(
-        link=submission_data.link,
-        group_id=submission_data.group_id,
-        student_id=student_id,
-        status="pending",
-    )
-    db.add(db_submission)
-    db.commit()
-    db.refresh(db_submission)
-
+    # Добавляем экспертов к уже созданной записи `db_submission`
     for reviewer in reviewer_counts_expert:
         db_reviewer = SubmissionReviewer(
             submission_id=db_submission.id,
@@ -246,7 +237,7 @@ def create_submission_contest(db: Session, submission_data: SubmissionCreate, st
             db,
             db_reviewer.reviewer_id,
             f"Вам назначили работу на проверку в группе '{group.name}'",
-            TypeMassege.NEW_WORK,
+            TypeMessage.NEW_WORK,
         )
         db.add(db_reviewer)
 
@@ -306,7 +297,7 @@ def submit_review(db: Session, submission_id: int, reviewer_id: int, review_data
             db,
             db_submission.student_id,
             f"Ваша работа в группе '{group.name}' проверена",
-            TypeMassege.NEW_ASSESSMENT,
+            TypeMessage.NEW_ASSESSMENT,
         )
 
     db.commit()
@@ -316,8 +307,10 @@ def submit_review(db: Session, submission_id: int, reviewer_id: int, review_data
     for grade_data in review_data.grades:
         criterion = db.query(Criterion).filter(Criterion.id == grade_data.criterion_id).first()
         grade_detail.append({
+            "criterion_id": criterion.id,
             "criterion_name": criterion.name,
             "score": grade_data.score,
+            "max_score": criterion.max_score,
         })
 
     return {
@@ -346,7 +339,7 @@ def get_submission_details(db: Session, submission_id: int):
     reviews_result = []
     for review in reviews:
         grades = (
-            db.query(Criterion.name.label("criterion_name"), Grade.score)
+            db.query(Criterion.id.label("criterion_id"), Criterion.max_score, Criterion.name.label("criterion_name"), Grade.score)
             .join(Criterion, Grade.criterion_id == Criterion.id)
             .filter(Grade.submission_id == submission_id, Grade.reviewer_id == review.reviewer_id)
             .all()
@@ -358,7 +351,7 @@ def get_submission_details(db: Session, submission_id: int):
                 "comment": review.comment,
                 "status": review.status,
                 "grades": [
-                    {"criterion_name": g.criterion_name, "score": g.score} for g in grades
+                    {"criterion_id": g.criterion_id, "criterion_name": g.criterion_name, "score": g.score, "max_score": g.max_score} for g in grades
                 ],
             }
         )
@@ -368,7 +361,7 @@ def get_submission_details(db: Session, submission_id: int):
         "link": submission.link,
         "status": submission.status,
         "student_id": submission.student_id,
-        "reviewrs": reviews_result,
+        "reviewers": reviews_result,
     }
 
 
@@ -381,13 +374,23 @@ def update_submission_link(db: Session, submission_id: int, new_link: str):
     return submission
 
 
-def update_submission_comment(db: Session, submission_id: int, new_comment: str):
+def update_submission_comment(db: Session, submission_id: int, reviewer_id: int, new_comment: str):
+    # Найти связь SubmissionReviewer для конкретного ревьювера
+    review = db.query(SubmissionReviewer).filter(
+        SubmissionReviewer.submission_id == submission_id,
+        SubmissionReviewer.reviewer_id == reviewer_id,
+    ).first()
+    if not review:
+        return None
+
+    review.comment = new_comment
+    db.commit()
+    db.refresh(review)
+
     submission = db.query(Submission).filter(Submission.id == submission_id).first()
     if not submission:
         return None
-    submission.reviewer_comment = new_comment
-    db.commit()
-    db.refresh(submission)
+
     return {
         "submission_id": submission.id,
         "link": submission.link,
