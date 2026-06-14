@@ -90,7 +90,12 @@ class SubmissionReviewersResponse(BaseModel):
     link: str
     status: str
     student_id: int
-    reviewers: list[ReviewDetails]
+    reviewers: list[ReviewDetails] | None
 
     class Config:
         from_attributes = True
+
+class SubmissionMyScoreResponse(BaseModel):
+    id: int
+    link: str
+    score: float

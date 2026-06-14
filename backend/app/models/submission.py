@@ -22,7 +22,7 @@ class Grade(Base):
     submission_id = Column(Integer, ForeignKey("submissions.id"))
     reviewer_id = Column(Integer, ForeignKey("users.id"))
     criterion_id = Column(Integer, ForeignKey("criteria.id")) # За какой критерий
-    score = Column(Integer)# Оценка от 0 до 10
+    score = Column(Integer)
 
 
 class SubmissionReviewer(Base):
@@ -44,7 +44,7 @@ class SubmissionReviewer(Base):
 
     status = Column(String, default="pending")
 
-    comment = Column(Text, nullable=True)# Сюда проверяющий напишет итоговый отзыв 
+    comment = Column(Text, nullable=True) 
 
     submission = relationship("Submission")
-    reviewer = relationship("User")# Кому назначили проверять
+    reviewer = relationship("User")

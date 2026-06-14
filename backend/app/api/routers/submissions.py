@@ -11,6 +11,7 @@ from app.schemas import (
     SubmissionCommentUpdate,
     UbdateSubmissionResponse,
     ReviewerSubmissionResponse,
+    SubmissionMyScoreResponse
 )
 from app.db.session import get_db
 from app.crud import (
@@ -21,7 +22,8 @@ from app.crud import (
     update_submission_link,
     update_submission_comment,
     get_reviewer_submissions,
-    create_submission_contest
+    create_submission_contest,
+    get_score_work
 )
 from app.models.group import Group, GroupMember, GroupMode
 from app.models.submission import Submission, SubmissionReviewer
@@ -37,6 +39,12 @@ async def upload_work(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    sub_current = (db.query(Submission).
+                   filter(Submission.group_id==submission.group_id,
+                          Submission.student_id==current_user.id).first())
+    if sub_current:
+        raise HTTPException(status_code=403, detail="Вы уже загрузили работу")
+
     is_member = db.query(GroupMember).filter_by(
         group_id=submission.group_id,
         user_id=current_user.id,
@@ -62,6 +70,19 @@ async def upload_work(
         raise HTTPException(status_code=400, detail="В группе пока нет проверяющих")
     return new_submission
 
+#упрощенный показ оценивания 
+@submissions_router.get("/submissions/my-work", response_model=SubmissionMyScoreResponse)
+async def get_my_work(
+    group_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user),
+):
+    submission = db.query(Submission).filter(Submission.group_id == group_id, 
+                                            Submission.student_id == current_user.id).order_by(Submission.id.desc()).first()
+    if not submission:
+        raise HTTPException(status_code = 404, detail="Вы еще не загрузили работу")
+    
+    return get_score_work(db, submission)
 
 # Отправляет оценки и комментарий к работе
 @submissions_router.post("/submissions/{submission_id}/review", response_model=SubmissionFullDetails)
@@ -157,3 +178,5 @@ async def my_reviews(
     current_user=Depends(get_current_user),
 ):
     return get_reviewer_submissions(db, reviewer_id=current_user.id)
+
+

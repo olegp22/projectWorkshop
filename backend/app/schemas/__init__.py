@@ -30,6 +30,7 @@ from .submissions import (
     ReviewerSubmissionResponse,
     ReviewDetails,
     SubmissionReviewersResponse,
+    SubmissionMyScoreResponse
 )
 
 from .events import (
@@ -73,4 +74,5 @@ __all__ = [
     "EventsResponse",
     "CreateEventsToUser",
     "UserRole",
+    "SubmissionMyScoreResponse"
 ]

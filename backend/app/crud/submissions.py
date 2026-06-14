@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func,distinct
 from app.models.group import Group, GroupMember, Criterion
 from app.models.submission import Submission, SubmissionReviewer, Grade
 from app.schemas.submissions import SubmissionCreate, ReviewCreate
@@ -319,7 +319,7 @@ def submit_review(db: Session, submission_id: int, reviewer_id: int, review_data
         "student_id": db_submission.student_id,
         "reviewer_id": reviewer_id,
         "link": db_submission.link,
-        "status": db_submission.status,
+        "status": review_link.status,
         "reviewer_comment": review_link.comment,
         "grades": grade_detail,
     }
@@ -418,3 +418,23 @@ def get_reviewer_submissions(db: Session, reviewer_id: int):
         }
         for item in reviews
     ]
+
+
+def get_score_work(db: Session, submission: Submission):
+    score = db.query(Grade).filter(Grade.submission_id == submission.id).all()
+    count_rew = db.query(func.count(distinct(Grade.criterion_id))).filter(Grade.submission_id == submission.id).scalar()
+    score_total = 0
+    for q in score:
+        score_total+=q.score
+    if count_rew == 0:
+        return {
+            "id": submission.id,
+            "link": submission.link,
+            "score": 0
+        }
+    
+    return {
+            "id": submission.id,
+            "link": submission.link,
+            "score": score_total/count_rew
+        }
