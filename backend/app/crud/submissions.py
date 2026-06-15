@@ -5,7 +5,7 @@ from app.models.submission import Submission, SubmissionReviewer, Grade
 from app.schemas.submissions import SubmissionCreate, ReviewCreate
 from app.crud.notifications import create_notification
 from app.schemas.notifications import TypeMessage
-
+from app.models.user import User
 
 def create_submission_classic(db: Session, submission_data: SubmissionCreate, student_id: int):
     group = db.query(Group).filter(Group.id == submission_data.group_id).first()
@@ -402,7 +402,8 @@ def update_submission_comment(db: Session, submission_id: int, reviewer_id: int,
 
 def get_reviewer_submissions(db: Session, reviewer_id: int):
     reviews = (
-        db.query(Submission.id, Submission.link, Submission.student_id, Submission.group_id, Submission.status)
+        db.query(Submission.id, Submission.link, Submission.student_id, Submission.group_id, Submission.status,
+                 User.name, User.surname)
         .join(SubmissionReviewer, Submission.id == SubmissionReviewer.submission_id)
         .filter(SubmissionReviewer.reviewer_id == reviewer_id)
         .all()
@@ -413,6 +414,8 @@ def get_reviewer_submissions(db: Session, reviewer_id: int):
             "submission_id": item.id,
             "link": item.link,
             "student_id": item.student_id,
+            "name": item.name,
+            "surname": item.surname,
             "group_id": item.group_id,
             "status": item.status,
         }

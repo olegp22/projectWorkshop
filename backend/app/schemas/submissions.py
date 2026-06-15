@@ -71,6 +71,8 @@ class ReviewerSubmissionResponse(BaseModel):
     submission_id: int
     link: str
     student_id: int
+    name:str
+    surname: str
     group_id: int
     status: str
 
