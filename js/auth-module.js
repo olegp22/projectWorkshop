@@ -50,9 +50,81 @@ function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+const AUTH_MODAL_HTML = `<div id="auth-modal-overlay" class="fixed inset-0 hidden items-center justify-center p-4 z-50 bg-black/50" role="dialog" aria-modal="true">
+    <div class="bg-white shadow-2xl max-w-sm w-full relative border border-purple-400 rounded-none">
+      <button id="close-auth-btn" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition" aria-label="Закрыть окно">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      <div class="p-6 pt-8">
+        <div class="flex mb-5">
+          <button id="tab-login" class="flex-1 pb-2 text-center text-sm font-medium text-orange-500 border-b-2 border-orange-500 transition cursor-pointer">Вход</button>
+          <button id="tab-register" class="flex-1 pb-2 text-center text-sm font-medium text-gray-500 border-b border-gray-300 hover:text-gray-700 transition cursor-pointer">Регистрация</button>
+        </div>
+        <div id="auth-error" class="hidden mb-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600"></div>
+
+        <form id="login-form" class="space-y-3" novalidate>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="auth-email">Email</label>
+            <input type="email" id="auth-email" placeholder="example@mail.ru" required class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="auth-password">Пароль</label>
+            <input type="password" id="auth-password" placeholder="Введите пароль" required class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
+          </div>
+          <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 text-sm font-medium transition">Войти</button>
+        </form>
+
+        <form id="register-form" class="space-y-3 hidden" novalidate>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="reg-first-name">Имя</label>
+            <input type="text" id="reg-first-name" placeholder="Иван" class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="reg-last-name">Фамилия</label>
+            <input type="text" id="reg-last-name" placeholder="Иванов" class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="reg-patronymic">Отчество</label>
+            <input type="text" id="reg-patronymic" placeholder="Иванович" class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="reg-email">Email</label>
+            <input type="email" id="reg-email" placeholder="example@mail.ru" required class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="reg-password">Пароль</label>
+            <input type="password" id="reg-password" required class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="reg-password-confirm">Подтвердите пароль</label>
+            <input type="password" id="reg-password-confirm" required class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
+          </div>
+          <div class="flex items-start">
+            <input type="checkbox" id="reg-terms" required class="mt-0.5 mr-1.5 w-3.5 h-3.5 text-orange-500">
+            <label for="reg-terms" class="text-xs text-gray-600">Я согласен с условиями использования</label>
+          </div>
+          <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 text-sm font-medium transition">Зарегистрироваться</button>
+        </form>
+      </div>
+    </div>
+  </div>`;
+
+function createAuthModal() {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = AUTH_MODAL_HTML;
+    const modal = wrapper.firstElementChild;
+    document.body.appendChild(modal);
+    initAuthModal();
+    return modal;
+}
+
 export function openAuthModal() {
-    const modal = document.getElementById('auth-modal-overlay');
-    if (!modal) return;
+    let modal = document.getElementById('auth-modal-overlay');
+    if (!modal) {
+        modal = createAuthModal();
+    }
     lastFocusedElement = document.activeElement;
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
@@ -104,21 +176,33 @@ function switchAuthTab(tab) {
     }
 }
 
+// === ПОЗИЦИОНИРОВАНИЕ DROPDOWN'ОВ ===
+function positionDropdown(button, dropdown) {
+  if (!button || !dropdown) return;
+  const rect = button.getBoundingClientRect();
+  
+  dropdown.style.position = 'fixed';
+  dropdown.style.zIndex = '9999';
+  
+  dropdown.style.top = (rect.bottom + 8) + 'px';
+  dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+  dropdown.style.left = 'auto';
+}
+
 export async function initAuthHeader() {
   const guestNav = document.getElementById('guestNav');
   const loggedNav = document.getElementById('loggedNav');
   const headerUserName = document.getElementById('headerUserName');
   const logoutBtn = document.getElementById('logoutBtn');
+  const logoutBtnBurger = document.getElementById('logoutBtnBurger');
 
   if (!guestNav || !loggedNav) return;
 
   if (authAPI.isAuthenticated()) {
-    // Показываем авторизованную навигацию
     guestNav.classList.add('hidden');
     loggedNav.classList.remove('hidden');
     loggedNav.classList.add('flex');
 
-    // Загружаем имя пользователя
     try {
       const user = await usersAPI.getMe();
       const displayName = (user.name && user.surname)
@@ -129,42 +213,92 @@ export async function initAuthHeader() {
       if (headerUserName) headerUserName.innerText = 'Пользователь';
     }
 
-    // Обработчик выхода
     if (logoutBtn) {
       logoutBtn.onclick = () => {
         authAPI.logout();
         window.location.reload();
       };
     }
-
-    // Инициализация выпадающего меню профиля
-    const profileIconBtn = document.getElementById('profile-btn');
-    const profileDropdownMenu = document.getElementById('profileDropdown');
-
-    function toggleProfileMenu() {
-      profileDropdownMenu?.classList.toggle('hidden');
+    if (logoutBtnBurger) {
+      logoutBtnBurger.onclick = () => {
+        authAPI.logout();
+        window.location.reload();
+      };
     }
 
-    if (profileIconBtn) {
-      profileIconBtn.addEventListener('click', (e) => {
+    const burgerBtn = document.getElementById('burgerMenuBtn');
+    const burgerDropdown = document.getElementById('burgerDropdown');
+
+    if (burgerBtn && burgerDropdown) {
+      burgerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        toggleProfileMenu();
+        const isHidden = burgerDropdown.classList.contains('hidden');
+        document.getElementById('profileDropdown')?.classList.add('hidden');
+        document.getElementById('notificationDropdown')?.classList.add('hidden');
+        document.getElementById('profile-btn')?.setAttribute('aria-expanded', 'false');
+
+        if (isHidden) {
+          burgerDropdown.classList.remove('hidden');
+          positionDropdown(burgerBtn, burgerDropdown);
+        } else {
+          burgerDropdown.classList.add('hidden');
+        }
+        burgerBtn.setAttribute('aria-expanded', String(isHidden));
+      });
+
+      window.addEventListener('resize', () => {
+        if (!burgerDropdown.classList.contains('hidden')) {
+          positionDropdown(burgerBtn, burgerDropdown);
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!burgerDropdown.contains(e.target) && e.target !== burgerBtn) {
+          burgerDropdown.classList.add('hidden');
+          burgerBtn.setAttribute('aria-expanded', 'false');
+        }
       });
     }
 
-    document.addEventListener('click', (e) => {
-      if (profileDropdownMenu && !profileDropdownMenu.contains(e.target) && e.target !== profileIconBtn) {
-        profileDropdownMenu.classList.add('hidden');
-      }
-    });
+    const profileBtn = document.getElementById('profile-btn');
+    const profileDropdown = document.getElementById('profileDropdown');
+
+    if (profileBtn && profileDropdown) {
+      profileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = profileDropdown.classList.contains('hidden');
+        document.getElementById('burgerDropdown')?.classList.add('hidden');
+        document.getElementById('notificationDropdown')?.classList.add('hidden');
+        document.getElementById('burgerMenuBtn')?.setAttribute('aria-expanded', 'false');
+
+        if (isHidden) {
+          profileDropdown.classList.remove('hidden');
+          positionDropdown(profileBtn, profileDropdown);
+        } else {
+          profileDropdown.classList.add('hidden');
+        }
+        profileBtn.setAttribute('aria-expanded', String(isHidden));
+      });
+
+      window.addEventListener('resize', () => {
+        if (!profileDropdown.classList.contains('hidden')) {
+          positionDropdown(profileBtn, profileDropdown);
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!profileDropdown.contains(e.target) && e.target !== profileBtn) {
+          profileDropdown.classList.add('hidden');
+          profileBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
 
   } else {
-    // Показываем гостевую навигацию
     guestNav.classList.remove('hidden');
     loggedNav.classList.add('hidden');
     loggedNav.classList.remove('flex');
 
-    // Гостевой клик открывает модалку
     const guestNavEl = document.getElementById('guestNav');
     if (guestNavEl) {
       guestNavEl.addEventListener('click', () => {
@@ -192,7 +326,6 @@ export function initAuthModal() {
     if (tabLogin) tabLogin.addEventListener('click', () => switchAuthTab('login'));
     if (tabRegister) tabRegister.addEventListener('click', () => switchAuthTab('register'));
 
-    // Привязка ко всем кнопкам входа/регистрации на странице
     document.querySelectorAll('.login-btn-expert').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -200,7 +333,6 @@ export function initAuthModal() {
         });
     });
 
-    // Обработка формы входа
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
@@ -219,7 +351,6 @@ export function initAuthModal() {
             try {
                 await authAPI.login(email, password);
 
-                // Проверяем, был ли pending join-токен
                 const pendingJoin = localStorage.getItem('pending_join_token');
                 if (pendingJoin) {
                     localStorage.removeItem('pending_join_token');
@@ -235,7 +366,6 @@ export function initAuthModal() {
         });
     }
 
-    // Обработка формы регистрации
     const registerForm = document.getElementById('register-form');
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
@@ -265,7 +395,6 @@ export function initAuthModal() {
                 showAuthError('Введите корректный email');
                 return;
             }
-            // Синхронизировано с бэкендом: min_length=8
             if (!password || password.length < 8) {
                 showAuthError('Пароль должен быть не менее 8 символов');
                 return;
@@ -287,9 +416,6 @@ export function initAuthModal() {
                     patronymic: patronymic
                 });
 
-                // ИСПРАВЛЕНИЕ ПУНКТА №4
-                // Используем userStore.setProfile() вместо прямого saveProfileToStorage
-                // и setAuthToken() вместо прямого localStorage.setItem
                 userStore.setProfile({
                     id: result.id,
                     name: firstName,
@@ -298,9 +424,6 @@ export function initAuthModal() {
                     email: email
                 });
 
-                // ИСПРАВЛЕНИЕ ПУНКТА №4
-                // Корректно сохраняем токен через API-функцию setAuthToken
-                // вместо authAPI.logout() + localStorage.setItem
                 if (result.access_token) {
                     setAuthToken(result.access_token);
                 }

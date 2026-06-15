@@ -122,10 +122,9 @@ function setupFilters() {
   const container = document.getElementById('filterContainer');
   if (!container) return;
 
-  // Все режимы используют одинаковые фильтры по статусу проверки
+  // Фильтры по статусу проверки (бэкенд возвращает pending/graded)
   container.innerHTML = `
     <button class="filter-btn is-active bg-orange-500 px-4 py-1 rounded text-sm font-medium transition cursor-pointer text-white" data-filter="all">Все</button>
-    <button class="filter-btn px-4 py-1 rounded text-sm font-medium transition cursor-pointer bg-orange-500 text-white opacity-70 hover:opacity-100" data-filter="urgent">Срочные</button>
     <button class="filter-btn px-4 py-1 rounded text-sm font-medium transition cursor-pointer bg-orange-500 text-white opacity-70 hover:opacity-100" data-filter="reviewing">На проверке</button>
     <button class="filter-btn px-4 py-1 rounded text-sm font-medium transition cursor-pointer bg-orange-500 text-white opacity-70 hover:opacity-100" data-filter="archive">Архив</button>
   `;

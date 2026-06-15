@@ -16,10 +16,10 @@
 }
 
 /* Мобильный: 1 колонка */
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .projects-grid { 
     grid-template-columns: 1fr !important;
-    gap: 16px !important;
+    gap: 12px !important;
   }
 }
 
@@ -38,6 +38,14 @@
   box-shadow: 0 2px 8px rgba(139, 92, 246, 0.1);
   width: 100% !important;
   box-sizing: border-box !important;
+  word-break: break-word;
+}
+
+@media (max-width: 640px) {
+  .project-card {
+    min-height: auto;
+    padding: 14px 16px;
+  }
 }
 
 .project-card:hover {
@@ -45,6 +53,12 @@
   box-shadow: 0 6px 20px rgba(139, 92, 246, 0.25);
   border-color: #a78bfa;
   transform: translateY(-2px);
+}
+
+@media (max-width: 640px) {
+  .project-card:hover {
+    transform: none; /* Убираем hover-эффект на тач-устройствах */
+  }
 }
 
 .card-content {
@@ -59,6 +73,12 @@
   color: #1f2937;
   margin: 0;
   line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .card-row {
+    font-size: 13px;
+  }
 }
 
 .card-label {
@@ -78,10 +98,18 @@
   margin-top: 10px;
   transition: background-color 0.2s ease;
   font-family: inherit;
+  touch-action: manipulation;
 }
 
 .review-btn:hover {
   background-color: #7c3aed;
+}
+
+@media (max-width: 640px) {
+  .review-btn {
+    padding: 12px 0;
+    font-size: 15px; /* Больше для тач */
+  }
 }
 
 /* === ФИЛЬТРЫ === */
@@ -117,4 +145,17 @@
   font-weight: 700;
   color: #1f2937;
   pointer-events: none;
+}
+
+/* === МОБИЛЬНЫЕ УТИЛИТЫ === */
+@media (max-width: 640px) {
+  #reviewMain,
+  #myProjectsMain {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  
+  .flex-wrap-mobile {
+    flex-wrap: wrap !important;
+  }
 }

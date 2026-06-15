@@ -67,10 +67,9 @@ function calculateAverageScores(submission, criteria) {
     
     reviews.forEach(review => {
       if (review.grades) {
-        // Сопоставляем по criterion_id или criterion_name
+        // Сопоставляем по criterion_name (бэкенд возвращает только его)
         const grade = review.grades.find(g => 
-          (g.criterion_id && g.criterion_id === c.id) || 
-          (g.criterion_name && g.criterion_name === c.name)
+          g.criterion_name === c.name
         );
         if (grade && grade.score !== undefined) {
           scores.push({
@@ -199,8 +198,8 @@ function renderReviewsTable(submission, criteria) {
     if (review.grades && review.grades.length > 0) {
       review.grades.forEach(g => {
         totalScore += g.score || 0;
-        // max_score берём ТОЛЬКО из критерия группы — бэкенд не возвращает его в grade
-        const criterion = criteria.find(c => c.id === g.criterion_id || c.name === g.criterion_name);
+        // max_score берём ТОЛЬКО из критерия группы — бэкенд возвращает только criterion_name
+        const criterion = criteria.find(c => c.name === g.criterion_name);
         totalMax += criterion?.max_score || 10;
       });
     }

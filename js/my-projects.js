@@ -24,20 +24,6 @@ function getUserIdFromToken() {
 // Для студента используем ТОЛЬКО localStorage (my_submissions)
 // Для каждой сохранённой работы загружаем детали через getSubmission
 
-// Сохранить ID отправленной работы в localStorage
-export function saveSubmissionId(submissionId, groupId, link) {
-  const stored = getStoredSubmissions();
-  if (!stored.find(s => s.submission_id === submissionId)) {
-    stored.push({
-      submission_id: submissionId,
-      group_id: groupId,
-      link: link,
-      created_at: new Date().toISOString()
-    });
-    localStorage.setItem(MY_SUBMISSIONS_KEY, JSON.stringify(stored));
-  }
-}
-
 // Получить сохранённые ID работ из localStorage
 function getStoredSubmissions() {
   try {
@@ -46,11 +32,6 @@ function getStoredSubmissions() {
   } catch {
     return [];
   }
-}
-
-// Очистить сохранённые работы (например, при выходе)
-export function clearStoredSubmissions() {
-  localStorage.removeItem(MY_SUBMISSIONS_KEY);
 }
 
 // === ПОДСЧЁТ ИТОГОВОГО БАЛЛА ===
