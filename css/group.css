@@ -1,5 +1,12 @@
+.groups-scrollbar {
+  overflow-y: scroll !important;
+  scrollbar-width: 16px;
+  scrollbar-color: #8d51f3 #f5f0ff;
+}
+
 .groups-scrollbar::-webkit-scrollbar {
   width: 16px;
+  display: block;
 }
 
 .groups-scrollbar::-webkit-scrollbar-track {
@@ -11,6 +18,7 @@
   background: #8d51f3;
   border-radius: 8px;
   border: 3px solid #f5f0ff;
+  min-height: 40px;
 }
 
 .groups-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -43,6 +51,12 @@
 .groups-scrollbar::-webkit-scrollbar-button:vertical:start:increment,
 .groups-scrollbar::-webkit-scrollbar-button:vertical:end:decrement {
   display: none;
+}
+
+/* Firefox scrollbar */
+.groups-scrollbar {
+  scrollbar-width: 16px;
+  scrollbar-color: #8d51f3 #f5f0ff;
 }
 
 .members-scrollbar::-webkit-scrollbar {

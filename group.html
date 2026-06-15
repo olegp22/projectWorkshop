@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/group.css">
   <link rel="stylesheet" href="css/notification.css">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body class="bg-white font-sans antialiased flex flex-col min-h-screen">
 
@@ -32,8 +33,7 @@
               <button type="button" data-mode="peer" class="mode-btn px-5 py-2 border border-gray-300 bg-white text-gray-700 text-sm rounded hover:border-orange-500 hover:text-orange-500 transition">Peer-to-peer</button>
               <button type="button" data-mode="contest" class="mode-btn px-5 py-2 border border-gray-300 bg-white text-gray-700 text-sm rounded hover:border-orange-500 hover:text-orange-500 transition">Конкурсное голосование</button>
             </div>
-            <p class="text-xs text-red-500 mt-1">после нажатия выбранный режим становится оранжевым</p>
-          </div>
+                      </div>
 
                     <!-- НАСТРОЙКА КОЛИЧЕСТВА ЭКСПЕРТОВ (classic mode) -->
           <div id="expertInspectorsBlock" class="mb-5">
@@ -68,15 +68,14 @@
 
         <div class="w-80 shrink-0">
           <h3 class="text-center font-bold text-gray-800 text-lg mb-4">Мои группы</h3>
-          <div class="groups-scrollbar overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 space-y-3" id="groupsListContainer"></div>
+          <div class="groups-scrollbar overflow-y-auto pr-2 space-y-3" id="groupsListContainer" style="max-height: 480px;"></div>
         </div>
       </div>
     </div>
 
     <!-- Секция деталей группы -->
     <div id="sectionGroupDetails" class="section-content hidden">
-      <h2 id="organizerTitle" class="text-xl font-semibold text-orange-500 mb-6 hidden">Для организаторов</h2>
-
+      
       <div class="flex flex-col md:flex-row gap-10 items-start">
         <div class="flex-1">
           <div class="flex items-center gap-3 mb-6 flex-wrap">
@@ -89,7 +88,7 @@
             <div class="members-scrollbar overflow-y-auto max-h-80" id="membersListArea"></div>
           </div>
 
-          <!-- Действия организатора -->
+          
           <div id="organizerActions" class="hidden mt-5">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
               <!-- Левая колонка: участники -->
@@ -100,7 +99,7 @@
                     <span class="text-lg leading-none">+</span>
                     <span id="addExpertBtnText">Добавить эксперта</span>
                   </button>
-                  <input type="text" id="expertInviteLink" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 text-xs text-gray-500 rounded text-center" placeholder="ссылка для приглашения появляется после нажатия кнопки" readonly>
+                  <input type="text" id="expertInviteLink" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 text-xs text-gray-500 rounded text-center" placeholder="" readonly>
                 </div>
 
                 <!-- Добавить студента -->
@@ -109,7 +108,7 @@
                     <span class="text-lg leading-none">+</span>
                     Добавить студента
                   </button>
-                  <input type="text" id="studentInviteLink" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 text-xs text-gray-500 rounded text-center" placeholder="ссылка для приглашения появляется после нажатия кнопки" readonly>
+                  <input type="text" id="studentInviteLink" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 text-xs text-gray-500 rounded text-center" placeholder="" readonly>
                 </div>
 
                 <!-- Удалить участника -->
@@ -167,12 +166,12 @@
             <div id="criteriaListArea" class="space-y-2 mt-4"></div>
           </div>
 
-          <!-- Действия эксперта (только classic) -->
+          
           <div id="expertActions" class="hidden mt-5">
             <button id="goToReviewBtn" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 text-sm font-medium transition rounded">Перейти к проверке работ</button>
           </div>
 
-          <!-- Действия студента -->
+          
           <div id="studentActions" class="hidden mt-5 space-y-4">
             <div id="studentSubmitBlock">
               <div class="flex items-center gap-4">
@@ -209,7 +208,7 @@
 
         <div class="w-80 shrink-0">
           <h3 class="text-center font-bold text-gray-800 text-lg mb-4">Мои группы</h3>
-          <div class="groups-scrollbar overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 space-y-3" id="groupsListDetails"></div>
+          <div class="groups-scrollbar overflow-y-auto pr-2 space-y-3" id="groupsListDetails" style="max-height: 480px;"></div>
         </div>
       </div>
     </div>
