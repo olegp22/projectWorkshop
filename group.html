@@ -9,6 +9,11 @@
   <link rel="stylesheet" href="css/notification.css">
 <base target="_blank">
 <base target="_blank">
+<base target="_blank">
+<base target="_blank">
+<base target="_blank">
+<base target="_blank">
+<base target="_blank">
 </head>
 <body class="bg-white font-sans antialiased flex flex-col min-h-screen">
 
@@ -36,8 +41,8 @@
                       </div>
 
                     <!-- НАСТРОЙКА КОЛИЧЕСТВА ЭКСПЕРТОВ (classic mode) -->
-          <div id="expertInspectorsBlock" class="mb-5">
-            <label class="text-sm font-medium text-gray-700 block mb-2">Количество экспертов на один проект</label>
+          <div id="expertInspectorsBlock" class="hidden mb-5">
+            <label class="text-sm font-medium text-gray-700 block mb-2">Количество экспертов на работу</label>
             <input type="number" id="expertInspectorsCount" class="w-32 px-4 py-2 border border-gray-300 text-sm focus:border-orange-400 focus:outline-none rounded" value="1" min="1" max="10">
             <p class="text-xs text-gray-500 mt-1">Сколько экспертов будут проверять каждую работу</p>
           </div>
@@ -50,19 +55,13 @@
 
           <!-- ИСПРАВЛЕНИЕ ПУНКТ 3: добавлены поля для contest-режима -->
           <div id="contestExpertInspectorsBlock" class="hidden mb-5">
-            <label class="text-sm font-medium text-gray-700 block mb-2">Количество экспертов-жюри на работу</label>
+            <label class="text-sm font-medium text-gray-700 block mb-2">Количество жюри на работу</label>
             <input type="number" id="contestExpertInspectorsCount" class="w-32 px-4 py-2 border border-gray-300 text-sm focus:border-orange-400 focus:outline-none rounded" value="1" min="1" max="10">
-            <p class="text-xs text-gray-500 mt-1">Сколько экспертов (жюри) будут проверять каждую работу</p>
+            <p class="text-xs text-gray-500 mt-1">Сколько жюри будут проверять каждую работу</p>
           </div>
+<!-- /ИСПРАВЛЕНИЕ ПУНКТ 3 -->
 
-          <div id="contestStudentInspectorsBlock" class="hidden mb-5">
-            <label class="text-sm font-medium text-gray-700 block mb-2">Количество студентов-проверяющих на работу</label>
-            <input type="number" id="contestStudentInspectorsCount" class="w-32 px-4 py-2 border border-gray-300 text-sm focus:border-orange-400 focus:outline-none rounded" value="1" min="1" max="10">
-            <p class="text-xs text-gray-500 mt-1">Сколько студентов будут проверять каждую работу</p>
-          </div>
-          <!-- /ИСПРАВЛЕНИЕ ПУНКТ 3 -->
-
-          <button id="createGroupBtn" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 text-sm font-medium transition shadow-sm rounded mb-8">Создать новую группу</button>
+          <button id="createGroupBtn" class=" text-white px-6 py-2.5 text-sm font-bold transition shadow-sm rounded-sm mb-8" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">Создать новую группу</button>
 
         </div>
 
@@ -74,7 +73,7 @@
     </div>
 
     <!-- Секция деталей группы -->
-    <div id="sectionGroupDetails" class="section-content hidden">
+    <div id="sectionGroupDetails" class="section-content active hidden">
       
       <div class="flex flex-col md:flex-row gap-10 items-start">
         <div class="flex-1">
@@ -85,98 +84,89 @@
 
           <h3 class="text-base font-semibold text-gray-700 mb-3">Участники</h3>
           <div class="border-2 border-purple-500 p-1 max-w-2xl">
-            <div class="members-scrollbar overflow-y-auto max-h-80" id="membersListArea"></div>
+            <div class="members-scrollbar overflow-y-auto max-h-80 min-h-[120px]" id="membersListArea"></div>
           </div>
 
           
-          <div id="organizerActions" class="hidden mt-5">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-              <!-- Левая колонка: участники -->
-              <div class="space-y-4">
-                <!-- Добавить эксперта/жюри -->
-                <div class="space-y-2" id="addExpertBlock">
-                  <button id="addExpertBtn" class="w-full flex items-center justify-center gap-2 px-5 py-2.5 bg-orange-500 text-white font-medium text-sm hover:bg-orange-600 transition rounded">
-                    <span class="text-lg leading-none">+</span>
-                    <span id="addExpertBtnText">Добавить эксперта</span>
-                  </button>
-                  <input type="text" id="expertInviteLink" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 text-xs text-gray-500 rounded text-center" placeholder="" readonly>
-                </div>
+          <div id="organizerActions" class="mt-5">
+            <!-- Сетка кнопок 2 колонки как на макете -->
+            <div class="grid grid-cols-2 gap-4 mt-6">
+              <!-- Левая колонка -->
+              <div class="space-y-3">
+                <button id="addExpertBtn" class="w-full mx-auto flex items-center justify-center gap-2 px-4 py-2.5  text-white font-bold text-sm hover:bg-orange-600 transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">
+                  <span class="text-lg leading-none font-bold">+</span>
+                  <span class="flex-1 text-center">Добавить члена жюри</span>
+                </button>
+                <input type="text" id="expertInviteLink" class="hidden w-full px-3 py-2 bg-gray-50 border border-gray-200 text-xs text-gray-500 rounded text-center" placeholder="ссылка для приглашения" readonly>
 
-                <!-- Добавить студента -->
-                <div class="space-y-2">
-                  <button id="addStudentBtn" class="w-full flex items-center justify-center gap-2 px-5 py-2.5 bg-orange-500 text-white font-medium text-sm hover:bg-orange-600 transition rounded">
-                    <span class="text-lg leading-none">+</span>
-                    Добавить студента
-                  </button>
-                  <input type="text" id="studentInviteLink" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 text-xs text-gray-500 rounded text-center" placeholder="" readonly>
-                </div>
+                <button id="addStudentBtn" class="w-full mx-auto flex items-center justify-center gap-2 px-4 py-2.5  text-white font-bold text-sm hover:bg-orange-600 transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">
+                  <span class="text-lg leading-none font-bold">+</span>
+                  Добавить студента
+                </button>
+                <input type="text" id="studentInviteLink" class="hidden w-full px-3 py-2 bg-gray-50 border border-gray-200 text-xs text-gray-500 rounded text-center" placeholder="ссылка для приглашения" readonly>
 
-                <!-- Удалить участника -->
                 <div class="relative">
-                  <button id="removeMemberBtn" class="w-full flex items-center justify-center gap-2 px-5 py-2.5 bg-orange-500 text-white font-medium text-sm hover:bg-orange-600 transition rounded">
-                    <span class="text-base">🗑</span>
-                    Удалить участника
+                  <button id="removeMemberBtn" class="w-full mx-auto flex items-center justify-center gap-2 px-4 py-2.5  text-white font-bold text-sm hover:bg-orange-600 transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <span class="flex-1 text-center">Удалить участника</span>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                   </button>
                   <div id="removeMemberDropdown" class="hidden absolute left-0 top-full mt-1 w-full bg-white border-2 border-orange-500 shadow-lg z-40 max-h-48 overflow-y-auto"></div>
                 </div>
               </div>
 
-              <!-- Правая колонка: критерии -->
-              <div class="space-y-4">
-                <div class="space-y-2">
-                  <button id="addCriterionBtn" class="w-full flex items-center justify-center gap-2 px-5 py-2.5 bg-orange-500 text-white font-medium text-sm hover:bg-orange-600 transition rounded">
-                    <span class="text-lg leading-none">+</span>
-                    Добавить критерий оценки
-                  </button>
-                </div>
+              <!-- Правая колонка -->
+              <div class="space-y-3">
+                <button id="addCriterionBtn" class="w-full mx-auto flex items-center justify-center gap-2 px-4 py-2.5  text-white font-bold text-sm hover:bg-orange-600 transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">
+                  <span class="text-lg leading-none font-bold">+</span>
+                  Добавить критерий оценки
+                </button>
 
-                <div class="space-y-2">
-                  <button id="addCriterionDescBtn" class="w-full flex items-center justify-center gap-2 px-5 py-2.5 bg-orange-500 text-white font-medium text-sm hover:bg-orange-600 transition rounded">
-                    <span class="text-lg leading-none">+</span>
-                    Добавить описание критерия
-                  </button>
+                <!-- Форма добавления критерия — прямо под кнопкой, ширина = кнопке -->
+                <div id="criterionFormBlock" class="hidden space-y-2 border-2 border-orange-200 p-3 rounded bg-orange-50">
+                  <input type="text" id="criterionNameInput" class="w-full px-3 py-2 border border-gray-300 text-sm rounded focus:border-orange-400 focus:outline-none" placeholder="Название критерия">
+                  <textarea id="criterionDescInput" class="w-full px-3 py-2 border border-gray-300 text-sm rounded resize-none focus:border-orange-400 focus:outline-none" rows="2" placeholder="Описание критерия (необязательно)"></textarea>
+                  <div class="flex items-center justify-center gap-2">
+                    <span class="text-sm text-gray-700 whitespace-nowrap">Макс. балл:</span>
+                    <input type="number" id="criterionMaxScoreInput" class="w-16 px-2 py-1 border border-gray-300 text-sm rounded focus:border-orange-400 focus:outline-none" value="10" min="1" max="100">
+                  </div>
+                  <div class="flex gap-2">
+                    <button id="saveCriterionBtn" class="w-full flex items-center justify-center px-4 py-2.5 text-white font-bold text-sm transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">Сохранить</button>
+                    <button id="cancelCriterionBtn" class="bg-white border border-gray-400 text-gray-700 px-4 py-1.5 text-sm rounded hover:bg-gray-100 transition">Отмена</button>
+                  </div>
                 </div>
 
                 <div class="relative">
-                  <button id="removeCriterionBtn" class="w-full flex items-center justify-center gap-2 px-5 py-2.5 bg-orange-500 text-white font-medium text-sm hover:bg-orange-600 transition rounded">
-                    <span class="text-base">🗑</span>
-                    Удалить критерий оценки
+                  <button id="removeCriterionBtn" class="w-full mx-auto flex items-center justify-center gap-2 px-4 py-2.5  text-white font-bold text-sm hover:bg-orange-600 transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <span class="flex-1 text-center">Удалить критерий оценки</span>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                   </button>
                   <div id="removeCriterionDropdown" class="hidden absolute left-0 top-full mt-1 w-full bg-white border-2 border-orange-500 shadow-lg z-40 max-h-48 overflow-y-auto"></div>
                 </div>
+
+                <!-- Список критериев -->
+                <div id="criteriaListArea" class="border border-gray-200 rounded p-2 min-h-[80px] max-h-32 overflow-y-auto"></div>
+
+
+                <button id="addEventBtn" class="w-full mx-auto flex items-center justify-center gap-2 px-4 py-2.5  text-white font-bold text-sm hover:bg-orange-600 transition rounded-sm" onclick="window.location.href='calendar.html'" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">
+                  <span class="text-lg leading-none font-bold">+</span>
+                  Добавить мероприятие
+                </button>
               </div>
             </div>
+          </div>
 
-            <!-- Форма добавления критерия -->
-            <div id="criterionFormBlock" class="hidden mt-4 space-y-3 max-w-md border-2 border-orange-200 p-4 rounded bg-orange-50">
-              <input type="text" id="criterionNameInput" class="w-full px-3 py-2 border border-gray-300 text-sm rounded focus:border-orange-400 focus:outline-none" placeholder="Название критерия">
-              <textarea id="criterionDescInput" class="w-full px-3 py-2 border border-gray-300 text-sm rounded resize-none focus:border-orange-400 focus:outline-none" rows="2" placeholder="Описание критерия (необязательно)"></textarea>
-              <div class="flex items-center gap-3">
-                <label class="text-sm text-gray-700 whitespace-nowrap">Максимальный балл:</label>
-                <input type="number" id="criterionMaxScoreInput" class="w-20 px-3 py-2 border border-gray-300 text-sm rounded focus:border-orange-400 focus:outline-none" value="10" min="1" max="100">
-              </div>
-              <div class="flex gap-2">
-                <button id="saveCriterionBtn" class="bg-orange-500 text-white px-4 py-1.5 text-sm rounded hover:bg-orange-600 transition">Сохранить</button>
-                <button id="cancelCriterionBtn" class="border border-gray-400 text-gray-700 px-4 py-1.5 text-sm rounded hover:bg-gray-100 transition">Отмена</button>
-              </div>
-            </div>
-
-            <div id="criteriaListArea" class="space-y-2 mt-4"></div>
+          <div id="expertActions" class="mt-5">
+            <button id="goToReviewBtn" class="w-full  text-white px-6 py-2.5 text-sm font-bold transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">Перейти к проверке работ</button>
           </div>
 
           
-          <div id="expertActions" class="hidden mt-5">
-            <button id="goToReviewBtn" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 text-sm font-medium transition rounded">Перейти к проверке работ</button>
-          </div>
-
-          
-          <div id="studentActions" class="hidden mt-5 space-y-4">
+          <div id="studentActions" class="mt-5 space-y-4">
             <div id="studentSubmitBlock">
               <div class="flex items-center gap-4">
                 <input type="text" id="studentProjectLink" class="flex-1 max-w-md px-3 py-2 border border-gray-300 text-sm rounded" placeholder="ссылка на проект">
-                <button id="studentSendForReviewBtn" class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 text-sm font-medium transition rounded">Отправить на проверку</button>
+                <button id="studentSendForReviewBtn" class=" text-white px-5 py-2 text-sm font-bold transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">Отправить на проверку</button>
               </div>
             </div>
 
@@ -187,20 +177,20 @@
                   <span id="studentWorkStatus" class="text-xs px-2 py-0.5 rounded">—</span>
                 </div>
                 <a id="studentCurrentLink" href="#" target="_blank" class="text-purple-600 text-sm hover:underline break-all block mb-3">—</a>
-                <div id="studentUpdateBlock" class="flex items-center gap-2">
+                <div id="studentUpdateBlock" class="flex items-center justify-center gap-2">
                   <input type="text" id="studentNewLinkInput" class="flex-1 px-3 py-2 border border-gray-300 text-sm rounded" placeholder="новая ссылка">
-                  <button id="studentUpdateLinkBtn" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 text-sm rounded transition">Обновить</button>
+                  <button id="studentUpdateLinkBtn" class=" text-white px-4 py-2 text-sm font-bold rounded-sm transition" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">Обновить</button>
                 </div>
               </div>
             </div>
 
             <!-- Кнопка проверки чужих работ (только P2P) -->
-            <button id="studentGoToReviewBtn" class="hidden bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 text-sm font-medium transition rounded">
+            <button id="studentGoToReviewBtn" class="hidden w-full  text-white px-6 py-2.5 text-sm font-bold transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">
               Перейти к проверке работ
             </button>
           </div>
 
-          <button id="backToGroupsBtn" class="mt-8 text-sm text-gray-500 hover:text-gray-800 flex items-center gap-1 transition">
+          <button id="backToGroupsBtn" class="mt-4 text-sm text-gray-500 hover:text-gray-800 flex items-center gap-1 transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
             Назад к группам
           </button>
@@ -217,6 +207,6 @@
   <div id="layout-footer"></div>
 
   <script type="module" src="js/layout-loader.js"></script>
-  <script type="module" src="js/group.js"></script>
+  <script type="module" src="js/group.js?v=test"></script>
 </body>
 </html>

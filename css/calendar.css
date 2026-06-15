@@ -85,7 +85,7 @@ input[type="time"]:invalid {
   color: #9ca3af;
 }
 
-/* === МОБИЛЬНЫЙ КАЛЕНДАРЬ === */
+/*МОБИЛЬНЫЙ КАЛЕНДАРЬ*/
 @media (max-width: 640px) {
   #calendarGrid {
     grid-auto-rows: 80px !important;

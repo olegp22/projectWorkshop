@@ -261,3 +261,47 @@
     width: 100% !important;
   }
 }
+
+/* === ИСПРАВЛЕНИЯ ДЛЯ МАКЕТА === */
+
+/* Сетка кнопок организатора */
+#organizerActions .grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Placeholder стили для мок-данных */
+#membersListArea .italic {
+  font-style: italic;
+}
+
+/* Стили для списка критериев */
+#criteriaListArea {
+  font-size: 13px;
+}
+
+#criteriaListArea .bg-purple-50 {
+  background-color: #faf5ff;
+}
+
+/* Подписи под кнопками */
+#organizerActions .text-xs.text-gray-400 {
+  font-size: 11px;
+  margin-top: -4px;
+  margin-bottom: 4px;
+}
+
+#organizerActions .text-xs.text-red-400 {
+  font-size: 11px;
+  margin-top: -4px;
+  margin-bottom: 4px;
+}
+
+/* Мобильная адаптивность сетки */
+@media (max-width: 768px) {
+  #organizerActions .grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+}
