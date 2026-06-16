@@ -13,7 +13,6 @@ export function setAuthToken(token) {
     }
 }
 
-
 function isTokenExpired() {
     if (!authToken) return true;
     try {
@@ -36,7 +35,6 @@ function handleAuthError() {
     error.isAuthError = true;
     return error;
 }
-
 
 function deepNormalize(obj) {
     if (!obj || typeof obj !== 'object') return obj;
@@ -106,32 +104,90 @@ async function request(endpoint, method = 'GET', body = null, needsAuth = true) 
         options.body = JSON.stringify(body);
     }
 
+    let response;
     try {
-        const response = await fetch(`${API_BASE}${endpoint}`, options);
+        response = await fetch(`${API_BASE}${endpoint}`, options);
+    } catch (networkError) {
+        const error = new Error('Сервер недоступен. Проверьте подключение и убедитесь, что бэкенд запущен.');
+        error.isNetworkError = true;
+        error.originalError = networkError;
+        throw error;
+    }
 
-        if (response.status === 401) {
-            throw handleAuthError();
-        }
+    // Обработка 401
+    if (response.status === 401) {
+        throw handleAuthError();
+    }
 
-        const data = await response.json();
+    // Для 204 No Content или 304 Not Modified — тела нет
+    if (response.status === 204 || response.status === 304) {
         if (!response.ok) {
-            const error = new Error(data.detail || `Ошибка ${response.status}`);
+            const error = new Error(`Ошибка ${response.status}: ${response.statusText}`);
             error.status = response.status;
             throw error;
         }
+        return null;
+    }
 
-        return normalizeResponse(data);
-    } catch (error) {
-        if (error.isAuthError) throw error;
-        console.error(`API request failed: ${endpoint}`, error);
+    // === ИСПРАВЛЕНИЕ: всегда читаем как текст, проверяем пустоту, потом парсим ===
+    let text;
+    try {
+        text = await response.text();
+    } catch (e) {
+        text = '';
+    }
+
+    // Пустой ответ — не пытаемся парсить JSON
+    if (!text || text.trim() === '') {
+        if (!response.ok) {
+            const error = new Error(`Ошибка ${response.status}: ${response.statusText}`);
+            error.status = response.status;
+            throw error;
+        }
+        return null;
+    }
+
+    // Проверяем что ответ действительно JSON
+    const contentType = response.headers.get('content-type') || '';
+
+    // Если сервер вернул HTML-страницу ошибки или пусто
+    if (!contentType.includes('application/json') && text.trim().startsWith('<')) {
+        const error = new Error(
+            response.ok 
+                ? `Сервер вернул HTML вместо JSON. Возможно, эндпоинт ${endpoint} не существует.`
+                : `Ошибка сервера ${response.status}: ${response.statusText}`
+        );
+        error.status = response.status;
+        error.isHtmlResponse = true;
         throw error;
     }
+
+    // Парсим JSON
+    let data;
+    try {
+        data = JSON.parse(text);
+    } catch (parseError) {
+        const error = new Error('Сервер вернул некорректный JSON. Возможно, эндпоинт не существует или сервер вернул ошибку.');
+        error.status = response.status;
+        error.isParseError = true;
+        error.rawResponse = text.substring(0, 200);
+        throw error;
+    }
+
+    if (!response.ok) {
+        const error = new Error(data.detail || data.message || `Ошибка ${response.status}`);
+        error.status = response.status;
+        error.responseData = data;
+        throw error;
+    }
+
+    return normalizeResponse(data);
 }
 
 export const authAPI = {
     async login(email, password) {
         const data = await request('/auth/login', 'POST', { email, password }, false);
-        if (data.access_token) {
+        if (data && data.access_token) {
             setAuthToken(data.access_token);
         }
         return data;
@@ -169,6 +225,7 @@ export const usersAPI = {
             return user;
         } catch (error) {
             console.warn('Не удалось загрузить профиль с сервера:', error.message);
+            // Fallback: пробуем декодировать токен
             try {
                 const token = authToken.split('.')[1];
                 const payload = JSON.parse(atob(token));
@@ -299,7 +356,6 @@ export const groupsAPI = {
     },
 
     async reviewWork(submissionId, comment, grades) {
-
         return await request(`/groups/submissions/${submissionId}/review`, 'POST', {
             comment: comment || "",
             grades
@@ -326,11 +382,8 @@ export const groupsAPI = {
     }
 };
 
-
 export const eventsAPI = {
     async createEvent(data, groupId) {
-
-
         const endpoint = groupId
             ? `/events/?group_id=${groupId}`
             : '/events/';
@@ -338,7 +391,6 @@ export const eventsAPI = {
     },
 
     async getEvents() {
-
         return await request('/events/', 'GET');
     },
 
@@ -347,11 +399,9 @@ export const eventsAPI = {
     },
 
     async updateEvent(eventId, data) {
-
         return await request(`/events/${eventId}`, 'PUT', data);
     }
 };
-
 
 export function isValidUrl(string) {
     try {
@@ -361,6 +411,5 @@ export function isValidUrl(string) {
         return false;
     }
 }
-
 
 export { request };
