@@ -70,23 +70,23 @@ function renderProjects() {
 
   container.className = 'projects-grid';
 
-  // Фильтрация: каждый проект попадает только в ОДНУ категорию
+  // Фильтрация: обрабатываем ВСЕ фильтры включая urgent
   let filtered = [];
 
   if (currentFilter === 'all') {
-    // "Все" — показываем всё без дублирования
     filtered = projects;
+  } else if (currentFilter === 'urgent') {
+    // Срочные = работы на проверке (pending) с низким прогрессом
+    filtered = projects.filter(p => p.status === 'reviewing');
   } else if (currentFilter === 'reviewing') {
-    // "На проверке" — только неоценённые
     filtered = projects.filter(p => p.status === 'reviewing');
   } else if (currentFilter === 'archive') {
-    // "Архив" — только оценённые
     filtered = projects.filter(p => p.status === 'archive');
   }
 
   if (filtered.length === 0) {
     container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #9ca3af; padding: 32px 0;">Нет проектов для отображения</div>';
-    updateProgress(0, 0);
+    updateProgress(0, projects.length);
     return;
   }
 
@@ -110,7 +110,7 @@ function renderProjects() {
     });
   });
 
-  // Прогресс считаем по всем проектам, не только отфильтрованным
+  // Прогресс считаем по всем проектам
   const total = projects.length;
   const checked = projects.filter(p => p.status === 'archive').length;
   updateProgress(checked, total);
@@ -129,16 +129,9 @@ function updateProgress(checked, total) {
 }
 
 function setupFilters() {
-  const container = document.getElementById('filterContainer');
-  if (!container) return;
+  // НЕ пересоздаём кнопки, а навешиваем обработчики на существующие
+  const buttons = document.querySelectorAll('#filterContainer .filter-btn');
 
-  container.innerHTML = `
-    <button class="filter-btn is-active bg-orange-500 px-4 py-1 rounded text-sm font-medium transition cursor-pointer text-white" data-filter="all">Все</button>
-    <button class="filter-btn px-4 py-1 rounded text-sm font-medium transition cursor-pointer bg-orange-500 text-white opacity-70 hover:opacity-100" data-filter="reviewing">На проверке</button>
-    <button class="filter-btn px-4 py-1 rounded text-sm font-medium transition cursor-pointer bg-orange-500 text-white opacity-70 hover:opacity-100" data-filter="archive">Архив</button>
-  `;
-
-  const buttons = container.querySelectorAll('.filter-btn');
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
       buttons.forEach(b => {
@@ -214,9 +207,7 @@ async function loadProjectsWithProgress() {
           }
         }
 
-        // КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: определяем статус однозначно
-        // Проект либо "archive" (оценён), либо "reviewing" (на проверке)
-        // Никакого дублирования!
+        // Определяем статус однозначно
         const isFullyReviewed = hasMyReview
           || myReviewStatus === 'graded'
           || scoredCount >= totalCriteriaCount
