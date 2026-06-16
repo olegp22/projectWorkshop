@@ -84,10 +84,11 @@ async function loadEventsFromServer() {
       saveEventsToLocalStorage(events);
     }
   } catch (error) {
-    if (error.isAuthError || (error.message && error.message.includes('401'))) {
+    if (error.message && error.message.includes('Сессия истекла')) {
+      return;
+    }
+    if (error.message && error.message.includes('401')) {
       showToast('Сессия истекла. Пожалуйста, войдите снова.', true);
-      authAPI.logout();
-      window.location.reload();
       return;
     }
     console.warn('Не удалось загрузить события с сервера:', error.message);

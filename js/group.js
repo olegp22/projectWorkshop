@@ -796,6 +796,10 @@ if (goToReviewBtn) {
       showToast('Сначала выберите группу', true);
       return;
     }
+    if (!authAPI.isAuthenticated()) {
+      showToast('Необходимо авторизоваться', true);
+      return;
+    }
     const modeParam = currentGroupMode === 'contest' ? '&mode=contest' : '';
     window.location.href = `review.html?group=${currentGroupId}${modeParam}`;
   };

@@ -166,14 +166,19 @@ async function loadProjectsWithProgress() {
     const reviews = await groupsAPI.getMyReviews();
     const totalCriteriaCount = groupCriteria.length || 0;
 
-
     const groupReviews = reviews.filter(r => r.group_id == currentGroupId);
 
+    // Получаем локально оценённые работы из localStorage
+    let locallyReviewed = [];
+    try {
+      locallyReviewed = JSON.parse(localStorage.getItem('reviewed_submissions') || '[]');
+    } catch (e) {}
 
     const projectsWithDetails = await Promise.all(
       groupReviews.map(async (r) => {
         let myReviewStatus = 'pending';
         let scoredCount = 0;
+        let hasMyReview = false;
 
         try {
           const submission = await groupsAPI.getSubmission(r.submission_id);
@@ -182,6 +187,7 @@ async function loadProjectsWithProgress() {
             rev => rev.reviewer_id === currentUserId
           );
           if (myReview) {
+            hasMyReview = true;
             myReviewStatus = myReview.status || 'pending';
 
             if (myReview.grades && Array.isArray(myReview.grades)) {
@@ -200,12 +206,15 @@ async function loadProjectsWithProgress() {
           }
         }
 
-        const isFullyReviewed = myReviewStatus === 'graded' || scoredCount >= totalCriteriaCount;
+        const isFullyReviewed = hasMyReview
+          || myReviewStatus === 'graded'
+          || scoredCount >= totalCriteriaCount
+          || locallyReviewed.includes(String(r.submission_id));
 
         return {
           id: r.submission_id,
-          name: `Проект #${r.submission_id}`,
-          author: `${r.surname || ""} ${r.name || ""} (ID ${r.student_id})`,
+          name: `Работа: ${r.surname || ""} ${r.name || ""}`,
+          author: `${r.surname || ""} ${r.name || ""}`,
           status: isFullyReviewed ? 'archive' : 'reviewing',
           date: new Date().toISOString(),
           deadline: '—',
@@ -224,6 +233,10 @@ async function loadProjectsWithProgress() {
 
 async function init() {
   await loadCurrentUser();
+  if (!authAPI.isAuthenticated()) {
+    showToast('Необходимо авторизоваться', true);
+    return;
+  }
   await loadGroupInfo();
   await loadProjectsWithProgress();
   setupFilters();

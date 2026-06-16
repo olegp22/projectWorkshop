@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:8000';
+const API_BASE = '';
 
 let authToken = localStorage.getItem('access_token') || '';
 
@@ -87,7 +87,7 @@ async function request(endpoint, method = 'GET', body = null, needsAuth = true) 
         if (response.status === 401) {
             setAuthToken('');
             if (typeof window !== 'undefined' && !window.location.pathname.includes('/index.html')) {
-                window.location.href = '/index.html';
+                window.location.href = 'index.html';
             }
             throw new Error('Сессия истекла. Пожалуйста, войдите снова.');
         }
