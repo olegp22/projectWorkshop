@@ -6,6 +6,15 @@ let selectedParticipants = [];
 let activeEventBlock = null;
 let lastClickedEventElement = null;
 let currentUserId = null;
+let targetGroupId = null;
+let targetParticipantId = null;
+let targetParticipantName = '';
+let hideParticipantSelection = false;
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]));
+}
 
 function showToast(message, isError = false) {
   const toast = document.createElement('div');
@@ -117,7 +126,20 @@ function loadEventsFromLocalStorage() {
     return [];
   }
 }
+function initTargetParticipant() {
+  const params = new URLSearchParams(window.location.search);
+  targetGroupId = params.get('group_id');
+  targetParticipantId = params.get('participant_id');
+  targetParticipantName = params.get('participant_name') ? decodeURIComponent(params.get('participant_name')) : '';
+  hideParticipantSelection = Boolean(targetParticipantId);
+}
 
+function setTargetParticipant() {
+  if (!targetParticipantId) return;
+  const participantObj = availableParticipants.find(p => String(p.id) === String(targetParticipantId));
+  const selected = participantObj ? participantObj : { id: targetParticipantId, name: targetParticipantName || `Студент ${targetParticipantId}` };
+  selectedParticipants = [selected];
+}
 function saveEventsToLocalStorage(eventsData) {
   try {
     localStorage.setItem('calendar_events', JSON.stringify(eventsData));
@@ -338,10 +360,10 @@ document.getElementById('addEventBtn').onclick = () => {
   closeTooltip();
   window.editingEventId = null;
   clearEventForm();
-  switchSection('createEvent');
-  renderParticipantsDropdown();
+  if (hideParticipantSelection) {
+    setTargetParticipant();
+  }
 };
-
 document.getElementById('cancelEventBtn').onclick = () => {
   clearEventForm();
   window.editingEventId = null;
@@ -367,7 +389,7 @@ function clearEventForm() {
   document.getElementById('eventDate').value = '';
   document.getElementById('eventTimeStart').value = '';
   document.getElementById('eventTimeEnd').value = '';
-  selectedParticipants = [];
+  selectedParticipants = hideParticipantSelection ? [{ id: targetParticipantId, name: targetParticipantName || selectedParticipants[0]?.name || `Студент ${targetParticipantId}` }] : [];
   renderSelectedParticipants();
 }
 
@@ -375,30 +397,48 @@ let availableParticipants = [];
 
 async function loadParticipants() {
   try {
-    const groups = await groupsAPI.getMyGroups();
-    if (groups && groups.length > 0) {
-      const allMembers = [];
-      const seenIds = new Set();
+    const allMembers = [];
+    const seenIds = new Set();
 
-      for (const group of groups) {
-        try {
-          const members = await groupsAPI.getMembers(group.id);
-          for (const m of members) {
-            if (!seenIds.has(m.user_id) && m.user_id !== currentUserId) {
-              seenIds.add(m.user_id);
-              allMembers.push({
-                id: m.user_id,
-                name: `${m.name || ''} ${m.surname || ''}`.trim() || m.email || `User ${m.user_id}`
-              });
-            }
+    if (targetGroupId) {
+      try {
+        const members = await groupsAPI.getMembers(targetGroupId);
+        for (const m of members) {
+          if (!seenIds.has(m.user_id) && m.user_id !== currentUserId) {
+            seenIds.add(m.user_id);
+            allMembers.push({
+              id: m.user_id,
+              name: `${m.name || ''} ${m.surname || ''}`.trim() || m.email || `User ${m.user_id}`
+            });
           }
-        } catch (e) {
-          console.warn(`Не удалось загрузить участников группы ${group.id}:`, e.message);
+        }
+      } catch (e) {
+        console.warn(`Не удалось загрузить участников группы ${targetGroupId}:`, e.message);
+      }
+    } else {
+      const groups = await groupsAPI.getMyGroups();
+      if (groups && groups.length > 0) {
+        for (const group of groups) {
+          try {
+            const members = await groupsAPI.getMembers(group.id);
+            for (const m of members) {
+              if (!seenIds.has(m.user_id) && m.user_id !== currentUserId) {
+                seenIds.add(m.user_id);
+                allMembers.push({
+                  id: m.user_id,
+                  name: `${m.name || ''} ${m.surname || ''}`.trim() || m.email || `User ${m.user_id}`
+                });
+              }
+            }
+          } catch (e) {
+            console.warn(`Не удалось загрузить участников группы ${group.id}:`, e.message);
+          }
         }
       }
-
-      availableParticipants = allMembers;
     }
+
+    availableParticipants = allMembers;
+    setTargetParticipant();
   } catch (error) {
     if (error.isAuthError || (error.message && error.message.includes('401'))) {
       showToast('Сессия истекла. Пожалуйста, войдите снова.', true);
@@ -413,6 +453,14 @@ async function loadParticipants() {
 
 function renderParticipantsDropdown() {
   const dropdown = document.getElementById('participantsDropdown');
+  const button = document.getElementById('participantsDropdownBtn');
+  if (hideParticipantSelection) {
+    if (button) button.style.display = 'none';
+    const selectedName = selectedParticipants[0]?.name || targetParticipantName || `Студент ${targetParticipantId}`;
+    dropdown.innerHTML = `<div class="px-3 py-2 text-sm text-gray-700">Выбран участник: ${escapeHtml(selectedName)}</div>`;
+    return;
+  }
+
   if (availableParticipants.length === 0) {
     dropdown.innerHTML = '<div class="px-3 py-2 text-sm text-gray-500">Нет доступных участников</div>';
     return;
@@ -562,14 +610,22 @@ document.getElementById('saveEventBtn').onclick = async () => {
 };
 
 async function init() {
+  initTargetParticipant();
   currentUserId = getUserIdFromToken();
   await loadCurrentUser();
   await loadParticipants();
-
+  if (hideParticipantSelection) {
+    selectedParticipants = [{ id: targetParticipantId, name: targetParticipantName || selectedParticipants[0]?.name || `Студент ${targetParticipantId}` }];
+  }
 
   await loadEventsFromServer();
 
   renderCalendar();
+
+  if (hideParticipantSelection) {
+    switchSection('createEvent');
+    renderParticipantsDropdown();
+  }
 }
 
 init();

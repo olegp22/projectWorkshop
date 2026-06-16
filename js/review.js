@@ -1,4 +1,4 @@
-import { groupsAPI } from './api.js';
+import { authAPI, groupsAPI } from './api.js';
 import { loadCurrentUser, showToast, escapeHtml, loadGroupCriteria } from './review-core.js';
 
 let currentGroupId = null;
@@ -167,51 +167,62 @@ async function loadProjectsWithProgress() {
     const reviews = await groupsAPI.getMyReviews();
     const totalCriteriaCount = groupCriteria.length || 0;
 
-    const groupReviews = reviews.filter(r => r.group_id == currentGroupId);
+    const reviewedLocal = JSON.parse(localStorage.getItem('reviewed_submissions') || '[]');
+    const seen = new Set();
+    const groupReviews = (Array.isArray(reviews) ? reviews : []).filter(r => {
+      if (r.group_id != currentGroupId) return false;
+      const submissionId = r.submission_id || r.id || r.submission?.id;
+      if (!submissionId) return false;
+      if (seen.has(submissionId)) return false;
+      seen.add(submissionId);
+      return true;
+    });
 
-    // Статус работы определяется ТОЛЬКО бэкендом (r.status)
-
+    // Статус работы определяется логикой бэкенда и локальными пометками
     const projectsWithDetails = await Promise.all(
       groupReviews.map(async (r) => {
-        let myReviewStatus = 'pending';
+        const submissionId = r.submission_id || r.id || r.submission?.id;
         let scoredCount = 0;
-        let hasMyReview = false;
+        let status = 'reviewing';
+        let name = `Работа: ${r.surname || ''} ${r.name || ''}`.trim();
+        let author = `${r.surname || ''} ${r.name || ''}`.trim();
+
+        if (!name) {
+          name = `Работа ${submissionId}`;
+        }
+        if (!author) {
+          author = `Студент`;
+        }
 
         try {
-          const submission = await groupsAPI.getSubmission(r.submission_id);
+          const submission = await groupsAPI.getSubmission(submissionId);
+          const submissionStatus = (submission.status || '').toLowerCase();
+          status = submissionStatus === 'graded' ? 'archive' : 'reviewing';
 
-          const myReview = submission.reviews?.find(
-            rev => rev.reviewer_id === currentUserId
-          );
-          if (myReview) {
-            hasMyReview = true;
-            myReviewStatus = myReview.status || 'pending';
-
-            if (myReview.grades && Array.isArray(myReview.grades)) {
-              const uniqueCriteria = new Set(
-                myReview.grades.map(g => g.criterion_id).filter(Boolean)
-              );
-              scoredCount = uniqueCriteria.size;
+          if (Array.isArray(submission.reviews)) {
+            const myReview = submission.reviews.find(rev => String(rev.reviewer_id) === String(currentUserId));
+            if (myReview && Array.isArray(myReview.grades)) {
+              scoredCount = new Set(myReview.grades.map(g => g.criterion_id).filter(Boolean)).size;
             }
           }
         } catch (e) {
-          console.warn(`Не удалось загрузить детали работы ${r.submission_id}:`, e.message);
-
-          if (r.status === 'graded') {
-            myReviewStatus = 'graded';
+          console.warn(`Не удалось загрузить детали работы ${submissionId}:`, e.message);
+          status = (String(r.status || '').toLowerCase() === 'graded' || reviewedLocal.includes(submissionId)) ? 'archive' : 'reviewing';
+          if (status === 'archive') {
             scoredCount = totalCriteriaCount;
           }
         }
 
-        // Статус берём ТОЛЬКО от бэкенда
-        // r.status = статус работы (submission): 'pending', 'reviewing', 'graded'
-        const isFullyReviewed = r.status === 'graded';
+        if (status !== 'archive' && reviewedLocal.includes(submissionId)) {
+          status = 'archive';
+          scoredCount = totalCriteriaCount;
+        }
 
         return {
-          id: r.submission_id,
-          name: `Работа: ${r.surname || ""} ${r.name || ""}`,
-          author: `${r.surname || ""} ${r.name || ""}`,
-          status: isFullyReviewed ? 'archive' : 'reviewing',
+          id: submissionId,
+          name,
+          author,
+          status,
           date: new Date().toISOString(),
           deadline: '—',
           totalCriteria: totalCriteriaCount,

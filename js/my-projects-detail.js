@@ -54,27 +54,65 @@ function generateScaleSteps(max) {
   return steps;
 }
 
+function normalizeGrades(grades) {
+  if (!grades) return [];
+  if (Array.isArray(grades)) return grades;
+  if (typeof grades === 'object') {
+    return Object.values(grades).filter(item => item && typeof item === 'object');
+  }
+  return [];
+}
+
+function normalizeSubmission(submission) {
+  if (!submission || typeof submission !== 'object') return { reviews: [], criteria: [] };
+  const reviews = Array.isArray(submission.reviews)
+    ? submission.reviews
+    : Array.isArray(submission.data?.reviews)
+      ? submission.data.reviews
+      : Array.isArray(submission.result?.reviews)
+        ? submission.result.reviews
+        : Array.isArray(submission.reviewers)
+          ? submission.reviewers
+          : [];
+
+  const criteria = Array.isArray(submission.criteria)
+    ? submission.criteria
+    : Array.isArray(submission.group?.criteria)
+      ? submission.group.criteria
+      : [];
+
+  return {
+    ...submission,
+    reviews: reviews.map(review => ({
+      ...review,
+      grades: normalizeGrades(review.grades)
+    })),
+    criteria
+  };
+}
+
 
 function calculateAverageScores(submission, criteria) {
 
-  const reviews = submission.reviews || [];
+  const reviews = Array.isArray(submission.reviews) ? submission.reviews : [];
   const result = [];
 
   criteria.forEach(c => {
     const scores = [];
 
     reviews.forEach(review => {
-      if (review.grades) {
-
-        const grade = review.grades.find(g =>
-          g.criterion_name === c.name
-        );
-        if (grade && grade.score !== undefined) {
-          scores.push({
-            score: grade.score,
-            maxScore: c.max_score || 10
-          });
-        }
+      if (!Array.isArray(review.grades)) return;
+      const grade = review.grades.find(g =>
+        String(g.criterion_name) === String(c.name) ||
+        String(g.criterion_id) === String(c.id) ||
+        String(g.criterion_id) === String(c._id) ||
+        String(g.criterion_id) === String(c.criterion_id)
+      );
+      if (grade && grade.score !== undefined) {
+        scores.push({
+          score: grade.score,
+          maxScore: c.max_score || grade.max_score || 10
+        });
       }
     });
 
@@ -129,7 +167,7 @@ function renderCriteriaReadonly(criteriaWithAvg) {
     let markerHtml = '';
     if (avgScore !== null && avgScore >= 1 && avgScore <= max) {
       const markerPercent = max === 1 ? 50 : ((avgScore - 1) / (max - 1)) * 100;
-      markerHtml = `<div class="scale-marker ${isLarge ? 'large' : ''}" style="left: ${markerPercent};" data-value="${avgScore}"><span class="scale-marker-text">${avgScore}</span></div>`;
+      markerHtml = `<div class="scale-marker ${isLarge ? 'large' : ''}" style="left: ${markerPercent}%;" data-value="${avgScore}"><span class="scale-marker-text">${avgScore}</span></div>`;
     }
 
     const ballWord = getBallWord(max);
@@ -165,13 +203,11 @@ function renderCriteriaReadonly(criteriaWithAvg) {
   }).join('');
 }
 
-
 function renderReviewsTable(submission, criteria) {
   const tbody = document.getElementById('reviewsTableBody');
   if (!tbody) return;
 
-
-  const reviews = submission.reviews || [];
+  const reviews = Array.isArray(submission.reviews) ? submission.reviews : [];
 
   if (reviews.length === 0) {
     tbody.innerHTML = `
@@ -186,31 +222,62 @@ function renderReviewsTable(submission, criteria) {
     return;
   }
 
-  tbody.innerHTML = reviews.map((review, index) => {
-
+  const rows = reviews.map((review, index) => {
+    const reviewerName = `${review.reviewer?.surname || ''} ${review.reviewer?.name || ''}`.trim() || review.reviewer_name || `Проверяющий ${index + 1}`;
     let totalScore = 0;
     let totalMax = 0;
 
-    if (review.grades && review.grades.length > 0) {
-      review.grades.forEach(g => {
-        totalScore += g.score || 0;
+    const scoreCells = (criteria.length > 0 ? criteria : [{ name: 'Баллы', id: 'unknown' }]).map((c) => {
+      const grade = Array.isArray(review.grades)
+        ? review.grades.find((g) =>
+            String(g.criterion_name) === String(c.name) ||
+            String(g.criterion_id) === String(c.id) ||
+            String(g.criterion_id) === String(c._id) ||
+            String(g.criterion_id) === String(c.criterion_id)
+          )
+        : null;
 
-        const criterion = criteria.find(c => c.name === g.criterion_name);
-        totalMax += criterion?.max_score || 10;
-      });
-    }
+      const score = grade?.score != null ? grade.score : null;
+      const max = c.max_score || grade?.max_score || 10;
+      if (score !== null) {
+        totalScore += Number(score) || 0;
+        totalMax += Number(max) || 0;
+      } else {
+        totalMax += Number(max) || 0;
+      }
+
+      return `<td>${score !== null ? score : '-'}</td>`;
+    });
 
     const scoreDisplay = totalMax > 0 ? `${totalScore}/${totalMax}` : '—';
-    const anonymousName = `Проверяющий ${index + 1}`;
+    const commentText = review.comment || review.reviewer_comment || review.feedback || '—';
 
     return `
       <tr>
-        <td class="reviewer-name">${escapeHtml(anonymousName)}</td>
+        <td class="reviewer-name">${escapeHtml(reviewerName)}</td>
+        ${scoreCells.join('')}
         <td class="review-score">${scoreDisplay}</td>
-        <td class="review-comment">${escapeHtml(review.comment || '—')}</td>
+        <td class="review-comment">${escapeHtml(commentText)}</td>
       </tr>
     `;
   }).join('');
+
+  const table = document.querySelector('.reviews-table');
+  if (table) {
+    const thead = table.querySelector('thead');
+    if (thead) {
+      thead.innerHTML = `
+        <tr>
+          <th>Проверяющий</th>
+          ${criteria.map(c => `<th>${escapeHtml(c.name)}</th>`).join('')}
+          <th>Итого</th>
+          <th>Комментарий</th>
+        </tr>
+      `;
+    }
+  }
+
+  tbody.innerHTML = rows;
 }
 
 
@@ -275,8 +342,33 @@ async function loadProjectResults() {
     ]);
 
     submissionData = submission;
-    groupCriteria = criteria;
+    const fetchedCriteria = Array.isArray(criteria) ? criteria : [];
+    const normalizedSubmission = normalizeSubmission(submission);
+    const submissionReviews = normalizedSubmission.reviews;
 
+    const derivedCriteria = submissionReviews.reduce((acc, review) => {
+      if (!Array.isArray(review.grades)) return acc;
+      review.grades.forEach((grade) => {
+        const criterionId = grade.criterion_id ?? grade.criterionId ?? grade.id ?? grade._id;
+        const criterionName = grade.criterion_name ?? grade.criterionName ?? grade.name;
+        const existing = acc.find(c => String(c.id) === String(criterionId) || c.name === criterionName);
+        if (!existing) {
+          acc.push({
+            id: criterionId || criterionName || `grade-${acc.length + 1}`,
+            name: criterionName || `Критерий ${acc.length + 1}`,
+            max_score: grade.max_score || 10
+          });
+        }
+      });
+      return acc;
+    }, []);
+
+    const finalCriteria = fetchedCriteria.length > 0 ? fetchedCriteria : derivedCriteria;
+    groupCriteria = finalCriteria;
+
+    console.log('[ProjectDetail] fetched submission', submission);
+    console.log('[ProjectDetail] normalized reviews', submissionReviews);
+    console.log('[ProjectDetail] final criteria', finalCriteria);
 
     document.getElementById('projectName').innerText = `Проект #${submission.id}`;
     const linkEl = document.getElementById('projectDownloadLink');
@@ -285,8 +377,7 @@ async function loadProjectResults() {
       linkEl.innerText = submission.link || 'Ссылка недоступна';
     }
 
-
-    const hasReviews = submission.reviews && submission.reviews.length > 0;
+    const hasReviews = submissionReviews.length > 0;
     const criteriaList = document.getElementById('criteriaList');
     const reviewsTableBlock = document.getElementById('reviewsTableBlock');
     const avgTotalEl = document.getElementById('avgTotalScore');
@@ -310,17 +401,12 @@ async function loadProjectResults() {
 
     if (reviewsTableBlock) reviewsTableBlock.style.display = 'block';
 
-
-    const criteriaWithAvg = calculateAverageScores(submission, criteria);
-
+    const criteriaToUse = groupCriteria.length > 0 ? groupCriteria : derivedCriteria;
+    const criteriaWithAvg = calculateAverageScores(normalizedSubmission, criteriaToUse);
 
     renderCriteriaReadonly(criteriaWithAvg);
-
-
     updateAverageTotal(criteriaWithAvg);
-
-
-    renderReviewsTable(submission, criteria);
+    renderReviewsTable(normalizedSubmission, criteriaToUse);
 
   } catch (error) {
     showToast('Ошибка загрузки результатов: ' + error.message, true);

@@ -108,10 +108,10 @@ function renderProjects() {
     const isArchived = p.status === 'archive' || p.status === 'graded';
     const statusText = isArchived ? 'Оценена' : 'На проверке';
     const statusClass = isArchived ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
-    const scoreText = p.status === 'archive' && p.score > 0 ? `<span class="text-orange-600 font-bold">${p.score.toFixed(1)}</span> баллов` : '';
+    const scoreText = isArchived && p.score > 0 ? `<span class="text-orange-600 font-bold">${p.score.toFixed(1)}</span> баллов` : '';
 
     return `
-    <div class="project-card" data-status="${p.status}" data-id="${p.id}" data-group="${p.groupId}">
+    <div class="project-card" data-status="${p.status}" data-id="${p.id}" data-group="${p.groupId}" data-group-mode="${p.groupMode}">
       <div class="card-content">
         <p class="card-row"><span class="card-label">Группа:</span> ${escapeHtml(p.groupName)}</p>
         <p class="card-row"><span class="card-label">Ссылка:</span> <a href="${escapeHtml(p.link)}" target="_blank" class="text-purple-600 hover:underline">${escapeHtml(p.link)}</a></p>
@@ -127,7 +127,8 @@ function renderProjects() {
     card.addEventListener('click', () => {
       const projectId = card.dataset.id;
       const groupId = card.dataset.group;
-      const modeParam = p.groupMode !== 'classic' ? `&mode=${p.groupMode}` : '';
+      const groupMode = card.dataset.groupMode || 'classic';
+      const modeParam = groupMode !== 'classic' ? `&mode=${groupMode}` : '';
       window.location.href = `my-projects-detail.html?group=${groupId}&project=${projectId}${modeParam}`;
     });
   });

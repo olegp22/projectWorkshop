@@ -231,17 +231,18 @@ function setUserRole(role, groupMode = 'classic') {
   // === СТУДЕНТ ===
   if (normalizedRole === 'student' || normalizedRole === 'member') {
     if (studentActions) studentActions.classList.remove('hidden');
-    // Студент видит ТОЛЬКО свои блоки (ссылка на проект)
-    // Скрываем кнопку проверки чужих работ
-    const studentGoToReviewBtn = document.getElementById('studentGoToReviewBtn');
-    if (studentGoToReviewBtn) studentGoToReviewBtn.classList.add('hidden');
-    // Скрываем рейтинг для студента
     const studentRatingBlock = document.getElementById('studentRatingBlock');
-    if (studentRatingBlock) studentRatingBlock.classList.add('hidden');
+    if (studentRatingBlock) {
+      if (normalizedMode === 'contest') {
+        studentRatingBlock.classList.remove('hidden');
+      } else {
+        studentRatingBlock.classList.add('hidden');
+      }
+    }
   }
 
   setupOrganizerButtonsByMode(normalizedMode);
-  setupStudentButtonsByMode(normalizedMode);
+  setupStudentButtonsByMode(normalizedMode, normalizedRole);
 
   // Текст кнопки проверки в зависимости от режима
   if (normalizedMode === 'contest') {
@@ -284,10 +285,20 @@ function setupOrganizerButtonsByMode(groupMode) {
   }
 }
 
-function setupStudentButtonsByMode(groupMode) {
-  // Студентам показываем только ссылку на проект, проверка чужих работ — отдельная роль
+function setupStudentButtonsByMode(groupMode, role) {
   const studentGoToReviewBtn = document.getElementById('studentGoToReviewBtn');
-  if (studentGoToReviewBtn) {
+  if (!studentGoToReviewBtn) return;
+
+  const normalizedRole = normalizeRole(role);
+  const normalizedMode = normalizeGroupMode(groupMode);
+
+  const shouldShowButton = normalizedRole === 'student' || normalizedRole === 'member'
+    ? (normalizedMode === 'p2p' || normalizedMode === 'contest')
+    : false;
+
+  if (shouldShowButton) {
+    studentGoToReviewBtn.classList.remove('hidden');
+  } else {
     studentGoToReviewBtn.classList.add('hidden');
   }
 }
@@ -379,19 +390,33 @@ function renderMembers(members, groupMode = 'classic') {
   }
 
   const normalizedMode = normalizeGroupMode(groupMode);
+  const isEventCreator = ['organizer', 'creator', 'expert', 'reviewer'].includes(normalizeRole(currentUserRole));
 
   container.innerHTML = members.map(m => {
     const fullName = (m.name + ' ' + m.surname).trim() || m.email || m.user_id;
     const displayRole = getDisplayRole(m.role, normalizedMode);
+    const memberRole = normalizeRole(m.role);
+    const showAddEvent = isEventCreator && memberRole === 'student';
 
     return `
     <div class="flex justify-between items-center py-2 px-2 border-b border-gray-100 last:border-0" data-member-id="${m.user_id}">
       <span class="text-gray-800 text-sm flex-1 text-center">${escapeHtml(fullName)}</span>
       <div class="w-px h-4 bg-purple-300 mx-3"></div>
       <span class="text-gray-500 text-xs font-medium bg-gray-100 px-2 py-0.5 text-center w-24">${escapeHtml(displayRole)}</span>
+      ${showAddEvent ? `<button type="button" class="add-event-btn ml-3 rounded bg-orange-500 px-3 py-1 text-xs font-semibold text-white hover:bg-orange-600 transition" data-member-id="${m.user_id}" data-member-name="${escapeHtml(fullName)}">Добавить событие</button>` : ''}
     </div>
   `;
   }).join('');
+
+  container.querySelectorAll('.add-event-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const memberId = btn.dataset.memberId;
+      const memberName = btn.dataset.memberName;
+      if (!memberId) return;
+      window.location.href = `calendar.html?group_id=${encodeURIComponent(currentGroupId)}&participant_id=${encodeURIComponent(memberId)}&participant_name=${encodeURIComponent(memberName)}`;
+    });
+  });
 
   const dropdown = document.getElementById('removeMemberDropdown');
   if (dropdown) {
