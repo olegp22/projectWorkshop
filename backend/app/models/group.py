@@ -41,8 +41,7 @@ class GroupMember(Base):
         UniqueConstraint("group_id", "user_id", name="unique_user_in_group"),
     )
 
-    group = relationship("Group")
-    user = relationship("User")
+  
 
 
 #запрос в бд для создания таблица с критериями оценивания в группе

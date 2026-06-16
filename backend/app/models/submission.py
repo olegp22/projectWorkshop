@@ -46,5 +46,4 @@ class SubmissionReviewer(Base):
 
     comment = Column(Text, nullable=True) 
 
-    submission = relationship("Submission")
-    reviewer = relationship("User")
+    
