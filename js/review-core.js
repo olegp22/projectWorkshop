@@ -284,6 +284,13 @@ export async function handleFinishReview(projectId, feedback, groupId, onSuccess
   try {
     await groupsAPI.reviewWork(projectId, feedback, grades);
     showToast('Оценка успешно сохранена!');
+
+    // Очищаем кэш работ, чтобы при возврате список перезагрузился с актуальными статусами
+    try {
+      localStorage.removeItem('my_reviews_cache');
+      localStorage.removeItem('my_reviews_cache_time');
+    } catch (e) {}
+
     if (onSuccess) onSuccess();
     return true;
   } catch (error) {

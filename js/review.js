@@ -1,4 +1,4 @@
-import { authAPI, groupsAPI } from './api.js';
+import { groupsAPI } from './api.js';
 import { loadCurrentUser, showToast, escapeHtml, loadGroupCriteria } from './review-core.js';
 
 let currentGroupId = null;
@@ -70,15 +70,14 @@ function renderProjects() {
 
   container.className = 'projects-grid';
 
-  // Фильтрация: обрабатываем ВСЕ фильтры включая urgent
-  console.log('[review.js] Rendering projects, total:', projects.length, 'filter:', currentFilter);
+  // Фильтрация: обрабатываем ВСЕ фильтры
   let filtered = [];
 
   if (currentFilter === 'all') {
     filtered = projects;
   } else if (currentFilter === 'urgent') {
-    // Срочные = работы на проверке (pending) с низким прогрессом
-    filtered = projects.filter(p => p.status === 'reviewing');
+    // Срочные = работы на проверке с прогрессом ниже 50%
+    filtered = projects.filter(p => p.status === 'reviewing' && p.scoredCriteria < p.totalCriteria / 2);
   } else if (currentFilter === 'reviewing') {
     filtered = projects.filter(p => p.status === 'reviewing');
   } else if (currentFilter === 'archive') {
@@ -165,22 +164,12 @@ function setupSort() {
 
 async function loadProjectsWithProgress() {
   try {
-    if (!currentGroupId) {
-      console.warn('[review.js] currentGroupId is not set');
-      projects = [];
-      return;
-    }
     const reviews = await groupsAPI.getMyReviews();
-    console.log('[review.js] Loaded reviews:', reviews.length, reviews);
     const totalCriteriaCount = groupCriteria.length || 0;
 
     const groupReviews = reviews.filter(r => r.group_id == currentGroupId);
 
-    // Получаем локально оценённые работы из localStorage
-    let locallyReviewed = [];
-    try {
-      locallyReviewed = JSON.parse(localStorage.getItem('reviewed_submissions') || '[]');
-    } catch (e) {}
+    // Статус работы определяется ТОЛЬКО бэкендом (r.status)
 
     const projectsWithDetails = await Promise.all(
       groupReviews.map(async (r) => {
@@ -214,11 +203,9 @@ async function loadProjectsWithProgress() {
           }
         }
 
-        // Определяем статус однозначно
-        const isFullyReviewed = hasMyReview
-          || myReviewStatus === 'graded'
-          || scoredCount >= totalCriteriaCount
-          || locallyReviewed.includes(String(r.submission_id));
+        // Статус берём ТОЛЬКО от бэкенда
+        // r.status = статус работы (submission): 'pending', 'reviewing', 'graded'
+        const isFullyReviewed = r.status === 'graded';
 
         return {
           id: r.submission_id,
