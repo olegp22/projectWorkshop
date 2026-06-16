@@ -53,6 +53,11 @@
             <p class="text-xs text-gray-500 mt-1">Сколько жюри будут проверять каждую работу</p>
           </div>
           <!-- /ИСПРАВЛЕНИЕ ПУНКТ 3 -->
+                   <div id="contestStudentInspectorsBlock" class="hidden mb-5">
+            <label class="text-sm font-medium text-gray-700 block mb-2">Количество студентов-проверяющих на работу</label>
+            <input type="number" id="contestStudentInspectorsCount" class="w-32 px-4 py-2 border border-gray-300 text-sm focus:border-orange-400 focus:outline-none rounded" value="1" min="1" max="10">
+            <p class="text-xs text-gray-500 mt-1">Сколько студентов будут проверять каждую работу</p>
+          </div>
 
           <button id="createGroupBtn" class=" text-white px-6 py-2.5 text-sm font-bold transition shadow-sm rounded-sm mb-8" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">Создать новую группу</button>
 

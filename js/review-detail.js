@@ -102,7 +102,7 @@ function prepareGradesForSubmit() {
   }
 
 
-  if (criteria.length === 0) {
+  if (!criteria || criteria.length === 0) {
     showToast('Критерии оценки не настроены организатором', true);
     return null;
   }
@@ -154,6 +154,13 @@ async function loadProject() {
     }
 
     const submission = await loadProjectSubmission(currentProjectId);
+    if (!submission) {
+        showToast('Работа не найдена', true);
+        document.getElementById('projectName').innerText = 'Работа не найдена';
+        document.getElementById('projectDownloadLink').style.display = 'none';
+        document.getElementById('finishReviewBtn').style.display = 'none';
+        return;
+    }
     if (submission) {
       document.getElementById('projectName').innerText = `Проект #${submission.id}`;
       const linkEl = document.getElementById('projectDownloadLink');
@@ -174,7 +181,7 @@ async function loadProject() {
         if (feedbackBlock) feedbackBlock.classList.add('hidden');
         if (criteriaListBlock) criteriaListBlock.classList.add('hidden');
 
-        if (criteria.length === 0) {
+        if (!criteria || criteria.length === 0) {
 
           if (contestScaleBlock) {
             contestScaleBlock.innerHTML = `
@@ -228,7 +235,7 @@ async function loadProject() {
         if (contestScaleBlock) contestScaleBlock.classList.add('hidden');
 
 
-        if (criteria.length === 0) {
+        if (!criteria || criteria.length === 0) {
           if (criteriaListBlock) {
             criteriaListBlock.innerHTML = `
               <div class="text-center py-8">
@@ -314,6 +321,16 @@ async function loadProject() {
           try {
             await groupsAPI.reviewWork(currentProjectId, feedback, grades);
             showToast('Оценка успешно сохранена!');
+
+            // Сохраняем в localStorage что работа оценена
+            try {
+              const reviewed = JSON.parse(localStorage.getItem('reviewed_submissions') || '[]');
+              if (!reviewed.includes(currentProjectId)) {
+                reviewed.push(currentProjectId);
+                localStorage.setItem('reviewed_submissions', JSON.stringify(reviewed));
+              }
+            } catch (e) {}
+
             setTimeout(() => {
               const modeParam = currentGroupMode !== 'classic' ? `&mode=${currentGroupMode}` : '';
               window.location.href = `review.html?group=${currentGroupId}${modeParam}`;
