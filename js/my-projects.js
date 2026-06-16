@@ -6,7 +6,6 @@ let currentGroupMode = 'classic';
 let projects = [];
 let currentFilter = 'all';
 let sortAsc = false;
-let currentGroupMode = 'classic';
 
 function getUserIdFromToken() {
   const token = localStorage.getItem('access_token');
@@ -42,11 +41,12 @@ async function loadMyProjects() {
           try {
             const details = await groupsAPI.getSubmission(myWork.id);
             if (details) {
+              // Статус берём ТОЛЬКО от бэкенда
               status = details.status === 'graded' ? 'archive' : 'reviewing';
             }
           } catch (e) {
-            // Если не удалось получить детали, используем score
-            if (score > 0) status = 'archive';
+            // Если API недоступен — оставляем 'reviewing', не гадаем
+            console.warn('Не удалось получить детали работы:', e.message);
           }
 
           allProjects.push({
@@ -105,8 +105,9 @@ function renderProjects() {
   }
 
   container.innerHTML = filtered.map(p => {
-    const statusText = p.status === 'archive' ? 'Оценена' : 'На проверке';
-    const statusClass = p.status === 'archive' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
+    const isArchived = p.status === 'archive' || p.status === 'graded';
+    const statusText = isArchived ? 'Оценена' : 'На проверке';
+    const statusClass = isArchived ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
     const scoreText = p.status === 'archive' && p.score > 0 ? `<span class="text-orange-600 font-bold">${p.score.toFixed(1)}</span> баллов` : '';
 
     return `
@@ -117,7 +118,7 @@ function renderProjects() {
         <p class="card-row"><span class="card-label">Статус:</span> <span class="text-xs px-2 py-0.5 rounded ${statusClass}">${statusText}</span></p>
         ${scoreText ? `<p class="card-row"><span class="card-label">Балл:</span> ${scoreText}</p>` : ''}
       </div>
-      <button class="review-btn">${p.status === 'archive' ? 'Посмотреть результаты' : 'Посмотреть детали'}</button>
+      <button class="review-btn">${isArchived ? 'Посмотреть результаты' : 'Посмотреть детали'}</button>
     </div>
   `;
   }).join('');

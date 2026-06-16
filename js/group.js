@@ -208,40 +208,42 @@ function setUserRole(role, groupMode = 'classic') {
   const studentActions = document.getElementById('studentActions');
   const organizerTitle = document.getElementById('organizerTitle');
 
-
-
+  // Сначала скрываем ВСЕ блоки действий
   if (organizerActions) organizerActions.classList.add('hidden');
   if (expertActions) expertActions.classList.add('hidden');
   if (studentActions) studentActions.classList.add('hidden');
 
-
   document.querySelectorAll('.role-organizer-only').forEach(el => el.classList.add('hidden'));
 
-
+  // === ОРГАНИЗАТОР ===
   if (normalizedRole === 'organizer' || normalizedRole === 'creator') {
     if (organizerActions) organizerActions.classList.remove('hidden');
     document.querySelectorAll('.role-organizer-only').forEach(el => el.classList.remove('hidden'));
+    // Организатор НЕ видит блоки эксперта и студента
   }
 
+  // === ПРОВЕРЯЮЩИЙ (эксперт / жюри) ===
   if (normalizedRole === 'expert' || normalizedRole === 'reviewer' || normalizedRole === 'jury') {
     if (expertActions) expertActions.classList.remove('hidden');
+    // Проверяющий НЕ видит блоки организатора и студента
   }
 
+  // === СТУДЕНТ ===
   if (normalizedRole === 'student' || normalizedRole === 'member') {
     if (studentActions) studentActions.classList.remove('hidden');
+    // Студент видит ТОЛЬКО свои блоки (ссылка на проект)
+    // Скрываем кнопку проверки чужих работ
+    const studentGoToReviewBtn = document.getElementById('studentGoToReviewBtn');
+    if (studentGoToReviewBtn) studentGoToReviewBtn.classList.add('hidden');
+    // Скрываем рейтинг для студента
+    const studentRatingBlock = document.getElementById('studentRatingBlock');
+    if (studentRatingBlock) studentRatingBlock.classList.add('hidden');
   }
-
-
-  if (normalizedRole === 'organizer' || normalizedRole === 'creator') {
-    if (expertActions) expertActions.classList.remove('hidden');
-    if (studentActions) studentActions.classList.remove('hidden');
-  }
-
 
   setupOrganizerButtonsByMode(normalizedMode);
   setupStudentButtonsByMode(normalizedMode);
 
-
+  // Текст кнопки проверки в зависимости от режима
   if (normalizedMode === 'contest') {
     const btn = document.getElementById('goToReviewBtn');
     if (btn) btn.innerText = 'Перейти к голосованию';
@@ -250,16 +252,14 @@ function setUserRole(role, groupMode = 'classic') {
     if (btn) btn.innerText = 'Перейти к проверке работ';
   }
 
-
+  // Рейтинг показываем только организатору и эксперту (не студенту)
   const ratingBtnBlock = document.getElementById('ratingBtnBlock');
-  const studentRatingBlock = document.getElementById('studentRatingBlock');
-
-  if (normalizedMode === 'contest') {
-    if (ratingBtnBlock) ratingBtnBlock.classList.remove('hidden');
-    if (studentRatingBlock) studentRatingBlock.classList.remove('hidden');
-  } else {
-    if (ratingBtnBlock) ratingBtnBlock.classList.add('hidden');
-    if (studentRatingBlock) studentRatingBlock.classList.add('hidden');
+  if (ratingBtnBlock) {
+    if (normalizedMode === 'contest' && (normalizedRole === 'organizer' || normalizedRole === 'creator' || normalizedRole === 'expert' || normalizedRole === 'reviewer' || normalizedRole === 'jury')) {
+      ratingBtnBlock.classList.remove('hidden');
+    } else {
+      ratingBtnBlock.classList.add('hidden');
+    }
   }
 }
 
@@ -285,14 +285,10 @@ function setupOrganizerButtonsByMode(groupMode) {
 }
 
 function setupStudentButtonsByMode(groupMode) {
+  // Студентам показываем только ссылку на проект, проверка чужих работ — отдельная роль
   const studentGoToReviewBtn = document.getElementById('studentGoToReviewBtn');
-
   if (studentGoToReviewBtn) {
-    if (groupMode === 'p2p') {
-      studentGoToReviewBtn.classList.remove('hidden');
-    } else {
-      studentGoToReviewBtn.classList.add('hidden');
-    }
+    studentGoToReviewBtn.classList.add('hidden');
   }
 }
 
