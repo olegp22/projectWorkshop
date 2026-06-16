@@ -54,33 +54,31 @@ function generateScaleSteps(max) {
   return steps;
 }
 
-// === ПУНКТ 5.2: ИСПРАВЛЕННЫЙ ПОДСЧЁТ СРЕДНИХ БАЛЛОВ ===
-// Считаем среднее по всем проверкам для каждого критерия с учётом max_score
 
 function calculateAverageScores(submission, criteria) {
-  // Используем reviews (нормализованный api.js)
+
   const reviews = submission.reviews || [];
   const result = [];
 
   criteria.forEach(c => {
     const scores = [];
-    
+
     reviews.forEach(review => {
       if (review.grades) {
-        // Сопоставляем по criterion_name (бэкенд возвращает только его)
-        const grade = review.grades.find(g => 
+
+        const grade = review.grades.find(g =>
           g.criterion_name === c.name
         );
         if (grade && grade.score !== undefined) {
           scores.push({
             score: grade.score,
-            maxScore: c.max_score || 10  // бэкенд не возвращает max_score в grade
+            maxScore: c.max_score || 10
           });
         }
       }
     });
 
-    const avgScore = scores.length > 0 
+    const avgScore = scores.length > 0
       ? Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length)
       : null;
 
@@ -167,14 +165,12 @@ function renderCriteriaReadonly(criteriaWithAvg) {
   }).join('');
 }
 
-// === ПУНКТ 5.2: ИСПРАВЛЕННАЯ ТАБЛИЦА ОТЗЫВОВ ===
-// Считаем totalMax из критериев группы — бэкенд не возвращает max_score в grade
 
 function renderReviewsTable(submission, criteria) {
   const tbody = document.getElementById('reviewsTableBody');
   if (!tbody) return;
 
-  // Используем reviews (нормализованный api.js)
+
   const reviews = submission.reviews || [];
 
   if (reviews.length === 0) {
@@ -191,14 +187,14 @@ function renderReviewsTable(submission, criteria) {
   }
 
   tbody.innerHTML = reviews.map((review, index) => {
-    // Считаем totalMax из grades с fallback на max_score критерия
+
     let totalScore = 0;
     let totalMax = 0;
-    
+
     if (review.grades && review.grades.length > 0) {
       review.grades.forEach(g => {
         totalScore += g.score || 0;
-        // max_score берём ТОЛЬКО из критерия группы — бэкенд возвращает только criterion_name
+
         const criterion = criteria.find(c => c.name === g.criterion_name);
         totalMax += criterion?.max_score || 10;
       });
@@ -217,8 +213,6 @@ function renderReviewsTable(submission, criteria) {
   }).join('');
 }
 
-// === ПУНКТ 5.2: ИСПРАВЛЕННЫЙ ИТОГОВЫЙ БАЛЛ ===
-// Считаем сумму средних / сумму максимумов по всем критериям
 
 function updateAverageTotal(criteriaWithAvg) {
   const avgTotalEl = document.getElementById('avgTotalScore');
@@ -274,7 +268,7 @@ async function loadProjectResults() {
   }
 
   try {
-    // Загружаем submission и критерии параллельно
+
     const [submission, criteria] = await Promise.all([
       groupsAPI.getSubmission(currentProjectId),
       groupsAPI.getCriteria(currentGroupId).catch(() => [])
@@ -283,7 +277,7 @@ async function loadProjectResults() {
     submissionData = submission;
     groupCriteria = criteria;
 
-    // Устанавливаем название проекта и ссылку
+
     document.getElementById('projectName').innerText = `Проект #${submission.id}`;
     const linkEl = document.getElementById('projectDownloadLink');
     if (linkEl) {
@@ -291,7 +285,7 @@ async function loadProjectResults() {
       linkEl.innerText = submission.link || 'Ссылка недоступна';
     }
 
-    // Используем reviews (нормализованный api.js)
+
     const hasReviews = submission.reviews && submission.reviews.length > 0;
     const criteriaList = document.getElementById('criteriaList');
     const reviewsTableBlock = document.getElementById('reviewsTableBlock');
@@ -316,16 +310,16 @@ async function loadProjectResults() {
 
     if (reviewsTableBlock) reviewsTableBlock.style.display = 'block';
 
-    // Считаем средние баллы
+
     const criteriaWithAvg = calculateAverageScores(submission, criteria);
 
-    // Рендерим шкалы с средними баллами
+
     renderCriteriaReadonly(criteriaWithAvg);
 
-    // Обновляем итоговый средний балл
+
     updateAverageTotal(criteriaWithAvg);
 
-    // Рендерим таблицу отзывов — передаём criteria для lookup max_score
+
     renderReviewsTable(submission, criteria);
 
   } catch (error) {

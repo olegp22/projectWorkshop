@@ -19,12 +19,7 @@ function getUserIdFromToken() {
   }
 }
 
-// === ИСПРАВЛЕНИЕ ПУНКТ 2: СПИСОК ПРОЕКТОВ СТУДЕНТА ===
-// getMyReviews возвращает работы НА ПРОВЕРКУ (reviewer perspective)
-// Для студента используем ТОЛЬКО localStorage (my_submissions)
-// Для каждой сохранённой работы загружаем детали через getSubmission
 
-// Получить сохранённые ID работ из localStorage
 function getStoredSubmissions() {
   try {
     const raw = localStorage.getItem(MY_SUBMISSIONS_KEY);
@@ -34,16 +29,14 @@ function getStoredSubmissions() {
   }
 }
 
-// === ПОДСЧЁТ ИТОГОВОГО БАЛЛА ===
-// Считаем среднее по всем проверкам с учётом max_score каждого критерия
 
 function calculateTotalScore(submission) {
-  // Используем reviews (нормализованный api.js)
+
   const reviews = submission.reviews || [];
   if (reviews.length === 0) return null;
 
-  // Собираем все оценки по критериям
-  const criteriaScores = {}; // { criterion_id: { totalScore, totalMax, count } }
+
+  const criteriaScores = {};
 
   reviews.forEach(review => {
     if (review.grades && review.grades.length > 0) {
@@ -64,7 +57,7 @@ function calculateTotalScore(submission) {
 
   if (Object.keys(criteriaScores).length === 0) return null;
 
-  // Считаем сумму средних / сумму максимумов
+
   let totalScore = 0;
   let totalMax = 0;
 
@@ -84,37 +77,35 @@ async function loadMyProjects() {
   }
 
   const allProjects = [];
-  let storedSubmissions = getStoredSubmissions();
+  let groups = [];
+  try {
+    groups = await groupsAPI.getMyGroups();
+  } catch (e) {
+    console.warn('Ошибка загрузки групп:', e.message);
+  }
 
-  for (const stored of storedSubmissions) {
+
+  for (const group of groups) {
     try {
-      const submission = await groupsAPI.getSubmission(stored.submission_id);
-      if (!submission) continue;
-
-      const groups = await groupsAPI.getMyGroups();
-      const group = groups.find(g => g.id == stored.group_id);
-
-      const scoreData = calculateTotalScore(submission);
-      const isGraded = submission.status === 'graded';
+      const myWork = await groupsAPI.getMyWork(group.id);
+      if (!myWork) continue;
 
       allProjects.push({
-        id: submission.submission_id || submission.id,
-        name: `Проект #${submission.submission_id || submission.id}`,
-        groupId: stored.group_id,
-        groupName: group?.name || 'Неизвестная группа',
-        groupMode: (group?.group_mode || 'classic').toLowerCase(),
+        id: myWork.id,
+        name: `Проект #${myWork.id}`,
+        groupId: group.id,
+        groupName: group.name || 'Неизвестная группа',
+        groupMode: (group.group_mode || 'classic').toLowerCase(),
         deadline: '—',
-        status: isGraded ? 'archive' : 'reviewing',
-        date: stored.created_at || new Date().toISOString(),
-        totalScore: scoreData ? `${scoreData.score}/${scoreData.max}` : '**',
-        link: submission.link || stored.link || '#'
+        status: myWork.score > 0 ? 'archive' : 'reviewing',
+        date: new Date().toISOString(),
+        totalScore: myWork.score > 0 ? `${myWork.score.toFixed(1)}/10` : '**',
+        link: myWork.link || '#'
       });
     } catch (e) {
-      console.warn(`Ошибка загрузки работы ${stored.submission_id}:`, e.message);
-      // ИСПРАВЛЕНИЕ: если 404 — работа удалена, убираем из localStorage
-      if (e.message && (e.message.includes('404') || e.message.includes('не найдена'))) {
-        storedSubmissions = storedSubmissions.filter(s => s.submission_id !== stored.submission_id);
-        localStorage.setItem(MY_SUBMISSIONS_KEY, JSON.stringify(storedSubmissions));
+
+      if (!e.message?.includes('404') && !e.message?.includes('еще не загрузили')) {
+        console.warn(`Ошибка загрузки работы для группы ${group.id}:`, e.message);
       }
     }
   }
@@ -153,7 +144,7 @@ function renderProjects() {
     card.addEventListener('click', () => {
       const projectId = card.dataset.id;
       const groupId = card.dataset.group;
-      const modeParam = projects.find(p => p.id == projectId)?.groupMode === 'contest' ? '&mode=contest' 
+      const modeParam = projects.find(p => p.id == projectId)?.groupMode === 'contest' ? '&mode=contest'
         : projects.find(p => p.id == projectId)?.groupMode === 'p2p' ? '&mode=p2p' : '';
       window.location.href = `my-projects-detail.html?group=${groupId}&project=${projectId}${modeParam}`;
     });

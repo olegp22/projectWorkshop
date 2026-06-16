@@ -95,7 +95,7 @@ async function initLayout() {
     console.log('[LayoutLoader] Удален target="_blank" из <base>');
   }
 
-  const isAuthPage = window.location.pathname.includes('index.html') || 
+  const isAuthPage = window.location.pathname.includes('index.html') ||
                      window.location.pathname === '/' ||
                      window.location.pathname.endsWith('/');
   const hasToken = !!localStorage.getItem('access_token');
@@ -108,7 +108,7 @@ async function initLayout() {
     const { initAuthHeader, initAuthModal } = await import('./auth-module.js?v=6');
     await initAuthHeader();
     console.log('[LayoutLoader] initAuthHeader выполнен');
-    // Инициализируем модалку авторизации на всех страницах
+
     initAuthModal();
     console.log('[LayoutLoader] initAuthModal выполнен');
   } catch (err) {

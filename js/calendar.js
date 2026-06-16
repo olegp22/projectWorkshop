@@ -1,10 +1,11 @@
-import { authAPI, usersAPI, groupsAPI } from './api.js';
+import { authAPI, usersAPI, groupsAPI, eventsAPI } from './api.js';
 
 let currentDate = new Date();
 let events = [];
 let selectedParticipants = [];
 let activeEventBlock = null;
 let lastClickedEventElement = null;
+let currentUserId = null;
 
 function showToast(message, isError = false) {
   const toast = document.createElement('div');
@@ -14,9 +15,21 @@ function showToast(message, isError = false) {
   setTimeout(() => toast.remove(), 3000);
 }
 
+function getUserIdFromToken() {
+  const token = localStorage.getItem('access_token');
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.user_id || null;
+  } catch {
+    return null;
+  }
+}
+
 async function loadCurrentUser() {
   try {
     const user = await usersAPI.getMe();
+    currentUserId = user.id;
     const displayName = (user.name && user.surname)
       ? `${user.name} ${user.surname}`
       : (user.name || user.email || 'Пользователь');
@@ -40,6 +53,66 @@ function closeTooltip() {
     lastClickedEventElement.classList.remove('bg-orange-500', 'text-white');
     lastClickedEventElement.classList.add('bg-white', 'text-gray-900');
     lastClickedEventElement = null;
+  }
+}
+
+
+async function loadEventsFromServer() {
+  try {
+    if (!authAPI.isAuthenticated()) {
+      events = loadEventsFromLocalStorage();
+      return;
+    }
+    const serverEvents = await eventsAPI.getEvents();
+    if (Array.isArray(serverEvents)) {
+
+      events = serverEvents.map(e => ({
+        id: e.id,
+        date: formatDateForCalendar(new Date(e.date)),
+        topic: e.description || 'Без темы',
+        place: e.locaition || '',
+        startTime: formatTime(new Date(e.date)),
+        endTime: '',
+        participants: [],
+        toUserId: e.to_user_id,
+        fromUserId: e.from_user_id,
+        isServerEvent: true
+      }));
+      saveEventsToLocalStorage(events);
+    }
+  } catch (error) {
+    console.warn('Не удалось загрузить события с сервера:', error.message);
+    events = loadEventsFromLocalStorage();
+  }
+}
+
+function formatDateForCalendar(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatTime(date) {
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
+function loadEventsFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem('calendar_events');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveEventsToLocalStorage(eventsData) {
+  try {
+    localStorage.setItem('calendar_events', JSON.stringify(eventsData));
+  } catch (e) {
+    console.warn('Не удалось сохранить события в localStorage');
   }
 }
 
@@ -125,6 +198,11 @@ function showEventTooltip(event, eventElement, cellElement) {
     ? event.participants.map(p => `<li class="text-sm text-gray-700">${p}</li>`).join('')
     : '<li class="text-sm text-gray-500">Нет участников</li>';
 
+
+  const recipientInfo = event.toUserId
+    ? `Получатель ID: ${event.toUserId}`
+    : 'Нет данных';
+
   tooltip.innerHTML = `
     <div class="flex justify-between items-start mb-3 pb-2 border-b border-gray-200">
       <span class="font-semibold text-gray-900 text-center flex-1 pt-1">${event.topic}</span>
@@ -134,6 +212,7 @@ function showEventTooltip(event, eventElement, cellElement) {
       <div><span class="font-medium text-gray-900">Тема:</span> ${event.topic}</div>
       <div><span class="font-medium text-gray-900">Место:</span> ${event.place || '—'}</div>
       <div><span class="font-medium text-gray-900">Время начала/окончания:</span> ${event.startTime || '—'} / ${event.endTime || '—'}</div>
+      <div><span class="font-medium text-gray-900">Получатель:</span> ${recipientInfo}</div>
       <div class="pt-1 flex gap-2">
         <span class="font-medium text-gray-900 whitespace-nowrap">Участники:</span>
         <ul class="list-disc list-inside ml-1">${participantsHtml}</ul>
@@ -165,19 +244,57 @@ function showEventTooltip(event, eventElement, cellElement) {
 
   tooltip.querySelector('.tooltip-edit').addEventListener('click', (e) => {
     e.stopPropagation();
-    showToast('Редактирование в разработке', true);
-    closeTooltip();
+
+    editEvent(event);
   });
 
-  tooltip.querySelector('.tooltip-delete').addEventListener('click', (e) => {
+  tooltip.querySelector('.tooltip-delete').addEventListener('click', async (e) => {
     e.stopPropagation();
     if (confirm('Удалить мероприятие?')) {
-      events = events.filter(e => e.id !== event.id);
-      renderCalendar();
-      showToast('Мероприятие удалено');
+
+      await deleteEventHandler(event);
     }
     closeTooltip();
   });
+}
+
+
+async function editEvent(event) {
+  if (event.isServerEvent && event.fromUserId !== currentUserId) {
+    showToast('Вы можете редактировать только свои события', true);
+    closeTooltip();
+    return;
+  }
+
+
+  document.getElementById('eventTopic').value = event.topic;
+  document.getElementById('eventPlace').value = event.place || '';
+  document.getElementById('eventDate').value = event.date;
+  document.getElementById('eventTimeStart').value = event.startTime || '';
+  document.getElementById('eventTimeEnd').value = event.endTime || '';
+
+
+  window.editingEventId = event.id;
+
+  switchSection('createEvent');
+  renderParticipantsDropdown();
+  closeTooltip();
+}
+
+
+async function deleteEventHandler(event) {
+  try {
+    if (event.isServerEvent) {
+      await eventsAPI.deleteEvent(event.id);
+      showToast('Мероприятие удалено');
+    }
+
+    events = events.filter(e => e.id !== event.id);
+    saveEventsToLocalStorage(events);
+    renderCalendar();
+  } catch (error) {
+    showToast('Ошибка удаления: ' + error.message, true);
+  }
 }
 
 document.addEventListener('click', (e) => {
@@ -209,12 +326,15 @@ document.getElementById('nextYearBtn').onclick = () => {
 
 document.getElementById('addEventBtn').onclick = () => {
   closeTooltip();
+  window.editingEventId = null;
+  clearEventForm();
   switchSection('createEvent');
   renderParticipantsDropdown();
 };
 
 document.getElementById('cancelEventBtn').onclick = () => {
   clearEventForm();
+  window.editingEventId = null;
   switchSection('calendar');
 };
 
@@ -247,7 +367,6 @@ async function loadParticipants() {
   try {
     const groups = await groupsAPI.getMyGroups();
     if (groups && groups.length > 0) {
-      // Загружаем участников из ВСЕХ групп, убираем дубликаты
       const allMembers = [];
       const seenIds = new Set();
 
@@ -255,7 +374,7 @@ async function loadParticipants() {
         try {
           const members = await groupsAPI.getMembers(group.id);
           for (const m of members) {
-            if (!seenIds.has(m.user_id)) {
+            if (!seenIds.has(m.user_id) && m.user_id !== currentUserId) {
               seenIds.add(m.user_id);
               allMembers.push({
                 id: m.user_id,
@@ -334,7 +453,8 @@ document.addEventListener('click', (e) => {
   if (!dropdown.contains(e.target) && e.target !== btn) dropdown.classList.add('hidden');
 });
 
-document.getElementById('saveEventBtn').onclick = () => {
+
+document.getElementById('saveEventBtn').onclick = async () => {
   const topic = document.getElementById('eventTopic').value.trim();
   const place = document.getElementById('eventPlace').value.trim();
   const dateStr = document.getElementById('eventDate').value.trim();
@@ -344,27 +464,94 @@ document.getElementById('saveEventBtn').onclick = () => {
   if (!topic) { showToast('Введите тему мероприятия', true); return; }
   if (!dateStr) { showToast('Выберите дату', true); return; }
 
-  events.push({
-    id: Date.now(),
-    date: dateStr,
-    topic,
-    place,
-    startTime,
-    endTime,
-    participants: selectedParticipants.map(p => p.name)
-  });
 
-  showToast('Мероприятие создано!');
+  let eventDateTime = new Date(dateStr);
+  if (startTime) {
+    const [hours, minutes] = startTime.split(':');
+    eventDateTime.setHours(parseInt(hours), parseInt(minutes));
+  }
+
+
+  if (window.editingEventId) {
+    try {
+      await eventsAPI.updateEvent(window.editingEventId, {
+        to_user_id: selectedParticipants[0]?.id || currentUserId,
+        date: eventDateTime.toISOString(),
+        locaition: place,
+        description: topic
+      });
+
+
+      const idx = events.findIndex(e => e.id === window.editingEventId);
+      if (idx !== -1) {
+        events[idx] = {
+          ...events[idx],
+          date: dateStr,
+          topic,
+          place,
+          startTime,
+          endTime,
+          participants: selectedParticipants.map(p => p.name)
+        };
+      }
+
+      showToast('Мероприятие обновлено!');
+      window.editingEventId = null;
+    } catch (error) {
+      showToast('Ошибка обновления: ' + error.message, true);
+      return;
+    }
+  } else {
+
+
+    if (selectedParticipants.length === 0) {
+      showToast('Выберите хотя бы одного участника', true);
+      return;
+    }
+
+    try {
+
+      const result = await eventsAPI.createEvent({
+        to_user_id: selectedParticipants[0].id,
+        date: eventDateTime.toISOString(),
+        locaition: place,
+        description: topic
+      });
+
+
+      events.push({
+        id: result.id || Date.now(),
+        date: dateStr,
+        topic,
+        place,
+        startTime,
+        endTime,
+        participants: selectedParticipants.map(p => p.name),
+        toUserId: selectedParticipants[0].id,
+        fromUserId: currentUserId,
+        isServerEvent: true
+      });
+
+      showToast('Мероприятие создано!');
+    } catch (error) {
+      showToast('Ошибка создания: ' + error.message, true);
+      return;
+    }
+  }
+
+  saveEventsToLocalStorage(events);
   clearEventForm();
   switchSection('calendar');
   renderCalendar();
 };
 
 async function init() {
+  currentUserId = getUserIdFromToken();
   await loadCurrentUser();
   await loadParticipants();
 
-  events = [];
+
+  await loadEventsFromServer();
 
   renderCalendar();
 }

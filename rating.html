@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Рейтинг — ФидбэК</title>
+  <link href="css/tailwind.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/notification.css">
+  <style>
+    .rating-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    .rating-table th {
+      background: #7c3aed;
+      color: white;
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .rating-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 14px;
+      color: #374151;
+    }
+    .rating-table tr:hover td {
+      background: #f9fafb;
+    }
+    .rating-table .rank-1 td {
+      background: #fef3c7;
+      font-weight: 600;
+    }
+    .rating-table .rank-2 td {
+      background: #f3f4f6;
+      font-weight: 600;
+    }
+    .rating-table .rank-3 td {
+      background: #fff7ed;
+      font-weight: 600;
+    }
+    .rank-cell {
+      width: 60px;
+      text-align: center;
+    }
+    .score-cell {
+      width: 120px;
+      text-align: center;
+      font-weight: 700;
+      color: #f97316;
+      font-size: 16px;
+    }
+    .name-cell {
+      font-weight: 500;
+    }
+    .medal {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .medal-gold { background: #fbbf24; color: #92400e; }
+    .medal-silver { background: #e5e7eb; color: #4b5563; }
+    .medal-bronze { background: #fdba74; color: #9a3412; }
+
+    @media (max-width: 640px) {
+      .rating-table th, .rating-table td {
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+      .score-cell { width: 80px; font-size: 14px; }
+      .hide-mobile { display: none; }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+      color: #9ca3af;
+    }
+    .empty-state .emoji { font-size: 48px; margin-bottom: 16px; }
+    .empty-state h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #4b5563;
+      margin-bottom: 8px;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .rating-table tbody tr {
+      animation: fadeInUp 0.3s ease forwards;
+    }
+
+    .skeleton-row td { background: #f3f4f6; }
+    .skeleton-text {
+      height: 16px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .error-box {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      color: #dc2626;
+    }
+  </style>
+<base target="_blank">
+</head>
+<body class="bg-white font-sans antialiased flex flex-col min-h-screen">
+
+  <div id="layout-header"></div>
+
+  <main class="flex-1 max-w-4xl w-full mx-auto px-6 py-8">
+    <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-800">
+          Рейтинг участников
+          <span id="groupName" class="text-orange-500"></span>
+        </h1>
+        <p class="text-sm text-gray-500 mt-1">Конкурсный режим</p>
+      </div>
+      <a href="group.html" class="border-2 border-orange-500 text-orange-500 hover:bg-orange-50 px-4 py-1.5 text-sm font-medium rounded transition">
+        ← Мои группы
+      </a>
+    </div>
+
+
+    <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
+        <div class="text-2xl font-bold text-purple-700" id="totalParticipants">—</div>
+        <div class="text-xs text-purple-600 mt-1">Участников</div>
+      </div>
+      <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
+        <div class="text-2xl font-bold text-orange-600" id="totalWorks">—</div>
+        <div class="text-xs text-orange-600 mt-1">Работ</div>
+      </div>
+      <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 text-center">
+        <div class="text-2xl font-bold text-indigo-700" id="avgScore">—</div>
+        <div class="text-xs text-indigo-600 mt-1">Средний балл</div>
+      </div>
+    </div>
+
+
+    <div class="border border-gray-200 rounded-lg overflow-hidden" id="tableContainer">
+      <table class="rating-table">
+        <thead>
+          <tr>
+            <th class="rank-cell">#</th>
+            <th>Участник</th>
+            <th class="hide-mobile">ФИО</th>
+            <th class="score-cell">Балл</th>
+          </tr>
+        </thead>
+        <tbody id="ratingBody">
+          <tr class="skeleton-row"><td><div class="skeleton-text" style="width:30px"></div></td><td><div class="skeleton-text" style="width:150px"></div></td><td class="hide-mobile"><div class="skeleton-text" style="width:200px"></div></td><td><div class="skeleton-text" style="width:60px;margin:0 auto"></div></td></tr>
+          <tr class="skeleton-row"><td><div class="skeleton-text" style="width:30px"></div></td><td><div class="skeleton-text" style="width:120px"></div></td><td class="hide-mobile"><div class="skeleton-text" style="width:180px"></div></td><td><div class="skeleton-text" style="width:60px;margin:0 auto"></div></td></tr>
+          <tr class="skeleton-row"><td><div class="skeleton-text" style="width:30px"></div></td><td><div class="skeleton-text" style="width:140px"></div></td><td class="hide-mobile"><div class="skeleton-text" style="width:160px"></div></td><td><div class="skeleton-text" style="width:60px;margin:0 auto"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+
+    <div id="emptyState" class="hidden empty-state">
+      <div class="emoji">🏆</div>
+      <h3>Пока нет результатов</h3>
+      <p class="text-sm">Рейтинг появится после оценки работ жюри.</p>
+    </div>
+
+
+    <div id="errorState" class="hidden mt-4">
+      <div class="error-box">
+        <div class="font-semibold mb-1">Ошибка</div>
+        <div class="text-sm" id="errorText"></div>
+      </div>
+    </div>
+  </main>
+
+  <div id="layout-footer"></div>
+
+  <script type="module" src="js/layout-loader.js"></script>
+  <script type="module" src="js/rating.js"></script>
+</body>
+</html>

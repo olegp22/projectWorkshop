@@ -14,7 +14,7 @@ async function loadCurrentUser() {
     const displayName = (user.name && user.surname)
       ? `${user.name} ${user.surname}`
       : (user.name || user.email || 'Пользователь');
-    
+
     const headerEl = document.getElementById('headerUserName');
     if (headerEl) headerEl.innerText = displayName;
 
@@ -62,12 +62,12 @@ function switchTab(tabName) {
   }
 }
 
-// Привязка табов
+
 document.querySelectorAll('.settings-tab').forEach(tab => {
   tab.addEventListener('click', () => switchTab(tab.dataset.tab));
 });
 
-// Сохранение профиля
+
 const saveProfileBtn = document.getElementById('saveProfileBtn');
 if (saveProfileBtn) {
   saveProfileBtn.addEventListener('click', async () => {

@@ -1,4 +1,6 @@
-const API_BASE = 'http://localhost:8000';
+const API_BASE = window.location.hostname === 'localhost'
+    ? 'http://localhost:8000'
+    : '';
 
 let authToken = localStorage.getItem('access_token') || '';
 
@@ -11,46 +13,66 @@ export function setAuthToken(token) {
     }
 }
 
-// === НОРМАЛИЗАЦИЯ ОТВЕТОВ БЭКЕНДА ===
-// Бэкенд возвращает поля с опечатками и UPPERCASE enum'ами — нормализуем рекурсивно
+
+function isTokenExpired() {
+    if (!authToken) return true;
+    try {
+        const payload = JSON.parse(atob(authToken.split('.')[1]));
+        if (!payload.exp) return false;
+        const exp = payload.exp * 1000;
+        return Date.now() >= exp;
+    } catch {
+        return true;
+    }
+}
+
+function handleAuthError() {
+    setAuthToken('');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('feedback_user_profile');
+    localStorage.removeItem('my_submissions');
+    const error = new Error('Сессия истекла. Пожалуйста, войдите снова.');
+    error.isAuthError = true;
+    return error;
+}
+
 
 function deepNormalize(obj) {
     if (!obj || typeof obj !== 'object') return obj;
     if (Array.isArray(obj)) return obj.map(deepNormalize);
 
-    // Опечатка: reviewrs → reviews
     if ('reviewrs' in obj && !('reviews' in obj)) {
         obj.reviews = obj.reviewrs;
         delete obj.reviewrs;
     }
 
-    // Опечатка: type_massege → type_message
+    if ('reviewers' in obj && !('reviews' in obj)) {
+        obj.reviews = obj.reviewers;
+        delete obj.reviewers;
+    }
+
     if ('type_massege' in obj && !('type_message' in obj)) {
         obj.type_message = obj.type_massege;
         delete obj.type_massege;
     }
 
-    // UPPERCASE group_mode → lowercase
     if (typeof obj.group_mode === 'string') {
         obj.group_mode = obj.group_mode.toLowerCase();
     }
 
-    // UPPERCASE role → lowercase
     if (typeof obj.role === 'string') {
         obj.role = obj.role.toLowerCase();
     }
 
-    // UPPERCASE status → lowercase
     if (typeof obj.status === 'string') {
         obj.status = obj.status.toLowerCase();
     }
 
-    // UPPERCASE type_message → lowercase
     if (typeof obj.type_message === 'string') {
         obj.type_message = obj.type_message.toLowerCase();
     }
 
-    // Нормализуем вложенные объекты
     Object.keys(obj).forEach(key => {
         if (obj[key] && typeof obj[key] === 'object') {
             obj[key] = deepNormalize(obj[key]);
@@ -63,9 +85,12 @@ function deepNormalize(obj) {
 function normalizeResponse(data) {
     return deepNormalize(data);
 }
-// === /НОРМАЛИЗАЦИЯ ===
 
 async function request(endpoint, method = 'GET', body = null, needsAuth = true) {
+    if (needsAuth && isTokenExpired()) {
+        throw handleAuthError();
+    }
+
     const headers = {
         'Content-Type': 'application/json',
     };
@@ -85,21 +110,19 @@ async function request(endpoint, method = 'GET', body = null, needsAuth = true) 
         const response = await fetch(`${API_BASE}${endpoint}`, options);
 
         if (response.status === 401) {
-            setAuthToken('');
-            if (typeof window !== 'undefined' && !window.location.pathname.includes('/index.html')) {
-                window.location.href = '/index.html';
-            }
-            throw new Error('Сессия истекла. Пожалуйста, войдите снова.');
+            throw handleAuthError();
         }
 
         const data = await response.json();
         if (!response.ok) {
-            throw new Error(data.detail || `Ошибка ${response.status}`);
+            const error = new Error(data.detail || `Ошибка ${response.status}`);
+            error.status = response.status;
+            throw error;
         }
 
-        // Нормализуем ответ перед возвратом
         return normalizeResponse(data);
     } catch (error) {
+        if (error.isAuthError) throw error;
         console.error(`API request failed: ${endpoint}`, error);
         throw error;
     }
@@ -131,7 +154,7 @@ export const authAPI = {
     },
 
     isAuthenticated() {
-        return !!authToken;
+        return !!authToken && !isTokenExpired();
     }
 };
 
@@ -271,9 +294,14 @@ export const groupsAPI = {
         return await request(`/groups/submissions/${submissionId}`, 'GET');
     },
 
+    async getMyWork(groupId) {
+        return await request(`/groups/submissions/my-work?group_id=${groupId}`, 'GET');
+    },
+
     async reviewWork(submissionId, comment, grades) {
+
         return await request(`/groups/submissions/${submissionId}/review`, 'POST', {
-            comment,
+            comment: comment || "",
             grades
         });
     },
@@ -297,3 +325,42 @@ export const groupsAPI = {
         }
     }
 };
+
+
+export const eventsAPI = {
+    async createEvent(data, groupId) {
+
+
+        const endpoint = groupId
+            ? `/events/?group_id=${groupId}`
+            : '/events/';
+        return await request(endpoint, 'POST', data);
+    },
+
+    async getEvents() {
+
+        return await request('/events/', 'GET');
+    },
+
+    async deleteEvent(eventId) {
+        return await request(`/events/${eventId}`, 'DELETE');
+    },
+
+    async updateEvent(eventId, data) {
+
+        return await request(`/events/${eventId}`, 'PUT', data);
+    }
+};
+
+
+export function isValidUrl(string) {
+    try {
+        const url = new URL(string);
+        return ['http:', 'https:'].includes(url.protocol);
+    } catch (_) {
+        return false;
+    }
+}
+
+
+export { request };

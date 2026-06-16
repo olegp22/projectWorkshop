@@ -1,29 +1,17 @@
 console.log('[notification.js] loaded v4-fix (API integration)');
 
+import { request, authAPI, setAuthToken } from './api.js';
+
 let notifications = [];
 let notificationDropdown = null;
 let notificationBtn = null;
 let notificationBadge = null;
 
-const API_BASE = 'http://localhost:8000';
-let authToken = localStorage.getItem('access_token') || '';
-
-async function apiRequest(endpoint, method = 'GET', body = null) {
-  const headers = { 'Content-Type': 'application/json' };
-  if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-  const options = { method, headers };
-  if (body) options.body = JSON.stringify(body);
-
-  const response = await fetch(`${API_BASE}${endpoint}`, options);
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.detail || `Ошибка ${response.status}`);
-  return data;
-}
 
 async function loadNotifications() {
   try {
-    const rawNotifications = await apiRequest('/notification/my', 'GET');
-    
+    const rawNotifications = await request('/notification/my', 'GET');
+
     notifications = (rawNotifications || []).map(n => ({
       id: n.id,
       text: n.text,
@@ -53,7 +41,7 @@ function renderNotifications() {
 
   list.innerHTML = notifications.map(n => {
     let text = '';
-    
+
     if (n.type === 'new_assessment') {
       text = `<strong class="font-semibold text-gray-900">Новая оценка</strong><br>${esc(n.text)}`;
     } else if (n.type === 'change_assessment') {
@@ -69,9 +57,9 @@ function renderNotifications() {
     }
 
     const isUnread = !n.read;
-    // created_at не возвращается бэкендом (нет в NotificationResponse)
+
     const dateHtml = '';
-    
+
     return `
       <div class="px-4 py-3 border-b border-gray-100 cursor-pointer transition-colors hover:bg-orange-50 ${isUnread ? 'bg-orange-50 border-l-4 border-l-orange-500' : ''}"
            data-id="${n.id}">
@@ -105,15 +93,15 @@ function formatDate(dateValue) {
 async function markAsRead(id) {
   const n = notifications.find(x => x.id === id);
   if (!n || n.read) return;
-  
+
   n.read = true;
-  
+
   try {
     await loadNotifications();
   } catch (error) {
     console.error('Ошибка синхронизации уведомлений:', error.message);
   }
-  
+
   renderNotifications();
   updateBadge();
 }
@@ -121,14 +109,14 @@ async function markAsRead(id) {
 async function markAllAsRead() {
   const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
   if (unreadIds.length === 0) return;
-  
+
   try {
     notifications.forEach(n => n.read = true);
     await loadNotifications();
   } catch (error) {
     console.error('Ошибка отметки всех прочитанными:', error.message);
   }
-  
+
   renderNotifications();
   updateBadge();
 }

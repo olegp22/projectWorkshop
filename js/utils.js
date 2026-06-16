@@ -1,8 +1,3 @@
-//  УТИЛИТЫ (DRY — Don't Repeat Yourself)
-
-/**
- * Экранирование HTML-символов для защиты от XSS
- */
 export function escapeHtml(str) {
   if (!str) return '';
   return String(str).replace(/[&<>]/g, (m) => {
@@ -13,9 +8,7 @@ export function escapeHtml(str) {
   });
 }
 
-/**
- * Показать toast-уведомление
- */
+
 export function showToast(message, isError = false) {
   const toast = document.createElement('div');
   toast.className = `fixed top-5 right-5 px-5 py-3 rounded-md text-white text-sm z-50 animate-slide-in ${isError ? 'bg-red-600' : 'bg-gray-800'}`;
@@ -24,9 +17,7 @@ export function showToast(message, isError = false) {
   setTimeout(() => toast.remove(), 3000);
 }
 
-/**
- * Загрузка текущего пользователя в хедер
- */
+
 export async function loadCurrentUser(usersAPI) {
   try {
     const user = await usersAPI.getMe();
@@ -46,9 +37,7 @@ export async function loadCurrentUser(usersAPI) {
   }
 }
 
-/**
- * Debounce для оптимизации частых вызовов
- */
+
 export function debounce(func, wait) {
   let timeout;
   return function executedFunction(...args) {
@@ -61,9 +50,7 @@ export function debounce(func, wait) {
   };
 }
 
-/**
- * Форматирование даты для input[type="date"]
- */
+
 export function formatDateForInput(date) {
   const d = new Date(date);
   const year = d.getFullYear();
@@ -72,12 +59,10 @@ export function formatDateForInput(date) {
   return `${year}-${month}-${day}`;
 }
 
-/**
- * Различение HTTP-ошибок для понятных сообщений
- */
+
 export function getErrorMessage(error) {
   const msg = error.message || '';
-  
+
   if (msg.includes('400')) return 'Некорректный запрос. Проверьте данные.';
   if (msg.includes('401')) return 'Сессия истекла. Войдите снова.';
   if (msg.includes('403')) return 'Недостаточно прав для этой операции.';
@@ -94,32 +79,28 @@ export function getErrorMessage(error) {
   if (msg.includes('JSON') || msg.includes('Unexpected token')) {
     return 'Ошибка сервера. Получен некорректный ответ.';
   }
-  
+
   return msg || 'Произошла ошибка. Попробуйте снова.';
 }
 
-/**
- * Retry-логика для API-запросов
- */
+
 export async function withRetry(asyncFn, retries = 3, delay = 1000) {
   for (let i = 0; i < retries; i++) {
     try {
       return await asyncFn();
     } catch (error) {
       const msg = error.message || '';
-      // Не ретраим 4xx ошибки (кроме 429 Too Many Requests)
+
       if (msg.includes('400') || msg.includes('401') || msg.includes('403') || msg.includes('404') || msg.includes('422')) {
         throw error;
       }
       if (i === retries - 1) throw error;
-      await new Promise(r => setTimeout(r, delay * (i + 1))); // Exponential backoff
+      await new Promise(r => setTimeout(r, delay * (i + 1)));
     }
   }
 }
 
-/**
- * Skeleton-загрузка для карточек
- */
+
 export function showSkeleton(container, count = 4) {
   container.innerHTML = Array.from({ length: count }, () => `
     <div class="project-card animate-pulse">
@@ -134,9 +115,7 @@ export function showSkeleton(container, count = 4) {
   `).join('');
 }
 
-/**
- * Убрать skeleton
- */
+
 export function hideSkeleton(container) {
   container.innerHTML = '';
 }

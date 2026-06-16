@@ -1,4 +1,3 @@
-// Фильтрация проектов на странице эксперта
 document.addEventListener('DOMContentLoaded', function() {
   const filterBtns = document.querySelectorAll('.filter-btn');
   const projectCards = document.querySelectorAll('.project-card');
@@ -25,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Плавная прокрутка для кнопки "Начать сейчас"
+
   function smoothScrollToElement(elementId) {
     const targetElement = document.getElementById(elementId);
     if (!targetElement) {
@@ -47,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Обработка якорей в URL после полной загрузки
+
   function handleHashScroll() {
     if (window.location.hash === '#student-section' || window.location.hash === '#expert-section') {
       const hash = window.location.hash.substring(1);
@@ -58,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Ждём загрузки шрифтов и контента
+
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(handleHashScroll);
   } else {
@@ -66,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// Утилита debounce
+
 function debounce(func, wait) {
   let timeout;
   return function executedFunction(...args) {
@@ -79,7 +78,7 @@ function debounce(func, wait) {
   };
 }
 
-// Мобильное меню
+
 function toggleMobileMenu() {
   const menu = document.getElementById('mobile-menu');
   if (menu) {

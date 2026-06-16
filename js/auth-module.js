@@ -176,14 +176,14 @@ function switchAuthTab(tab) {
     }
 }
 
-// === ПОЗИЦИОНИРОВАНИЕ DROPDOWN'ОВ ===
+
 function positionDropdown(button, dropdown) {
   if (!button || !dropdown) return;
   const rect = button.getBoundingClientRect();
-  
+
   dropdown.style.position = 'fixed';
   dropdown.style.zIndex = '9999';
-  
+
   dropdown.style.top = (rect.bottom + 8) + 'px';
   dropdown.style.right = (window.innerWidth - rect.right) + 'px';
   dropdown.style.left = 'auto';
@@ -408,10 +408,10 @@ export function initAuthModal() {
                 return;
             }
             try {
-                const result = await authAPI.register({ 
-                    email, 
-                    password, 
-                    name: firstName, 
+                const result = await authAPI.register({
+                    email,
+                    password,
+                    name: firstName,
                     surname: lastName,
                     patronymic: patronymic
                 });

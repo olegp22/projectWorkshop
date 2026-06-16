@@ -35,7 +35,7 @@ async function loadGroupInfo() {
     const groups = await groupsAPI.getMyGroups();
     const group = groups.find(g => g.id == currentGroupId);
     if (group) {
-      // === ИСПРАВЛЕНИЕ: group_mode берём из API, URL — fallback ===
+
       currentGroupMode = (group.group_mode || 'classic').toLowerCase();
       const urlMode = params.get('mode');
       if (urlMode && !group.group_mode) {
@@ -122,7 +122,7 @@ function setupFilters() {
   const container = document.getElementById('filterContainer');
   if (!container) return;
 
-  // Фильтры по статусу проверки (бэкенд возвращает pending/graded)
+
   container.innerHTML = `
     <button class="filter-btn is-active bg-orange-500 px-4 py-1 rounded text-sm font-medium transition cursor-pointer text-white" data-filter="all">Все</button>
     <button class="filter-btn px-4 py-1 rounded text-sm font-medium transition cursor-pointer bg-orange-500 text-white opacity-70 hover:opacity-100" data-filter="reviewing">На проверке</button>
@@ -160,24 +160,16 @@ function setupSort() {
   });
 }
 
-// === ИСПРАВЛЕНИЕ ПУНКТ 1: ПРОГРЕСС ПРОВЕРКИ ===
-// getMyReviews возвращает [{submission_id, link, student_id, group_id, status}]
-// status === 'graded' означает что работа полностью проверена ВСЕМИ проверяющими
-// Для определения "проверил ли Я" — нужно смотреть status конкретного reviewer'а
-// Но getMyReviews не даёт reviewer-specific status
-// 
-// Решение: для каждой работы загружаем полные детали через getSubmission
-// и проверяем, есть ли среди reviews запись с reviewer_id === currentUserId и status === 'graded'
 
 async function loadProjectsWithProgress() {
   try {
     const reviews = await groupsAPI.getMyReviews();
     const totalCriteriaCount = groupCriteria.length || 0;
 
-    // Фильтруем только работы текущей группы
+
     const groupReviews = reviews.filter(r => r.group_id == currentGroupId);
 
-    // Загружаем детали каждой работы для определения прогресса
+
     const projectsWithDetails = await Promise.all(
       groupReviews.map(async (r) => {
         let myReviewStatus = 'pending';
@@ -185,13 +177,13 @@ async function loadProjectsWithProgress() {
 
         try {
           const submission = await groupsAPI.getSubmission(r.submission_id);
-          // Используем reviews (нормализованный api.js)
+
           const myReview = submission.reviews?.find(
             rev => rev.reviewer_id === currentUserId
           );
           if (myReview) {
             myReviewStatus = myReview.status || 'pending';
-            // Считаем уникальные criterion_id по которым есть оценка
+
             if (myReview.grades && Array.isArray(myReview.grades)) {
               const uniqueCriteria = new Set(
                 myReview.grades.map(g => g.criterion_id).filter(Boolean)
@@ -201,7 +193,7 @@ async function loadProjectsWithProgress() {
           }
         } catch (e) {
           console.warn(`Не удалось загрузить детали работы ${r.submission_id}:`, e.message);
-          // Fallback: если submission полностью проверена, считаем что и я проверил
+
           if (r.status === 'graded') {
             myReviewStatus = 'graded';
             scoredCount = totalCriteriaCount;
@@ -213,7 +205,7 @@ async function loadProjectsWithProgress() {
         return {
           id: r.submission_id,
           name: `Проект #${r.submission_id}`,
-          author: `Студент #${r.student_id}`,
+          author: `${r.surname || ""} ${r.name || ""} (ID ${r.student_id})`,
           status: isFullyReviewed ? 'archive' : 'reviewing',
           date: new Date().toISOString(),
           deadline: '—',

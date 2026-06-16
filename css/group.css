@@ -53,7 +53,6 @@
   display: none;
 }
 
-/* Firefox scrollbar */
 .groups-scrollbar {
   scrollbar-width: 16px;
   scrollbar-color: #8d51f3 #f5f0ff;
@@ -149,14 +148,26 @@
 }
 
 @keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
-.section-content { display: none; }
-.section-content.active { display: block; }
+.section-content {
+  display: none;
+}
+.section-content.active {
+  display: block;
+}
 
-.hidden { display: none !important; }
+.hidden {
+  display: none !important;
+}
 
 .groups-scrollbar {
   scrollbar-width: 16px;
@@ -179,7 +190,6 @@
   overflow-y: scroll !important;
 }
 
-/* Hide scrollbar when not needed but keep functionality */
 .members-scrollbar::-webkit-scrollbar,
 .groups-scrollbar::-webkit-scrollbar,
 .remove-dropdown-scrollbar::-webkit-scrollbar {
@@ -192,52 +202,50 @@
   border-color: #f97316 !important;
 }
 
-/* Убираем браузерную вторую рамку при нажатии */
 .mode-btn:focus,
 .mode-btn:focus-visible {
   outline: none;
 }
 
-/* === МОБИЛЬНАЯ АДАПТИВНОСТЬ ГРУПП === */
 @media (max-width: 768px) {
   #sectionGroups > .flex,
   #sectionGroupDetails > .flex {
     flex-direction: column !important;
     gap: 1.5rem !important;
   }
-  
+
   #sectionGroups .w-80,
   #sectionGroupDetails .w-80 {
     width: 100% !important;
     order: -1;
   }
-  
+
   .groups-scrollbar {
     max-height: 250px !important;
   }
-  
+
   #modeSelector {
     flex-direction: column !important;
   }
-  
+
   .mode-btn {
     width: 100% !important;
   }
-  
+
   #p2pInspectorsBlock input,
   #contestExpertInspectorsBlock input,
   #contestStudentInspectorsBlock input {
     width: 100% !important;
   }
-  
+
   #organizerActions .grid {
     grid-template-columns: 1fr !important;
   }
-  
+
   #criterionFormBlock {
     max-width: none !important;
   }
-  
+
   #membersListArea {
     max-height: 200px !important;
   }
@@ -247,36 +255,31 @@
   #sectionGroupDetails h2 {
     font-size: 1.25rem !important;
   }
-  
+
   #studentActions input {
     max-width: none !important;
   }
-  
+
   #studentActions .flex {
     flex-direction: column !important;
     gap: 0.75rem !important;
   }
-  
+
   #studentActions button {
     width: 100% !important;
   }
 }
 
-/* === ИСПРАВЛЕНИЯ ДЛЯ МАКЕТА === */
-
-/* Сетка кнопок организатора */
 #organizerActions .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
 
-/* Placeholder стили для мок-данных */
 #membersListArea .italic {
   font-style: italic;
 }
 
-/* Стили для списка критериев */
 #criteriaListArea {
   font-size: 13px;
 }
@@ -285,7 +288,6 @@
   background-color: #faf5ff;
 }
 
-/* Подписи под кнопками */
 #organizerActions .text-xs.text-gray-400 {
   font-size: 11px;
   margin-top: -4px;
@@ -298,7 +300,6 @@
   margin-bottom: 4px;
 }
 
-/* Мобильная адаптивность сетки */
 @media (max-width: 768px) {
   #organizerActions .grid {
     grid-template-columns: 1fr !important;

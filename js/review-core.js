@@ -89,11 +89,11 @@ function generateScaleSteps(max) {
   return steps;
 }
 
-// Вспомогательная функция для склонения "балл"
+
 function getBallWord(num) {
   const lastDigit = num % 10;
   const lastTwoDigits = num % 100;
-  
+
   if (lastTwoDigits >= 11 && lastTwoDigits <= 19) return 'баллов';
   if (lastDigit === 1) return 'балл';
   if (lastDigit >= 2 && lastDigit <= 4) return 'балла';
@@ -128,8 +128,8 @@ export function renderCriteriaList(containerId) {
       if (isLarge) btnClass += ' large';
 
       return `
-        <div class="${btnClass}" 
-             data-criteria-id="${c.id}" 
+        <div class="${btnClass}"
+             data-criteria-id="${c.id}"
              data-score="${value}"
              style="left: ${percent}%;">
           <span class="scale-btn-text">${value}</span>
@@ -164,12 +164,12 @@ export function renderCriteriaList(containerId) {
           </div>
           <div class="scale-input-row">
             <span class="scale-input-label">Точное значение:</span>
-            <input type="number" 
-                   class="scale-input" 
-                   data-criteria-id="${c.id}" 
-                   min="1" 
-                   max="${max}" 
-                   value="${c.score || ''}" 
+            <input type="number"
+                   class="scale-input"
+                   data-criteria-id="${c.id}"
+                   min="1"
+                   max="${max}"
+                   value="${c.score || ''}"
                    placeholder="1–${max}">
           </div>
         </div>

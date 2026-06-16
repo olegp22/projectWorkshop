@@ -1,6 +1,3 @@
-/* review-detail.css — стили страницы оценки проекта */
-
-/* === КРИТЕРИЙ === */
 .criteria-item {
   padding-bottom: 2.5rem;
   margin-bottom: 1rem;
@@ -10,7 +7,6 @@
   border-bottom: none;
 }
 
-/* Шапка критерия */
 .criteria-header {
   margin-bottom: 20px;
   display: flex;
@@ -65,7 +61,6 @@
   flex-shrink: 0;
 }
 
-/* === ШКАЛА ОЦЕНОК === */
 .criteria-scale {
   position: relative;
   width: 100%;
@@ -95,7 +90,6 @@
   }
 }
 
-/* Линия шкалы */
 .scale-line {
   position: absolute;
   top: 50%;
@@ -116,7 +110,6 @@
   }
 }
 
-/* Контейнер для меток */
 .scale-marks {
   position: absolute;
   top: 0;
@@ -126,7 +119,6 @@
   z-index: 2;
 }
 
-/* Кнопка значения на шкале */
 .scale-btn {
   position: absolute;
   top: 50%;
@@ -161,7 +153,6 @@
   box-shadow: 0 2px 8px rgba(139, 92, 246, 0.5);
 }
 
-/* Текст внутри кнопки */
 .scale-btn-text {
   font-size: 11px;
   font-weight: 700;
@@ -174,7 +165,6 @@
   }
 }
 
-/* Активное значение */
 .scale-btn.active {
   background: #f97316;
   box-shadow: 0 2px 8px rgba(249, 115, 22, 0.5);
@@ -185,7 +175,6 @@
   background: #ea580c;
 }
 
-/* Конечные точки */
 .scale-btn.endpoint {
   width: 44px;
   height: 44px;
@@ -205,7 +194,6 @@
   }
 }
 
-/* Редкие шаги */
 .scale-btn.sparse {
   width: 28px;
   height: 28px;
@@ -238,7 +226,6 @@
   }
 }
 
-/* Очень большие шкалы */
 .scale-btn.large {
   width: 22px;
   height: 22px;
@@ -272,7 +259,6 @@
   }
 }
 
-/* Маркер выбранного значения */
 .scale-marker {
   position: absolute;
   top: -28px;
@@ -343,7 +329,6 @@
   }
 }
 
-/* Строка с input */
 .scale-input-row {
   display: flex;
   align-items: center;
@@ -378,12 +363,11 @@
 @media (max-width: 640px) {
   .scale-input {
     width: 60px;
-    font-size: 14px; /* Предотвращает зум в iOS */
+    font-size: 14px;
     padding: 6px 8px;
   }
 }
 
-/* === КОНКУРСНАЯ ШКАЛА === */
 .contest-scale {
   position: relative;
   width: 100%;
@@ -525,9 +509,8 @@
   margin-top: 16px;
 }
 
-/* === МОБИЛЬНЫЕ УТИЛИТЫ === */
 @media (max-width: 640px) {
   #feedbackBlock textarea {
-    font-size: 16px; /* Предотвращает зум в iOS */
+    font-size: 16px;
   }
 }

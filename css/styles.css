@@ -1,12 +1,8 @@
-/* === МОБИЛЬНАЯ АДАПТИВНОСТЬ === */
-
-/* Базовые мобильные настройки */
 html {
   -webkit-text-size-adjust: 100%;
   touch-action: manipulation;
 }
 
-/* Контейнеры */
 .container-mobile {
   width: 100%;
   max-width: 100%;
@@ -21,7 +17,6 @@ html {
   }
 }
 
-/* Гибкие карточки */
 .project-card {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   word-break: break-word;
@@ -32,7 +27,6 @@ html {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Мобильная сетка проектов */
 .projects-grid {
   display: grid !important;
   grid-template-columns: repeat(4, 1fr) !important;
@@ -41,37 +35,33 @@ html {
   box-sizing: border-box !important;
 }
 
-/* Планшет: 2 колонки */
 @media (max-width: 1024px) {
-  .projects-grid { 
+  .projects-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 20px !important;
   }
 }
 
-/* Мобильный: 1 колонка */
 @media (max-width: 640px) {
-  .projects-grid { 
+  .projects-grid {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
   }
-  
+
   .project-card {
     min-height: auto;
     padding: 14px 16px;
   }
-  
+
   .card-row {
     font-size: 13px;
   }
 }
 
-/* Активное состояние для фильтров */
 .filter-btn.active {
   background-color: #f97316;
 }
 
-/* Поддержка line-clamp */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -80,27 +70,25 @@ html {
   overflow: hidden;
 }
 
-/* Hero section */
 #student-section,
 #expert-section {
   transform: none;
 }
 
-/* === МОБИЛЬНАЯ НАВИГАЦИЯ === */
 @media (max-width: 768px) {
   #mainHeader {
     padding-left: 0.75rem !important;
     padding-right: 0.75rem !important;
   }
-  
+
   #loggedNav {
     gap: 0.5rem !important;
   }
-  
+
   #loggedNav .nav-link {
-    display: none; /* Скрываем текстовые ссылки на мобильном */
+    display: none;
   }
-  
+
   #headerUserName {
     max-width: 100px;
     overflow: hidden;
@@ -109,7 +97,6 @@ html {
   }
 }
 
-/* === МОБИЛЬНЫЕ ТАБЛИЦЫ === */
 .mobile-table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -119,30 +106,29 @@ html {
   .reviews-table {
     font-size: 12px;
   }
-  
+
   .reviews-table th,
   .reviews-table td {
     padding: 8px 10px;
   }
-  
+
   .reviews-table .review-comment {
     max-width: 150px;
     word-break: break-word;
   }
 }
 
-/* === МОБИЛЬНЫЕ ФОРМЫ === */
 @media (max-width: 640px) {
   .mobile-form-row {
     flex-direction: column !important;
     gap: 0.5rem !important;
   }
-  
+
   .mobile-form-row label {
     width: auto !important;
     padding-top: 0 !important;
   }
-  
+
   .mobile-form-row input,
   .mobile-form-row select,
   .mobile-form-row textarea {
@@ -150,7 +136,6 @@ html {
   }
 }
 
-/* === МОБИЛЬНЫЕ МОДАЛКИ === */
 @media (max-width: 640px) {
   #auth-modal-overlay > div {
     max-width: calc(100vw - 2rem) !important;
@@ -158,36 +143,35 @@ html {
   }
 }
 
-/* === МОБИЛЬНЫЕ ШКАЛЫ ОЦЕНОК === */
 @media (max-width: 640px) {
   .scale-track {
     height: 36px !important;
   }
-  
+
   .scale-btn {
     width: 24px !important;
     height: 24px !important;
   }
-  
+
   .scale-btn.endpoint {
     width: 32px !important;
     height: 32px !important;
   }
-  
+
   .scale-btn-text {
     font-size: 9px !important;
   }
-  
+
   .scale-marker {
     width: 32px !important;
     height: 32px !important;
     top: -24px !important;
   }
-  
+
   .scale-marker-text {
     font-size: 11px !important;
   }
-  
+
   .contest-scale-btn {
     width: 28px !important;
     height: 28px !important;
@@ -195,41 +179,37 @@ html {
   }
 }
 
-/* === МОБИЛЬНЫЙ КАЛЕНДАРЬ === */
 @media (max-width: 640px) {
   #calendarGrid {
     grid-auto-rows: 80px !important;
   }
-  
+
   .cell-events-scroll {
     max-height: 40px !important;
   }
-  
+
   .cell-events-scroll > div {
     font-size: 10px !important;
     padding: 1px 4px !important;
   }
 }
 
-/* === МОБИЛЬНЫЕ ГРУППЫ === */
 @media (max-width: 768px) {
   .group-sidebar {
     width: 100% !important;
     order: -1;
   }
-  
+
   .members-scrollbar {
     max-height: 200px !important;
   }
 }
 
-/* === УТИЛИТЫ === */
 .touch-manipulation {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Предотвращаем зум на input в iOS */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -238,7 +218,7 @@ input[type="date"],
 input[type="time"],
 textarea,
 select {
-  font-size: 16px; /* Предотвращает зум в iOS Safari */
+  font-size: 16px;
 }
 
 @media (min-width: 641px) {

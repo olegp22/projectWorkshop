@@ -10,17 +10,13 @@
 <base target="_blank">
 <base target="_blank">
 <base target="_blank">
-<base target="_blank">
-<base target="_blank">
-<base target="_blank">
-<base target="_blank">
 </head>
 <body class="bg-white font-sans antialiased flex flex-col min-h-screen">
 
   <div id="layout-header"></div>
 
   <main class="flex-1 max-w-6xl w-full mx-auto px-6 py-8">
-    <!-- Секция списка групп -->
+
     <div id="sectionGroups" class="section-content active">
       <div class="flex flex-col md:flex-row gap-10 items-start">
         <div class="flex-1">
@@ -38,28 +34,33 @@
               <button type="button" data-mode="peer" class="mode-btn px-5 py-2 border border-gray-300 bg-white text-gray-700 text-sm rounded hover:border-orange-500 hover:text-orange-500 transition">Peer-to-peer</button>
               <button type="button" data-mode="contest" class="mode-btn px-5 py-2 border border-gray-300 bg-white text-gray-700 text-sm rounded hover:border-orange-500 hover:text-orange-500 transition">Конкурсное голосование</button>
             </div>
-                      </div>
+          </div>
 
-                    <!-- НАСТРОЙКА КОЛИЧЕСТВА ЭКСПЕРТОВ (classic mode) -->
+
           <div id="expertInspectorsBlock" class="hidden mb-5">
             <label class="text-sm font-medium text-gray-700 block mb-2">Количество экспертов на работу</label>
             <input type="number" id="expertInspectorsCount" class="w-32 px-4 py-2 border border-gray-300 text-sm focus:border-orange-400 focus:outline-none rounded" value="1" min="1" max="10">
             <p class="text-xs text-gray-500 mt-1">Сколько экспертов будут проверять каждую работу</p>
           </div>
 
-<div id="p2pInspectorsBlock" class="hidden mb-5">
+          <div id="p2pInspectorsBlock" class="hidden mb-5">
             <label class="text-sm font-medium text-gray-700 block mb-2">Количество проверяющих на работу</label>
             <input type="number" id="p2pInspectorsCount" class="w-32 px-4 py-2 border border-gray-300 text-sm focus:border-orange-400 focus:outline-none rounded" value="2" min="1" max="10">
             <p class="text-xs text-gray-500 mt-1">Сколько студентов будут проверять каждую работу</p>
           </div>
 
-          <!-- ИСПРАВЛЕНИЕ ПУНКТ 3: добавлены поля для contest-режима -->
+
           <div id="contestExpertInspectorsBlock" class="hidden mb-5">
             <label class="text-sm font-medium text-gray-700 block mb-2">Количество жюри на работу</label>
             <input type="number" id="contestExpertInspectorsCount" class="w-32 px-4 py-2 border border-gray-300 text-sm focus:border-orange-400 focus:outline-none rounded" value="1" min="1" max="10">
             <p class="text-xs text-gray-500 mt-1">Сколько жюри будут проверять каждую работу</p>
           </div>
-<!-- /ИСПРАВЛЕНИЕ ПУНКТ 3 -->
+          <div id="contestStudentInspectorsBlock" class="hidden mb-5">
+            <label class="text-sm font-medium text-gray-700 block mb-2">Количество студентов-проверяющих на работу</label>
+            <input type="number" id="contestStudentInspectorsCount" class="w-32 px-4 py-2 border border-gray-300 text-sm focus:border-orange-400 focus:outline-none rounded" value="1" min="1" max="10">
+            <p class="text-xs text-gray-500 mt-1">Сколько студентов будут проверять каждую работу</p>
+          </div>
+
 
           <button id="createGroupBtn" class=" text-white px-6 py-2.5 text-sm font-bold transition shadow-sm rounded-sm mb-8" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">Создать новую группу</button>
 
@@ -72,9 +73,9 @@
       </div>
     </div>
 
-    <!-- Секция деталей группы -->
+
     <div id="sectionGroupDetails" class="section-content active hidden">
-      
+
       <div class="flex flex-col md:flex-row gap-10 items-start">
         <div class="flex-1">
           <div class="flex items-center gap-3 mb-6 flex-wrap">
@@ -87,15 +88,15 @@
             <div class="members-scrollbar overflow-y-auto max-h-80 min-h-[120px]" id="membersListArea"></div>
           </div>
 
-          
+
           <div id="organizerActions" class="mt-5">
-            <!-- Сетка кнопок 2 колонки как на макете -->
+
             <div class="grid grid-cols-2 gap-4 mt-6">
-              <!-- Левая колонка -->
+
               <div class="space-y-3">
                 <button id="addExpertBtn" class="w-full mx-auto flex items-center justify-center gap-2 px-4 py-2.5  text-white font-bold text-sm hover:bg-orange-600 transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">
                   <span class="text-lg leading-none font-bold">+</span>
-                  <span class="flex-1 text-center">Добавить члена жюри</span>
+                  <span class="flex-1 text-center" id="addExpertBtnText">Добавить эксперта</span>
                 </button>
                 <input type="text" id="expertInviteLink" class="hidden w-full px-3 py-2 bg-gray-50 border border-gray-200 text-xs text-gray-500 rounded text-center" placeholder="ссылка для приглашения" readonly>
 
@@ -115,14 +116,14 @@
                 </div>
               </div>
 
-              <!-- Правая колонка -->
+
               <div class="space-y-3">
                 <button id="addCriterionBtn" class="w-full mx-auto flex items-center justify-center gap-2 px-4 py-2.5  text-white font-bold text-sm hover:bg-orange-600 transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">
                   <span class="text-lg leading-none font-bold">+</span>
                   Добавить критерий оценки
                 </button>
 
-                <!-- Форма добавления критерия — прямо под кнопкой, ширина = кнопке -->
+
                 <div id="criterionFormBlock" class="hidden space-y-2 border-2 border-orange-200 p-3 rounded bg-orange-50">
                   <input type="text" id="criterionNameInput" class="w-full px-3 py-2 border border-gray-300 text-sm rounded focus:border-orange-400 focus:outline-none" placeholder="Название критерия">
                   <textarea id="criterionDescInput" class="w-full px-3 py-2 border border-gray-300 text-sm rounded resize-none focus:border-orange-400 focus:outline-none" rows="2" placeholder="Описание критерия (необязательно)"></textarea>
@@ -131,7 +132,7 @@
                     <input type="number" id="criterionMaxScoreInput" class="w-16 px-2 py-1 border border-gray-300 text-sm rounded focus:border-orange-400 focus:outline-none" value="10" min="1" max="100">
                   </div>
                   <div class="flex gap-2">
-                    <button id="saveCriterionBtn" class="w-full flex items-center justify-center px-4 py-2.5 text-white font-bold text-sm transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">Сохранить</button>
+                    <button id="saveCriterionBtn" class="w-full flex items-center justify-center px-4 py-2.5 text-white font-bold text-sm transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">Сохранить</button>
                     <button id="cancelCriterionBtn" class="bg-white border border-gray-400 text-gray-700 px-4 py-1.5 text-sm rounded hover:bg-gray-100 transition">Отмена</button>
                   </div>
                 </div>
@@ -145,7 +146,7 @@
                   <div id="removeCriterionDropdown" class="hidden absolute left-0 top-full mt-1 w-full bg-white border-2 border-orange-500 shadow-lg z-40 max-h-48 overflow-y-auto"></div>
                 </div>
 
-                <!-- Список критериев -->
+
                 <div id="criteriaListArea" class="border border-gray-200 rounded p-2 min-h-[80px] max-h-32 overflow-y-auto"></div>
 
 
@@ -155,13 +156,21 @@
                 </button>
               </div>
             </div>
+
+
+            <div id="ratingBtnBlock" class="hidden mt-4">
+              <button id="viewRatingBtn" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-white font-bold text-sm hover:bg-orange-600 transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                Посмотреть рейтинг
+              </button>
+            </div>
           </div>
 
           <div id="expertActions" class="mt-5">
             <button id="goToReviewBtn" class="w-full  text-white px-6 py-2.5 text-sm font-bold transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">Перейти к проверке работ</button>
           </div>
 
-          
+
           <div id="studentActions" class="mt-5 space-y-4">
             <div id="studentSubmitBlock">
               <div class="flex items-center gap-4">
@@ -176,7 +185,7 @@
                   <span class="text-sm font-medium text-gray-700">Ваша работа:</span>
                   <span id="studentWorkStatus" class="text-xs px-2 py-0.5 rounded">—</span>
                 </div>
-                <a id="studentCurrentLink" href="#" target="_blank" class="text-purple-600 text-sm hover:underline break-all block mb-3">—</a>
+                <a id="studentCurrentLink" href="#" class="text-purple-600 text-sm hover:underline break-all block mb-3">—</a>
                 <div id="studentUpdateBlock" class="flex items-center justify-center gap-2">
                   <input type="text" id="studentNewLinkInput" class="flex-1 px-3 py-2 border border-gray-300 text-sm rounded" placeholder="новая ссылка">
                   <button id="studentUpdateLinkBtn" class=" text-white px-4 py-2 text-sm font-bold rounded-sm transition" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">Обновить</button>
@@ -184,10 +193,18 @@
               </div>
             </div>
 
-            <!-- Кнопка проверки чужих работ (только P2P) -->
+
             <button id="studentGoToReviewBtn" class="hidden w-full  text-white px-6 py-2.5 text-sm font-bold transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">
               Перейти к проверке работ
             </button>
+
+
+            <div id="studentRatingBlock" class="hidden mt-4">
+              <button id="studentViewRatingBtn" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-white font-bold text-sm hover:bg-orange-600 transition rounded-sm" style="background-color: #FE8805;" onmouseenter="this.style.backgroundColor='#E67A00'" onmouseleave="this.style.backgroundColor='#FE8805'">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                Рейтинг участников
+              </button>
+            </div>
           </div>
 
           <button id="backToGroupsBtn" class="mt-4 text-sm text-gray-500 hover:text-gray-800 flex items-center gap-1 transition">

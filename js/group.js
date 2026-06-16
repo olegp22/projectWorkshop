@@ -35,8 +35,6 @@ function escapeHtml(str) {
   });
 }
 
-// === НОРМАЛИЗАЦИЯ РОЛЕЙ И РЕЖИМОВ ===
-// Бэкенд возвращает UPPERCASE, фронт ожидает lowercase
 
 function normalizeRole(role) {
   if (!role) return 'member';
@@ -48,14 +46,14 @@ function normalizeGroupMode(mode) {
   return mode.toLowerCase();
 }
 
-// Отображаемое название роли в UI
+
 function getDisplayRole(role, groupMode) {
   const normalizedRole = normalizeRole(role);
   const normalizedMode = normalizeGroupMode(groupMode);
 
   if (!normalizedRole) return 'участник';
 
-  // В конкурсном режиме expert/reviewer отображаем как "жюри"
+
   if (normalizedMode === 'contest' && (normalizedRole === 'expert' || normalizedRole === 'reviewer')) {
     return 'жюри';
   }
@@ -73,9 +71,6 @@ function getDisplayRole(role, groupMode) {
   return roleMap[normalizedRole] || normalizedRole;
 }
 
-
-// === ЛОКАЛЬНОЕ ХРАНИЛИЩЕ ИНВАЙТ-ТОКЕНОВ ===
-// Бэкенд не возвращает токены в GET /groups/my, храним их на фронтенде
 
 const INVITE_TOKENS_KEY = 'feedback_group_invite_tokens';
 
@@ -104,7 +99,7 @@ function getGroupInviteTokens(groupId) {
 }
 
 function generateInviteToken() {
-  // Генерируем UUID v4 подобный токен
+
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -113,7 +108,7 @@ function generateInviteToken() {
 }
 
 function injectInviteTokens(groups) {
-  // Подставляем сохранённые токены в объекты групп
+
   const tokens = getStoredInviteTokens();
   return groups.map(g => {
     const groupTokens = tokens[g.id];
@@ -128,7 +123,6 @@ function injectInviteTokens(groups) {
   });
 }
 
-// === /ЛОКАЛЬНОЕ ХРАНИЛИЩЕ ===
 
 async function loadCurrentUser() {
   try {
@@ -214,16 +208,16 @@ function setUserRole(role, groupMode = 'classic') {
   const studentActions = document.getElementById('studentActions');
   const organizerTitle = document.getElementById('organizerTitle');
 
-  // === РАЗДЕЛЕНИЕ ПО РОЛЯМ ===
-  // Скрываем все блоки по умолчанию
+
+
   if (organizerActions) organizerActions.classList.add('hidden');
   if (expertActions) expertActions.classList.add('hidden');
   if (studentActions) studentActions.classList.add('hidden');
 
-  // Скрываем элементы только для организатора
+
   document.querySelectorAll('.role-organizer-only').forEach(el => el.classList.add('hidden'));
 
-  // Показываем блоки в зависимости от роли
+
   if (normalizedRole === 'organizer' || normalizedRole === 'creator') {
     if (organizerActions) organizerActions.classList.remove('hidden');
     document.querySelectorAll('.role-organizer-only').forEach(el => el.classList.remove('hidden'));
@@ -237,23 +231,35 @@ function setUserRole(role, groupMode = 'classic') {
     if (studentActions) studentActions.classList.remove('hidden');
   }
 
-  // Организатор также видит блоки эксперта и студента (полный доступ)
+
   if (normalizedRole === 'organizer' || normalizedRole === 'creator') {
     if (expertActions) expertActions.classList.remove('hidden');
     if (studentActions) studentActions.classList.remove('hidden');
   }
 
-  // Setup buttons based on mode (still needed for correct labels)
+
   setupOrganizerButtonsByMode(normalizedMode);
   setupStudentButtonsByMode(normalizedMode);
 
-  // Update button text based on mode
+
   if (normalizedMode === 'contest') {
     const btn = document.getElementById('goToReviewBtn');
     if (btn) btn.innerText = 'Перейти к голосованию';
   } else {
     const btn = document.getElementById('goToReviewBtn');
     if (btn) btn.innerText = 'Перейти к проверке работ';
+  }
+
+
+  const ratingBtnBlock = document.getElementById('ratingBtnBlock');
+  const studentRatingBlock = document.getElementById('studentRatingBlock');
+
+  if (normalizedMode === 'contest') {
+    if (ratingBtnBlock) ratingBtnBlock.classList.remove('hidden');
+    if (studentRatingBlock) studentRatingBlock.classList.remove('hidden');
+  } else {
+    if (ratingBtnBlock) ratingBtnBlock.classList.add('hidden');
+    if (studentRatingBlock) studentRatingBlock.classList.add('hidden');
   }
 }
 
@@ -269,6 +275,8 @@ function setupOrganizerButtonsByMode(groupMode) {
   } else if (groupMode === 'contest') {
     addExpertBlock.classList.remove('hidden');
     if (addExpertBtnText) addExpertBtnText.innerText = 'Добавить члена жюри';
+    const addStudentBlock = document.getElementById('addStudentBlock');
+    if (addStudentBlock) addStudentBlock.classList.remove('hidden');
 
   } else {
     addExpertBlock.classList.remove('hidden');
@@ -304,7 +312,7 @@ function showSection(sectionName) {
     currentGroupId = null;
     currentUserRole = null;
 
-    // Reset mode blocks to default (expert mode visible)
+
     const expertBlock = document.getElementById('expertInspectorsBlock');
     const p2pBlock = document.getElementById('p2pInspectorsBlock');
     const contestExpertBlock = document.getElementById('contestExpertInspectorsBlock');
@@ -312,7 +320,7 @@ function showSection(sectionName) {
     if (p2pBlock) p2pBlock.classList.add('hidden');
     if (contestExpertBlock) contestExpertBlock.classList.add('hidden');
 
-    // Reset mode buttons to first (expert)
+
     const modeSelector = document.getElementById('modeSelector');
     const buttons = modeSelector?.querySelectorAll('.mode-btn');
     if (buttons) {
@@ -428,15 +436,17 @@ function setupModeSelector() {
   const expertBlock = document.getElementById('expertInspectorsBlock');
   const p2pBlock = document.getElementById('p2pInspectorsBlock');
   const contestExpertBlock = document.getElementById('contestExpertInspectorsBlock');
+  const contestStudentBlock = document.getElementById('contestStudentInspectorsBlock');
 
   const buttons = modeSelector?.querySelectorAll('.mode-btn');
   if (!buttons) return;
 
-  // Set initial visibility based on first active button
+
   const setVisibility = (mode) => {
     if (expertBlock) expertBlock.classList.toggle('hidden', mode !== 'expert');
     if (p2pBlock) p2pBlock.classList.toggle('hidden', mode !== 'peer');
     if (contestExpertBlock) contestExpertBlock.classList.toggle('hidden', mode !== 'contest');
+    if (contestStudentBlock) contestStudentBlock.classList.toggle('hidden', mode !== 'contest');
   };
 
   buttons.forEach(btn => {
@@ -447,7 +457,7 @@ function setupModeSelector() {
     });
   });
 
-  // Initialize with first button (expert mode)
+
   if (buttons.length > 0) {
     buttons[0].classList.add('is-active');
     setVisibility(buttons[0].dataset.mode);
@@ -657,29 +667,46 @@ if (createGroupBtn) {
 
     } else if (groupMode === 'contest') {
       const expertInput = document.getElementById('contestExpertInspectorsCount');
+      const studentInput = document.getElementById('contestStudentInspectorsCount');
 
       countOfInspectorsExpert = parseInt(expertInput?.value) || 1;
-      countOfInspectorsStudent = 0;
+      countOfInspectorsStudent = parseInt(studentInput?.value) || 1;
 
       if (countOfInspectorsExpert < 1) countOfInspectorsExpert = 1;
       if (countOfInspectorsExpert > 10) countOfInspectorsExpert = 10;
+      if (countOfInspectorsStudent < 1) countOfInspectorsStudent = 1;
+      if (countOfInspectorsStudent > 10) countOfInspectorsStudent = 10;
     }
 
     createGroupBtn.disabled = true;
     createGroupBtn.textContent = 'Создание...';
 
+    let expertCount = 0;
+    let studentCount = 0;
+
+    if (groupMode === 'classic') {
+      expertCount = countOfInspectorsExpert;
+      studentCount = 0;
+    } else if (groupMode === 'p2p') {
+      expertCount = 0;
+      studentCount = countOfInspectorsStudent;
+    } else {
+      expertCount = countOfInspectorsExpert;
+      studentCount = countOfInspectorsStudent;
+    }
+
     try {
       const newGroup = await groupsAPI.createGroup(
-        name, 
-        groupMode, 
-        groupMode === 'p2p' ? countOfInspectorsStudent : countOfInspectorsExpert,
-        null
+        name,
+        groupMode,
+        expertCount,
+        studentCount
       );
       showToast(`Группа "${name}" создана!`);
       if (nameInput) nameInput.value = '';
 
-      // === СОХРАНЯЕМ ИНВАЙТ-ТОКЕНЫ ЛОКАЛЬНО ===
-      // Бэкенд возвращает токены при создании, но не в GET /groups/my
+
+
       if (newGroup && newGroup.id) {
         const reviewerToken = newGroup.reviewer_invite_token || generateInviteToken();
         const studentToken = newGroup.student_invite_token || generateInviteToken();
@@ -706,12 +733,12 @@ if (addExpertBtn) {
     if (linkField) {
       const baseUrl = window.location.origin;
 
-      // Если токена нет (старая группа), генерируем на лету
+
       let reviewerToken = group?.reviewer_invite_token;
       if (!reviewerToken) {
         reviewerToken = generateInviteToken();
         saveInviteTokens(currentGroupId, reviewerToken, group?.student_invite_token || generateInviteToken());
-        // Обновляем группу в списке
+
         group.reviewer_invite_token = reviewerToken;
       }
 
@@ -732,12 +759,12 @@ if (addStudentBtn) {
     if (linkField) {
       const baseUrl = window.location.origin;
 
-      // Если токена нет (старая группа), генерируем на лету
+
       let studentToken = group?.student_invite_token;
       if (!studentToken) {
         studentToken = generateInviteToken();
         saveInviteTokens(currentGroupId, group?.reviewer_invite_token || generateInviteToken(), studentToken);
-        // Обновляем группу в списке
+
         group.student_invite_token = studentToken;
       }
 
@@ -771,6 +798,28 @@ if (goToReviewBtn) {
     }
     const modeParam = currentGroupMode === 'contest' ? '&mode=contest' : '';
     window.location.href = `review.html?group=${currentGroupId}${modeParam}`;
+  };
+}
+
+const viewRatingBtn = document.getElementById('viewRatingBtn');
+if (viewRatingBtn) {
+  viewRatingBtn.onclick = () => {
+    if (!currentGroupId) {
+      showToast('Сначала выберите группу', true);
+      return;
+    }
+    window.location.href = `rating.html?group=${currentGroupId}`;
+  };
+}
+
+const studentViewRatingBtn = document.getElementById('studentViewRatingBtn');
+if (studentViewRatingBtn) {
+  studentViewRatingBtn.onclick = () => {
+    if (!currentGroupId) {
+      showToast('Сначала выберите группу', true);
+      return;
+    }
+    window.location.href = `rating.html?group=${currentGroupId}`;
   };
 }
 
@@ -891,9 +940,6 @@ async function handleInviteToken() {
   }
 }
 
-// === ИСПРАВЛЕНИЕ ПУНКТ 3: ЗАГРУЗКА РАБОТЫ СТУДЕНТА ===
-// getMyReviews возвращает работы на проверку, НЕ работы студента
-// Используем ТОЛЬКО localStorage (my_submissions) + getSubmission для деталей
 
 function getStoredSubmissions() {
   try {
@@ -924,12 +970,12 @@ async function loadStudentSubmission() {
     const user = await usersAPI.getMe();
     let stored = getStoredSubmissions();
 
-    // Ищем работу студента в localStorage по group_id
+
     const mySubmission = stored.find(s => s.group_id == currentGroupId);
 
     if (mySubmission) {
       try {
-        // Загружаем актуальные детали с бэкенда
+
         const details = await groupsAPI.getSubmission(mySubmission.submission_id);
         currentStudentSubmission = {
           submission_id: mySubmission.submission_id,
@@ -941,14 +987,14 @@ async function loadStudentSubmission() {
         showStudentWorkBlock(currentStudentSubmission);
       } catch (e) {
         console.warn('Не удалось загрузить детали работы:', e.message);
-        // Если 404 — работа удалена на бэкенде, убираем из localStorage
+
         if (e.message && (e.message.includes('404') || e.message.includes('не найдена'))) {
           stored = stored.filter(s => s.submission_id !== mySubmission.submission_id);
           localStorage.setItem('my_submissions', JSON.stringify(stored));
           showStudentSubmitBlock();
           return;
         }
-        // Fallback на stored данные
+
         currentStudentSubmission = {
           ...mySubmission,
           student_id: user.id,
@@ -1020,7 +1066,7 @@ async function init() {
   setupModeSelector();
   setupCriteriaManager();
 
-  // Начинаем со списка групп (не деталей)
+
   showSection('groups');
   await loadGroups();
   await handleInviteToken();
