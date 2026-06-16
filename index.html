@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Сервис экспертной обратной связи</title>
+  <meta name="description" content="Сервис сбора экспертной обратной связи по проектам для студентов УрФУ">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/notification.css">
+  <link href="css/tailwind.css" rel="stylesheet">
+</head>
+<body class="bg-white min-h-screen flex flex-col font-['Inter']">
+
+  <div id="layout-header"></div>
+
+  <main class="grow">
+    <section class="px-6 py-16 max-w-6xl mx-auto w-full">
+      <div class="flex items-center justify-between gap-12">
+        <div class="flex-1">
+          <h1 class="text-4xl font-bold text-indigo-900 mb-4">Фидбэ<span class="text-orange-500">К</span></h1>
+          <p class="text-gray-600 mb-8 text-lg">Сервис сбора экспертной обратной связи по проектам</p>
+          <button id="startNowBtn" class="bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white px-8 py-3 rounded font-medium transition shadow-md cursor-pointer">
+            Начать сейчас
+          </button>
+        </div>
+        <div class="flex-1">
+          <img src="images/hero-illustration.png" alt="Иллюстрация" class="w-full max-w-md" loading="lazy" onerror="this.style.display='none'">
+        </div>
+      </div>
+    </section>
+
+    <section id="student-section" class="px-6 py-12 max-w-4xl mx-auto w-full">
+      <div class="border-2 border-orange-400 rounded-lg p-6 flex flex-col md:flex-row items-center gap-8 bg-white shadow-sm">
+        <div class="shrink-0">
+          <img src="images/student-illustration.png" alt="" class="w-40 h-40 object-contain" loading="lazy" onerror="this.parentElement.innerText='🎓'">
+        </div>
+        <div class="flex-1">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Для студентов и организаторов</h2>
+          <ul class="text-gray-600 mb-6 space-y-2">
+            <li>• отправляйте проекты на проверку</li>
+            <li>• получайте обратную связь</li>
+            <li>• отслеживайте прогресс</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="expert-section" class="px-6 py-4 max-w-4xl mx-auto w-full">
+      <div class="border-2 border-orange-400 rounded-lg p-6 flex flex-col md:flex-row items-center gap-8 bg-white shadow-sm">
+        <div class="flex-1 order-2 md:order-1">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Для экспертов</h2>
+          <ul class="text-gray-600 mb-6 space-y-2">
+            <li>• получайте проекты</li>
+            <li>• оценивайте по критериям</li>
+            <li>• оставляйте обратную связь</li>
+          </ul>
+        </div>
+        <div class="shrink-0 md:order-2">
+          <img src="images/expert-illustration.png" alt="" class="w-40 h-40 object-contain" loading="lazy" onerror="this.parentElement.innerText='👤'">
+        </div>
+      </div>
+    </section>
+
+    <section class="px-6 py-16 max-w-4xl mx-auto w-full text-center">
+      <button class="login-btn-expert border-2 border-purple-500 text-purple-900 hover:bg-orange-50 active:bg-orange-100 px-6 py-2 rounded font-medium transition cursor-pointer">
+        Войти или зарегистрироваться
+      </button>
+    </section>
+  </main>
+
+  <div id="layout-footer"></div>
+
+
+  <div id="auth-modal-overlay" class="fixed inset-0 hidden items-center justify-center p-4 z-50 bg-black/50" role="dialog" aria-modal="true">
+    <div class="bg-white shadow-2xl max-w-sm w-full relative border border-purple-400 rounded-none">
+      <button id="close-auth-btn" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition" aria-label="Закрыть окно">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      <div class="p-6 pt-8">
+        <div class="flex mb-5">
+          <button id="tab-login" class="flex-1 pb-2 text-center text-sm font-medium text-orange-500 border-b-2 border-orange-500 transition cursor-pointer">Вход</button>
+          <button id="tab-register" class="flex-1 pb-2 text-center text-sm font-medium text-gray-500 border-b border-gray-300 hover:text-gray-700 transition cursor-pointer">Регистрация</button>
+        </div>
+        <div id="auth-error" class="hidden mb-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600"></div>
+
+        <form id="login-form" class="space-y-3" novalidate>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="auth-email">Email</label>
+            <input type="email" id="auth-email" placeholder="example@mail.ru" required class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="auth-password">Пароль</label>
+            <input type="password" id="auth-password" placeholder="Введите пароль" required class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
+          </div>
+          <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 text-sm font-medium transition">Войти</button>
+        </form>
+
+        <form id="register-form" class="space-y-3 hidden" novalidate>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="reg-first-name">Имя</label>
+            <input type="text" id="reg-first-name" placeholder="Иван" class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="reg-last-name">Фамилия</label>
+            <input type="text" id="reg-last-name" placeholder="Иванов" class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="reg-patronymic">Отчество</label>
+            <input type="text" id="reg-patronymic" placeholder="Иванович" class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="reg-email">Email</label>
+            <input type="email" id="reg-email" placeholder="example@mail.ru" required class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="reg-password">Пароль</label>
+            <input type="password" id="reg-password" required class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="reg-password-confirm">Подтвердите пароль</label>
+            <input type="password" id="reg-password-confirm" required class="w-full px-3 py-2 text-sm border border-gray-300 focus:outline-none focus:border-orange-400">
+          </div>
+          <div class="flex items-start">
+            <input type="checkbox" id="reg-terms" required class="mt-0.5 mr-1.5 w-3.5 h-3.5 text-orange-500">
+            <label for="reg-terms" class="text-xs text-gray-600">Я согласен с условиями использования</label>
+          </div>
+          <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 text-sm font-medium transition">Зарегистрироваться</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initAuthModal } from './js/auth-module.js';
+    document.addEventListener('DOMContentLoaded', () => {
+      initAuthModal();
+      const startBtn = document.getElementById('startNowBtn');
+      if (startBtn) {
+        startBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.getElementById('student-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+    });
+  </script>
+  <script type="module" src="js/layout-loader.js"></script>
+</body>
+</html>

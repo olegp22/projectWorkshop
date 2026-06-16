@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Календарь — ФидбэК</title>
+  <link href="css/tailwind.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/calendar.css">
+  <link rel="stylesheet" href="css/notification.css">
+</head>
+<body class="bg-white font-sans antialiased flex flex-col min-h-screen">
+
+  <div id="layout-header"></div>
+
+  <main class="flex-1 max-w-6xl w-full mx-auto px-6 py-8">
+    <div id="sectionCalendar" class="section-content active">
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-semibold text-gray-800">Календарь</h1>
+        <button id="addEventBtn" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 text-sm font-medium transition flex items-center gap-2 rounded">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Добавить мероприятие
+        </button>
+      </div>
+      <div class="flex items-center gap-2 mb-4">
+        <button id="prevYearBtn" class="px-2 py-1 border border-gray-300 text-sm hover:bg-gray-100 rounded" title="Предыдущий год">«</button>
+        <button id="prevMonthBtn" class="px-2 py-1 border border-gray-300 text-sm hover:bg-gray-100 rounded" title="Предыдущий месяц">‹</button>
+        <span id="currentMonthYear" class="text-sm font-medium px-3">Месяц год</span>
+        <button id="nextMonthBtn" class="px-2 py-1 border border-gray-300 text-sm hover:bg-gray-100 rounded" title="Следующий месяц">›</button>
+        <button id="nextYearBtn" class="px-2 py-1 border border-gray-300 text-sm hover:bg-gray-100 rounded" title="Следующий год">»</button>
+        <div class="ml-auto text-sm text-gray-600" id="monthYearDisplay">Месяц год</div>
+      </div>
+      <div class="border border-gray-300">
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);background:#7c3aed;">
+          <div class="text-center text-sm font-medium text-white py-2">пн</div>
+          <div class="text-center text-sm font-medium text-white py-2">вт</div>
+          <div class="text-center text-sm font-medium text-white py-2">ср</div>
+          <div class="text-center text-sm font-medium text-white py-2">чт</div>
+          <div class="text-center text-sm font-medium text-white py-2">пт</div>
+          <div class="text-center text-sm font-medium text-white py-2">сб</div>
+          <div class="text-center text-sm font-medium text-white py-2">вс</div>
+        </div>
+        <div id="calendarGrid" style="display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:100px;"></div>
+      </div>
+    </div>
+
+    <div id="sectionCreateEvent" class="section-content hidden">
+      <h1 class="text-2xl font-semibold text-gray-800 mb-8">Создать мероприятие</h1>
+      <div class="max-w-2xl">
+        <div class="flex items-start gap-4 mb-5">
+          <label class="text-sm text-gray-700 w-24 pt-2">Тема:</label>
+          <input type="text" id="eventTopic" class="flex-1 px-3 py-2 border border-gray-300 text-sm focus:border-orange-400 focus:outline-none rounded">
+        </div>
+        <div class="flex items-start gap-4 mb-5">
+          <label class="text-sm text-gray-700 w-24 pt-2">Место:</label>
+          <input type="text" id="eventPlace" class="flex-1 px-3 py-2 border border-gray-300 text-sm focus:border-orange-400 focus:outline-none rounded">
+        </div>
+        <div class="flex items-start gap-4 mb-5">
+          <label class="text-sm text-gray-700 w-24 pt-2">Дата и время:</label>
+          <div class="flex gap-2 flex-1 items-center">
+            <input type="date" id="eventDate" class="w-40 px-3 py-2 border border-gray-300 text-sm text-center rounded focus:border-orange-400 focus:outline-none">
+            <span class="text-gray-400 text-sm">с</span>
+            <input type="time" id="eventTimeStart" class="w-28 px-3 py-2 border border-gray-300 text-sm text-center rounded focus:border-orange-400 focus:outline-none">
+            <span class="text-gray-400 text-sm">до</span>
+            <input type="time" id="eventTimeEnd" class="w-28 px-3 py-2 border border-gray-300 text-sm text-center rounded focus:border-orange-400 focus:outline-none">
+          </div>
+        </div>
+        <div class="flex items-start gap-4 mb-5">
+          <label class="text-sm text-gray-700 w-24 pt-2">Участники:</label>
+          <div class="flex-1 relative">
+            <button id="participantsDropdownBtn" class="w-full max-w-md bg-orange-500 text-white px-4 py-2 text-sm font-medium flex items-center justify-between rounded hover:bg-orange-600 transition">
+              <span>Выбрать участников</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div id="participantsDropdown" class="hidden absolute top-full left-0 mt-1 w-full max-w-md bg-white border border-orange-500 shadow-lg z-40 max-h-48 overflow-y-auto"></div>
+            <div id="selectedParticipants" class="mt-2 flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+        <div class="flex gap-4 mt-8 pl-28">
+          <button id="saveEventBtn" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 text-sm font-medium transition rounded">Сохранить</button>
+          <button id="cancelEventBtn" class="border border-gray-400 text-gray-700 px-6 py-2 text-sm hover:bg-gray-100 transition rounded">Отмена</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="layout-footer"></div>
+
+  <script type="module" src="js/layout-loader.js"></script>
+  <script type="module" src="js/calendar.js"></script>
+</body>
+</html>

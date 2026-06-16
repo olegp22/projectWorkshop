@@ -1,0 +1,45 @@
+.notification-dropdown {
+  position: fixed;
+  z-index: 9999;
+}
+
+.notification-list::-webkit-scrollbar {
+  width: 8px;
+}
+.notification-list::-webkit-scrollbar-track {
+  background: #fff1e6;
+  border-radius: 4px;
+}
+.notification-list::-webkit-scrollbar-thumb {
+  background: #f97316;
+  border-radius: 4px;
+}
+
+.notification-list {
+  scrollbar-width: thin;
+  scrollbar-color: #f97316 #fff1e6;
+}
+
+.notification-empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 16px;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .notification-dropdown {
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    top: 60px !important;
+  }
+
+  .notification-dropdown > div {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
