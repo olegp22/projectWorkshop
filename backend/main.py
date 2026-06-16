@@ -16,7 +16,7 @@ origins = [
     "http://localhost:3000",
     "http://localhost:5173",
      "http://127.0.0.1:5500", # если использует Vite
-     "https://your-frontend.github.io"
+     "https://project-workshop-8s9jvp7am-olegp222.vercel.app"
 ]
 
 app.add_middleware(
