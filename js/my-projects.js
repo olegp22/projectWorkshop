@@ -6,6 +6,7 @@ let currentGroupMode = 'classic';
 let projects = [];
 let currentFilter = 'all';
 let sortAsc = false;
+let currentGroupMode = 'classic';
 
 function getUserIdFromToken() {
   const token = localStorage.getItem('access_token');
@@ -125,7 +126,7 @@ function renderProjects() {
     card.addEventListener('click', () => {
       const projectId = card.dataset.id;
       const groupId = card.dataset.group;
-      const modeParam = currentGroupMode !== 'classic' ? `&mode=${currentGroupMode}` : '';
+      const modeParam = p.groupMode !== 'classic' ? `&mode=${p.groupMode}` : '';
       window.location.href = `my-projects-detail.html?group=${groupId}&project=${projectId}${modeParam}`;
     });
   });

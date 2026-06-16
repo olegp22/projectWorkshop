@@ -1,4 +1,4 @@
-import { groupsAPI } from './api.js';
+import { authAPI, groupsAPI } from './api.js';
 import { loadCurrentUser, showToast, escapeHtml, loadGroupCriteria } from './review-core.js';
 
 let currentGroupId = null;
@@ -71,6 +71,7 @@ function renderProjects() {
   container.className = 'projects-grid';
 
   // Фильтрация: обрабатываем ВСЕ фильтры включая urgent
+  console.log('[review.js] Rendering projects, total:', projects.length, 'filter:', currentFilter);
   let filtered = [];
 
   if (currentFilter === 'all') {
@@ -164,7 +165,13 @@ function setupSort() {
 
 async function loadProjectsWithProgress() {
   try {
+    if (!currentGroupId) {
+      console.warn('[review.js] currentGroupId is not set');
+      projects = [];
+      return;
+    }
     const reviews = await groupsAPI.getMyReviews();
+    console.log('[review.js] Loaded reviews:', reviews.length, reviews);
     const totalCriteriaCount = groupCriteria.length || 0;
 
     const groupReviews = reviews.filter(r => r.group_id == currentGroupId);
