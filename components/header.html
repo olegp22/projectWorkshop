@@ -44,20 +44,20 @@
 </header>
 
 <!-- Dropdown профиля — ВНЕ шапки, z-index 9999 чтобы быть точно над всем -->
-<div id="profileDropdown" class="hidden fixed bg-white border border-gray-200 rounded shadow-lg min-w-[140px]">
+<div id="profileDropdown" class="hidden fixed bg-white border border-gray-200 rounded shadow-lg min-w-[140px]" style="z-index: 9999;">
   <div class="px-4 py-2 text-sm text-gray-600 cursor-pointer hover:bg-gray-50 border-b border-gray-100" onclick="window.location.href='settings.html'">Настройки</div>
   <div class="px-4 py-2 text-sm text-gray-600 cursor-pointer hover:bg-gray-50" id="logoutBtn">Выход</div>
 </div>
 
 <!-- Бургер-меню dropdown — ВНЕ шапки, z-index 9999 чтобы быть точно над всем -->
-<div id="burgerDropdown" class="hidden fixed bg-white border border-gray-200 rounded shadow-lg min-w-[200px]">
+<div id="burgerDropdown" class="hidden fixed bg-white border border-gray-200 rounded shadow-lg min-w-[200px]" style="z-index: 9999;">
   <div class="px-4 py-2 text-sm text-gray-600 cursor-pointer hover:bg-gray-50 border-b border-gray-100" onclick="window.location.href='group.html'">Управление группами</div>
   <div class="px-4 py-2 text-sm text-gray-600 cursor-pointer hover:bg-gray-50 border-b border-gray-100" onclick="window.location.href='calendar.html'">Календарь</div>
   <div class="px-4 py-2 text-sm text-gray-600 cursor-pointer hover:bg-gray-50" onclick="window.location.href='my-projects.html'">Мои проекты</div>
 </div>
 
 <!-- Уведомления — тоже z-index 9999 для консистентности -->
-<div id="notificationDropdown" class="notification-dropdown hidden">
+<div id="notificationDropdown" class="notification-dropdown hidden" style="z-index: 9999;">
   <div class="w-80 max-h-[400px] bg-white border-2 border-orange-500 rounded-lg shadow-xl flex flex-col overflow-hidden">
     <div class="px-4 py-3 border-b border-gray-200 flex justify-between items-center shrink-0">
       <h3 class="text-sm font-semibold text-gray-800">Уведомления</h3>

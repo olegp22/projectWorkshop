@@ -21,9 +21,17 @@ export async function loadCurrentUser() {
       : (user.name || user.email || 'Пользователь');
     const el = document.getElementById('headerUserName');
     if (el) el.innerText = displayName;
+    return user;
   } catch (error) {
     const el = document.getElementById('headerUserName');
     if (el) el.innerText = 'Гость';
+
+    // If auth error, clear token and return null
+    if (error.message && (error.message.includes('401') || error.message.includes('Сессия истекла'))) {
+      localStorage.removeItem('access_token');
+      return null;
+    }
+    return null;
   }
 }
 

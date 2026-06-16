@@ -1,5 +1,6 @@
 .notification-dropdown {
   position: fixed;
+  z-index: 9999;
 }
 
 .notification-list::-webkit-scrollbar {

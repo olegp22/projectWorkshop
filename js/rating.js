@@ -8,13 +8,25 @@ let currentGroupId = null;
 
 async function initRating() {
   try {
-    const user = await loadCurrentUser();
-    if (!user) {
+    await loadCurrentUser();
+
+    // Check auth via token instead of relying on loadCurrentUser return value
+    const token = localStorage.getItem('access_token');
+    if (!token) {
       showToast('Необходимо авторизоваться', true);
-      setTimeout(() => window.location.href = 'login.html', 1500);
+      setTimeout(() => window.location.href = 'index.html', 1500);
       return;
     }
-    currentUserId = user.id;
+
+    // Get user ID from token
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      currentUserId = payload.user_id;
+    } catch {
+      showToast('Ошибка авторизации', true);
+      setTimeout(() => window.location.href = 'index.html', 1500);
+      return;
+    }
 
     const params = new URLSearchParams(window.location.search);
     currentGroupId = params.get('group');
