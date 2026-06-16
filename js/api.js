@@ -1,6 +1,4 @@
-const API_BASE = window.location.hostname === 'localhost'
-    ? 'http://localhost:8000'
-    : '';
+const API_BASE = 'http://localhost:8000';
 
 let authToken = localStorage.getItem('access_token') || '';
 
@@ -13,64 +11,46 @@ export function setAuthToken(token) {
     }
 }
 
-function isTokenExpired() {
-    if (!authToken) return true;
-    try {
-        const payload = JSON.parse(atob(authToken.split('.')[1]));
-        if (!payload.exp) return false;
-        const exp = payload.exp * 1000;
-        return Date.now() >= exp;
-    } catch {
-        return true;
-    }
-}
-
-function handleAuthError() {
-    setAuthToken('');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('feedback_user_profile');
-    localStorage.removeItem('my_submissions');
-    const error = new Error('Сессия истекла. Пожалуйста, войдите снова.');
-    error.isAuthError = true;
-    return error;
-}
+// === НОРМАЛИЗАЦИЯ ОТВЕТОВ БЭКЕНДА ===
+// Бэкенд возвращает поля с опечатками и UPPERCASE enum'ами — нормализуем рекурсивно
 
 function deepNormalize(obj) {
     if (!obj || typeof obj !== 'object') return obj;
     if (Array.isArray(obj)) return obj.map(deepNormalize);
 
+    // Опечатка: reviewrs → reviews
     if ('reviewrs' in obj && !('reviews' in obj)) {
         obj.reviews = obj.reviewrs;
         delete obj.reviewrs;
     }
 
-    if ('reviewers' in obj && !('reviews' in obj)) {
-        obj.reviews = obj.reviewers;
-        delete obj.reviewers;
-    }
-
+    // Опечатка: type_massege → type_message
     if ('type_massege' in obj && !('type_message' in obj)) {
         obj.type_message = obj.type_massege;
         delete obj.type_massege;
     }
 
+    // UPPERCASE group_mode → lowercase
     if (typeof obj.group_mode === 'string') {
         obj.group_mode = obj.group_mode.toLowerCase();
     }
 
+    // UPPERCASE role → lowercase
     if (typeof obj.role === 'string') {
         obj.role = obj.role.toLowerCase();
     }
 
+    // UPPERCASE status → lowercase
     if (typeof obj.status === 'string') {
         obj.status = obj.status.toLowerCase();
     }
 
+    // UPPERCASE type_message → lowercase
     if (typeof obj.type_message === 'string') {
         obj.type_message = obj.type_message.toLowerCase();
     }
 
+    // Нормализуем вложенные объекты
     Object.keys(obj).forEach(key => {
         if (obj[key] && typeof obj[key] === 'object') {
             obj[key] = deepNormalize(obj[key]);
@@ -83,12 +63,9 @@ function deepNormalize(obj) {
 function normalizeResponse(data) {
     return deepNormalize(data);
 }
+// === /НОРМАЛИЗАЦИЯ ===
 
 async function request(endpoint, method = 'GET', body = null, needsAuth = true) {
-    if (needsAuth && isTokenExpired()) {
-        throw handleAuthError();
-    }
-
     const headers = {
         'Content-Type': 'application/json',
     };
@@ -104,90 +81,34 @@ async function request(endpoint, method = 'GET', body = null, needsAuth = true) 
         options.body = JSON.stringify(body);
     }
 
-    let response;
     try {
-        response = await fetch(`${API_BASE}${endpoint}`, options);
-    } catch (networkError) {
-        const error = new Error('Сервер недоступен. Проверьте подключение и убедитесь, что бэкенд запущен.');
-        error.isNetworkError = true;
-        error.originalError = networkError;
-        throw error;
-    }
+        const response = await fetch(`${API_BASE}${endpoint}`, options);
 
-    // Обработка 401
-    if (response.status === 401) {
-        throw handleAuthError();
-    }
-
-    // Для 204 No Content или 304 Not Modified — тела нет
-    if (response.status === 204 || response.status === 304) {
-        if (!response.ok) {
-            const error = new Error(`Ошибка ${response.status}: ${response.statusText}`);
-            error.status = response.status;
-            throw error;
+        if (response.status === 401) {
+            setAuthToken('');
+            if (typeof window !== 'undefined' && !window.location.pathname.includes('/index.html')) {
+                window.location.href = '/index.html';
+            }
+            throw new Error('Сессия истекла. Пожалуйста, войдите снова.');
         }
-        return null;
-    }
 
-    // === ИСПРАВЛЕНИЕ: всегда читаем как текст, проверяем пустоту, потом парсим ===
-    let text;
-    try {
-        text = await response.text();
-    } catch (e) {
-        text = '';
-    }
-
-    // Пустой ответ — не пытаемся парсить JSON
-    if (!text || text.trim() === '') {
+        const data = await response.json();
         if (!response.ok) {
-            const error = new Error(`Ошибка ${response.status}: ${response.statusText}`);
-            error.status = response.status;
-            throw error;
+            throw new Error(data.detail || `Ошибка ${response.status}`);
         }
-        return null;
-    }
 
-    // Проверяем что ответ действительно JSON
-    const contentType = response.headers.get('content-type') || '';
-
-    // Если сервер вернул HTML-страницу ошибки или пусто
-    if (!contentType.includes('application/json') && text.trim().startsWith('<')) {
-        const error = new Error(
-            response.ok 
-                ? `Сервер вернул HTML вместо JSON. Возможно, эндпоинт ${endpoint} не существует.`
-                : `Ошибка сервера ${response.status}: ${response.statusText}`
-        );
-        error.status = response.status;
-        error.isHtmlResponse = true;
+        // Нормализуем ответ перед возвратом
+        return normalizeResponse(data);
+    } catch (error) {
+        console.error(`API request failed: ${endpoint}`, error);
         throw error;
     }
-
-    // Парсим JSON
-    let data;
-    try {
-        data = JSON.parse(text);
-    } catch (parseError) {
-        const error = new Error('Сервер вернул некорректный JSON. Возможно, эндпоинт не существует или сервер вернул ошибку.');
-        error.status = response.status;
-        error.isParseError = true;
-        error.rawResponse = text.substring(0, 200);
-        throw error;
-    }
-
-    if (!response.ok) {
-        const error = new Error(data.detail || data.message || `Ошибка ${response.status}`);
-        error.status = response.status;
-        error.responseData = data;
-        throw error;
-    }
-
-    return normalizeResponse(data);
 }
 
 export const authAPI = {
     async login(email, password) {
         const data = await request('/auth/login', 'POST', { email, password }, false);
-        if (data && data.access_token) {
+        if (data.access_token) {
             setAuthToken(data.access_token);
         }
         return data;
@@ -210,7 +131,7 @@ export const authAPI = {
     },
 
     isAuthenticated() {
-        return !!authToken && !isTokenExpired();
+        return !!authToken;
     }
 };
 
@@ -225,7 +146,6 @@ export const usersAPI = {
             return user;
         } catch (error) {
             console.warn('Не удалось загрузить профиль с сервера:', error.message);
-            // Fallback: пробуем декодировать токен
             try {
                 const token = authToken.split('.')[1];
                 const payload = JSON.parse(atob(token));
@@ -357,7 +277,7 @@ export const groupsAPI = {
 
     async reviewWork(submissionId, comment, grades) {
         return await request(`/groups/submissions/${submissionId}/review`, 'POST', {
-            comment: comment || "",
+            comment,
             grades
         });
     },

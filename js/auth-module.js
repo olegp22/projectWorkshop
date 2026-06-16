@@ -299,147 +299,170 @@ export async function initAuthHeader() {
     loggedNav.classList.add('hidden');
     loggedNav.classList.remove('flex');
 
-    const guestNavEl = document.getElementById('guestNav');
-    if (guestNavEl) {
-      guestNavEl.addEventListener('click', () => {
-        openAuthModal();
-      });
-    }
+    // guestNav click is now handled by event delegation in initAuthModal
   }
 }
 
 export function initAuthModal() {
-    const profileBtn = document.getElementById('profile-btn');
-    const profileName = document.getElementById('profile-name');
-    const closeBtn = document.getElementById('close-auth-btn');
-    const overlay = document.getElementById('auth-modal-overlay');
-    const tabLogin = document.getElementById('tab-login');
-    const tabRegister = document.getElementById('tab-register');
+    // Use event delegation for dynamically loaded elements
+    document.addEventListener('click', (e) => {
+        const profileBtn = e.target.closest('#profile-btn');
+        const profileName = e.target.closest('#profile-name');
+        const loginBtn = e.target.closest('.login-btn-expert');
+        const guestNav = e.target.closest('#guestNav');
 
-    if (profileBtn) profileBtn.addEventListener('click', openAuthModal);
-    if (profileName) profileName.addEventListener('click', openAuthModal);
-    if (closeBtn) closeBtn.addEventListener('click', closeAuthModal);
-    if (overlay) overlay.addEventListener('click', (e) => { if (e.target === overlay) closeAuthModal(); });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && overlay && !overlay.classList.contains('hidden')) closeAuthModal();
-    });
-    if (tabLogin) tabLogin.addEventListener('click', () => switchAuthTab('login'));
-    if (tabRegister) tabRegister.addEventListener('click', () => switchAuthTab('register'));
-
-    document.querySelectorAll('.login-btn-expert').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        if (profileBtn || profileName || loginBtn || guestNav) {
             e.preventDefault();
             openAuthModal();
-        });
+        }
     });
 
-    const loginForm = document.getElementById('login-form');
-    if (loginForm) {
-        loginForm.addEventListener('submit', async (e) => {
+    // Close button and overlay clicks
+    document.addEventListener('click', (e) => {
+        const closeBtn = e.target.closest('#close-auth-btn');
+        const overlay = e.target.closest('#auth-modal-overlay');
+
+        if (closeBtn) {
+            closeAuthModal();
+        } else if (overlay && e.target === overlay) {
+            closeAuthModal();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const overlay = document.getElementById('auth-modal-overlay');
+            if (overlay && !overlay.classList.contains('hidden')) {
+                closeAuthModal();
+            }
+        }
+    });
+
+    // Tab switching with event delegation
+    document.addEventListener('click', (e) => {
+        const tabLogin = e.target.closest('#tab-login');
+        const tabRegister = e.target.closest('#tab-register');
+
+        if (tabLogin) {
+            switchAuthTab('login');
+        } else if (tabRegister) {
+            switchAuthTab('register');
+        }
+    });
+
+    // Form submissions with event delegation
+    document.addEventListener('submit', (e) => {
+        const loginForm = e.target.closest('#login-form');
+        const registerForm = e.target.closest('#register-form');
+
+        if (loginForm) {
             e.preventDefault();
-            hideAuthError();
-            const email = document.getElementById('auth-email').value.trim();
-            const password = document.getElementById('auth-password').value;
-            if (!email || !isValidEmail(email)) {
-                showAuthError('Введите корректный email');
-                return;
-            }
-            if (!password) {
-                showAuthError('Введите пароль');
-                return;
-            }
-            try {
-                await authAPI.login(email, password);
+            handleLoginSubmit();
+        } else if (registerForm) {
+            e.preventDefault();
+            handleRegisterSubmit();
+        }
+    });
+}
 
-                const pendingJoin = localStorage.getItem('pending_join_token');
-                if (pendingJoin) {
-                    localStorage.removeItem('pending_join_token');
-                    window.location.href = `group.html?join=${pendingJoin}`;
-                    return;
-                }
-
-                window.location.href = 'group.html';
-            } catch (err) {
-                showAuthError(err.message);
-                document.getElementById('auth-password').value = '';
-            }
-        });
+async function handleLoginSubmit() {
+    hideAuthError();
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    if (!email || !isValidEmail(email)) {
+        showAuthError('Введите корректный email');
+        return;
     }
+    if (!password) {
+        showAuthError('Введите пароль');
+        return;
+    }
+    try {
+        await authAPI.login(email, password);
 
-    const registerForm = document.getElementById('register-form');
-    if (registerForm) {
-        registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            hideAuthError();
-            const firstName = document.getElementById('reg-first-name').value.trim();
-            const lastName = document.getElementById('reg-last-name').value.trim();
-            const patronymic = document.getElementById('reg-patronymic').value.trim();
-            const email = document.getElementById('reg-email').value.trim();
-            const password = document.getElementById('reg-password').value;
-            const confirm = document.getElementById('reg-password-confirm').value;
-            const terms = document.getElementById('reg-terms').checked;
+        const pendingJoin = localStorage.getItem('pending_join_token');
+        if (pendingJoin) {
+            localStorage.removeItem('pending_join_token');
+            window.location.href = `group.html?join=${pendingJoin}`;
+            return;
+        }
 
-            if (!firstName) {
-                showAuthError('Введите имя');
-                return;
-            }
-            if (!lastName) {
-                showAuthError('Введите фамилию');
-                return;
-            }
-            if (!patronymic) {
-                showAuthError('Введите отчество');
-                return;
-            }
-            if (!email || !isValidEmail(email)) {
-                showAuthError('Введите корректный email');
-                return;
-            }
-            if (!password || password.length < 8) {
-                showAuthError('Пароль должен быть не менее 8 символов');
-                return;
-            }
-            if (password !== confirm) {
-                showAuthError('Пароли не совпадают');
-                return;
-            }
-            if (!terms) {
-                showAuthError('Необходимо согласиться с условиями');
-                return;
-            }
-            try {
-                const result = await authAPI.register({
-                    email,
-                    password,
-                    name: firstName,
-                    surname: lastName,
-                    patronymic: patronymic
-                });
+        window.location.href = 'group.html';
+    } catch (err) {
+        showAuthError(err.message);
+        document.getElementById('auth-password').value = '';
+    }
+}
 
-                userStore.setProfile({
-                    id: result.id,
-                    name: firstName,
-                    surname: lastName,
-                    patronymic: patronymic,
-                    email: email
-                });
+async function handleRegisterSubmit() {
+    hideAuthError();
+    const firstName = document.getElementById('reg-first-name').value.trim();
+    const lastName = document.getElementById('reg-last-name').value.trim();
+    const patronymic = document.getElementById('reg-patronymic').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const confirm = document.getElementById('reg-password-confirm').value;
+    const terms = document.getElementById('reg-terms').checked;
 
-                if (result.access_token) {
-                    setAuthToken(result.access_token);
-                }
-
-                showAuthError('Регистрация успешна! Теперь войдите.', true);
-                setTimeout(() => switchAuthTab('login'), 1500);
-                document.getElementById('reg-first-name').value = '';
-                document.getElementById('reg-last-name').value = '';
-                document.getElementById('reg-patronymic').value = '';
-                document.getElementById('reg-email').value = '';
-                document.getElementById('reg-password').value = '';
-                document.getElementById('reg-password-confirm').value = '';
-                document.getElementById('reg-terms').checked = false;
-            } catch (err) {
-                showAuthError(err.message);
-            }
+    if (!firstName) {
+        showAuthError('Введите имя');
+        return;
+    }
+    if (!lastName) {
+        showAuthError('Введите фамилию');
+        return;
+    }
+    if (!patronymic) {
+        showAuthError('Введите отчество');
+        return;
+    }
+    if (!email || !isValidEmail(email)) {
+        showAuthError('Введите корректный email');
+        return;
+    }
+    if (!password || password.length < 8) {
+        showAuthError('Пароль должен быть не менее 8 символов');
+        return;
+    }
+    if (password !== confirm) {
+        showAuthError('Пароли не совпадают');
+        return;
+    }
+    if (!terms) {
+        showAuthError('Необходимо согласиться с условиями');
+        return;
+    }
+    try {
+        const result = await authAPI.register({
+            email,
+            password,
+            name: firstName,
+            surname: lastName,
+            patronymic: patronymic
         });
+
+        userStore.setProfile({
+            id: result.id,
+            name: firstName,
+            surname: lastName,
+            patronymic: patronymic,
+            email: email
+        });
+
+        if (result.access_token) {
+            setAuthToken(result.access_token);
+        }
+
+        showAuthError('Регистрация успешна! Теперь войдите.', true);
+        setTimeout(() => switchAuthTab('login'), 1500);
+        document.getElementById('reg-first-name').value = '';
+        document.getElementById('reg-last-name').value = '';
+        document.getElementById('reg-patronymic').value = '';
+        document.getElementById('reg-email').value = '';
+        document.getElementById('reg-password').value = '';
+        document.getElementById('reg-password-confirm').value = '';
+        document.getElementById('reg-terms').checked = false;
+    } catch (err) {
+        showAuthError(err.message);
     }
 }

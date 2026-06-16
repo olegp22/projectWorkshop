@@ -124,10 +124,15 @@ async function markAllAsRead() {
 function updateBadge() {
   if (!notificationBadge) return;
   const unread = notifications.filter(n => !n.read).length;
+
+  // ИСПРАВЛЕНИЕ: обновляем внутренний span, не внешний контейнер
+  const innerSpan = notificationBadge.querySelector('span');
+
   if (unread > 0) {
-    notificationBadge.textContent = unread > 99 ? '99+' : unread;
+    if (innerSpan) innerSpan.textContent = unread > 99 ? '99+' : unread;
     notificationBadge.classList.remove('hidden');
   } else {
+    if (innerSpan) innerSpan.textContent = '0';
     notificationBadge.classList.add('hidden');
   }
 }

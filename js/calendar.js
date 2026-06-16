@@ -38,7 +38,10 @@ async function loadCurrentUser() {
   } catch (error) {
     const el = document.getElementById('headerUserName');
     if (el) el.innerText = 'Гость';
-    if (error.message && error.message.includes('Сессия истекла')) {
+    if (error.isAuthError || (error.message && error.message.includes('Сессия истекла'))) {
+      showToast('Сессия истекла. Пожалуйста, войдите снова.', true);
+      authAPI.logout();
+      window.location.reload();
       return;
     }
   }
@@ -81,6 +84,12 @@ async function loadEventsFromServer() {
       saveEventsToLocalStorage(events);
     }
   } catch (error) {
+    if (error.isAuthError || (error.message && error.message.includes('401'))) {
+      showToast('Сессия истекла. Пожалуйста, войдите снова.', true);
+      authAPI.logout();
+      window.location.reload();
+      return;
+    }
     console.warn('Не удалось загрузить события с сервера:', error.message);
     events = loadEventsFromLocalStorage();
   }
@@ -390,6 +399,12 @@ async function loadParticipants() {
       availableParticipants = allMembers;
     }
   } catch (error) {
+    if (error.isAuthError || (error.message && error.message.includes('401'))) {
+      showToast('Сессия истекла. Пожалуйста, войдите снова.', true);
+      authAPI.logout();
+      window.location.reload();
+      return;
+    }
     console.log('Не удалось загрузить участников групп:', error.message);
     availableParticipants = [];
   }

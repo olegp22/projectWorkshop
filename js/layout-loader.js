@@ -105,10 +105,10 @@ async function initLayout() {
   console.log('[LayoutLoader] access_token в localStorage?', hasToken);
 
   try {
-    const { initAuthHeader, initAuthModal } = await import('./auth-module.js?v=6');
+    const { initAuthHeader, initAuthModal } = await import('./auth-module.js?v=7');
     await initAuthHeader();
     console.log('[LayoutLoader] initAuthHeader выполнен');
-
+    await new Promise(r => setTimeout(r, 50));
     initAuthModal();
     console.log('[LayoutLoader] initAuthModal выполнен');
   } catch (err) {
@@ -116,7 +116,8 @@ async function initLayout() {
   }
 
   try {
-    const { initNotifications } = await import('./notification.js?v=5');
+    const { initNotifications } = await import('./notification.js?v=6');
+    await new Promise(r => setTimeout(r, 50));
     initNotifications();
     console.log('[LayoutLoader] initNotifications выполнен');
   } catch (err) {
