@@ -35,13 +35,11 @@ async function loadGroupInfo() {
     const groups = await groupsAPI.getMyGroups();
     const group = groups.find(g => g.id == currentGroupId);
     if (group) {
-
       currentGroupMode = (group.group_mode || 'classic').toLowerCase();
       const urlMode = params.get('mode');
       if (urlMode && !group.group_mode) {
         currentGroupMode = urlMode;
       }
-
       currentUserRole = (group.role || 'member').toLowerCase();
       const nameEl = document.getElementById('groupName');
       if (nameEl) {
@@ -72,9 +70,19 @@ function renderProjects() {
 
   container.className = 'projects-grid';
 
-  const filtered = currentFilter === 'all'
-    ? projects
-    : projects.filter(p => p.status === currentFilter);
+  // Фильтрация: каждый проект попадает только в ОДНУ категорию
+  let filtered = [];
+
+  if (currentFilter === 'all') {
+    // "Все" — показываем всё без дублирования
+    filtered = projects;
+  } else if (currentFilter === 'reviewing') {
+    // "На проверке" — только неоценённые
+    filtered = projects.filter(p => p.status === 'reviewing');
+  } else if (currentFilter === 'archive') {
+    // "Архив" — только оценённые
+    filtered = projects.filter(p => p.status === 'archive');
+  }
 
   if (filtered.length === 0) {
     container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #9ca3af; padding: 32px 0;">Нет проектов для отображения</div>';
@@ -90,7 +98,7 @@ function renderProjects() {
         <p class="card-row"><span class="card-label">Студент:</span> ${escapeHtml(p.author)}</p>
         <p class="card-row"><span class="card-label">Прогресс:</span> ${p.scoredCriteria} из ${p.totalCriteria} критериев оценено</p>
       </div>
-      <button class="review-btn">Перейти к оценке</button>
+      <button class="review-btn">${p.status === 'archive' ? 'Просмотреть оценку' : 'Перейти к оценке'}</button>
     </div>
   `).join('');
 
@@ -102,8 +110,10 @@ function renderProjects() {
     });
   });
 
-  const checked = filtered.filter(p => p.status === 'archive').length;
-  updateProgress(checked, filtered.length);
+  // Прогресс считаем по всем проектам, не только отфильтрованным
+  const total = projects.length;
+  const checked = projects.filter(p => p.status === 'archive').length;
+  updateProgress(checked, total);
 }
 
 function updateProgress(checked, total) {
@@ -121,7 +131,6 @@ function updateProgress(checked, total) {
 function setupFilters() {
   const container = document.getElementById('filterContainer');
   if (!container) return;
-
 
   container.innerHTML = `
     <button class="filter-btn is-active bg-orange-500 px-4 py-1 rounded text-sm font-medium transition cursor-pointer text-white" data-filter="all">Все</button>
@@ -159,7 +168,6 @@ function setupSort() {
     renderProjects();
   });
 }
-
 
 async function loadProjectsWithProgress() {
   try {
@@ -206,6 +214,9 @@ async function loadProjectsWithProgress() {
           }
         }
 
+        // КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: определяем статус однозначно
+        // Проект либо "archive" (оценён), либо "reviewing" (на проверке)
+        // Никакого дублирования!
         const isFullyReviewed = hasMyReview
           || myReviewStatus === 'graded'
           || scoredCount >= totalCriteriaCount

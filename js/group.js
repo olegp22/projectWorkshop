@@ -971,47 +971,42 @@ async function loadStudentSubmission() {
   if (!currentGroupId) return;
 
   try {
-    const user = await usersAPI.getMe();
-    let stored = getStoredSubmissions();
+    // 1. Получаем базовую инфу о своей работе
+    const myWork = await groupsAPI.getMyWork(currentGroupId);
 
+    if (!myWork || !myWork.id) {
+      showStudentSubmitBlock();
+      return;
+    }
 
-    const mySubmission = stored.find(s => s.group_id == currentGroupId);
+    // 2. Получаем полные детали для точного статуса
+    let details = null;
+    try {
+      details = await groupsAPI.getSubmission(myWork.id);
+    } catch (e) {
+      console.warn('Не удалось загрузить детали работы:', e.message);
+    }
 
-    if (mySubmission) {
-      try {
+    const status = details?.status || 'pending';
 
-        const details = await groupsAPI.getSubmission(mySubmission.submission_id);
-        currentStudentSubmission = {
-          submission_id: mySubmission.submission_id,
-          link: details.link || mySubmission.link,
-          status: details.status || 'pending',
-          group_id: currentGroupId,
-          student_id: user.id
-        };
-        showStudentWorkBlock(currentStudentSubmission);
-      } catch (e) {
-        console.warn('Не удалось загрузить детали работы:', e.message);
+    currentStudentSubmission = {
+      submission_id: myWork.id,
+      link: myWork.link,
+      status: status,           // "pending" или "graded"
+      score: myWork.score || 0, // число или 0
+      group_id: currentGroupId
+    };
 
-        if (e.message && (e.message.includes('404') || e.message.includes('не найдена'))) {
-          stored = stored.filter(s => s.submission_id !== mySubmission.submission_id);
-          localStorage.setItem('my_submissions', JSON.stringify(stored));
-          showStudentSubmitBlock();
-          return;
-        }
+    showStudentWorkBlock(currentStudentSubmission);
 
-        currentStudentSubmission = {
-          ...mySubmission,
-          student_id: user.id,
-          status: 'pending'
-        };
-        showStudentWorkBlock(currentStudentSubmission);
-      }
+  } catch (error) {
+    // 404 = работа не загружена
+    if (error.message && (error.message.includes('404') || error.message.includes('не загрузили'))) {
+      showStudentSubmitBlock();
     } else {
+      console.warn('Ошибка загрузки работы:', error.message);
       showStudentSubmitBlock();
     }
-  } catch (error) {
-    console.warn('Ошибка загрузки работы студента:', error.message);
-    showStudentSubmitBlock();
   }
 }
 
@@ -1030,31 +1025,50 @@ function showStudentWorkBlock(submission) {
   }
 
   if (statusEl) {
-    const statusText = {
-      'pending': 'На проверке',
-      'graded': 'Проверено',
-      'reviewing': 'Проверяется'
-    };
-    statusEl.innerText = statusText[submission.status] || submission.status;
-    statusEl.className = `text-xs px-2 py-0.5 rounded ${
-      submission.status === 'graded' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
-    }`;
+    let statusText, statusClass;
+
+    if (submission.status === 'graded' || submission.score > 0) {
+      // Проверено — показываем балл
+      const ballWord = getBallWord(Math.round(submission.score));
+      statusText = `Проверено: ${submission.score.toFixed(1)} ${ballWord}`;
+      statusClass = 'bg-green-100 text-green-700';
+    } else if (submission.status === 'pending') {
+      // Назначены проверяющие, ожидает оценки
+      statusText = 'На проверке';
+      statusClass = 'bg-orange-100 text-orange-700';
+    } else {
+      // Создана, но проверяющие ещё не назначены (или другой статус)
+      statusText = 'Отправлено';
+      statusClass = 'bg-blue-100 text-blue-700';
+    }
+
+    statusEl.innerText = statusText;
+    statusEl.className = `text-xs px-2 py-0.5 rounded ${statusClass}`;
   }
 
+  // === ЛОГИКА РАЗБЛОКИРОВКИ КНОПКИ ОБНОВЛЕНИЯ ===
   const updateBtn = document.getElementById('studentUpdateLinkBtn');
   const newLinkInput = document.getElementById('studentNewLinkInput');
-  if (submission.status === 'graded') {
-    if (updateBtn) {
-      updateBtn.disabled = true;
+
+  // Можно менять ссылку только если работа НЕ проверена
+  const canEdit = submission.status !== 'graded' && submission.score === 0;
+
+  if (updateBtn) {
+    updateBtn.disabled = !canEdit;
+    if (!canEdit) {
       updateBtn.classList.add('opacity-50', 'cursor-not-allowed');
-    }
-    if (newLinkInput) newLinkInput.disabled = true;
-  } else {
-    if (updateBtn) {
-      updateBtn.disabled = false;
+    } else {
       updateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
-    if (newLinkInput) newLinkInput.disabled = false;
+  }
+
+  if (newLinkInput) {
+    newLinkInput.disabled = !canEdit;
+    if (!canEdit) {
+      newLinkInput.placeholder = 'Работа проверена — изменение недоступно';
+    } else {
+      newLinkInput.placeholder = 'новая ссылка';
+    }
   }
 }
 

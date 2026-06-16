@@ -80,14 +80,12 @@ function updateContestTotal() {
   if (maxEl) maxEl.innerText = '10';
 }
 
-
 function prepareGradesForSubmit() {
   if (currentGroupMode === 'contest') {
     if (contestScore === null) {
       showToast('Выберите оценку на шкале', true);
       return null;
     }
-
 
     if (criteria.length > 0) {
       return [{
@@ -96,11 +94,9 @@ function prepareGradesForSubmit() {
       }];
     }
 
-
     showToast('Конкурсный режим требует настроенных критериев. Обратитесь к организатору.', true);
     return null;
   }
-
 
   if (!criteria || criteria.length === 0) {
     showToast('Критерии оценки не настроены организатором', true);
@@ -132,7 +128,6 @@ async function loadProject() {
   }
 
   try {
-
     const groups = await groupsAPI.getMyGroups();
     const group = groups.find(g => g.id == currentGroupId);
     if (group) {
@@ -167,9 +162,7 @@ async function loadProject() {
       linkEl.href = submission.link;
       linkEl.innerText = submission.link;
 
-
       await loadGroupCriteria(currentGroupId);
-
 
       const feedbackBlock = document.getElementById('feedbackBlock');
       const criteriaListBlock = document.getElementById('criteriaList');
@@ -177,12 +170,10 @@ async function loadProject() {
       const finishBtn = document.getElementById('finishReviewBtn');
 
       if (currentGroupMode === 'contest') {
-
         if (feedbackBlock) feedbackBlock.classList.add('hidden');
         if (criteriaListBlock) criteriaListBlock.classList.add('hidden');
 
         if (!criteria || criteria.length === 0) {
-
           if (contestScaleBlock) {
             contestScaleBlock.innerHTML = `
               <div class="text-center py-8">
@@ -229,11 +220,9 @@ async function loadProject() {
         }
         updateContestTotal();
       } else {
-
         if (feedbackBlock) feedbackBlock.classList.remove('hidden');
         if (criteriaListBlock) criteriaListBlock.classList.remove('hidden');
         if (contestScaleBlock) contestScaleBlock.classList.add('hidden');
-
 
         if (!criteria || criteria.length === 0) {
           if (criteriaListBlock) {
@@ -261,7 +250,6 @@ async function loadProject() {
         updateTotalScore('totalScore', 'maxTotalScore');
       }
 
-
       const myReview = submission.reviews?.find(r => r.reviewer_id === currentUserId);
       const commentText = myReview?.reviewer_comment || myReview?.comment || '';
       if (commentText) {
@@ -269,7 +257,6 @@ async function loadProject() {
       }
       if (myReview?.grades?.length > 0) {
         if (currentGroupMode === 'contest') {
-
           const firstGrade = myReview.grades[0];
           if (firstGrade && firstGrade.score !== undefined) {
             contestScore = firstGrade.score;
@@ -277,7 +264,6 @@ async function loadProject() {
             updateContestTotal();
           }
         } else {
-
           myReview.grades.forEach(g => {
             const c = criteria.find(x => x.name === g.criterion_name);
             if (c) c.score = g.score;
@@ -292,7 +278,6 @@ async function loadProject() {
       }
     }
 
-
     const finishBtn = document.getElementById('finishReviewBtn');
     if (finishBtn) {
       const isReadonly = params.get('readonly') === 'true';
@@ -300,12 +285,10 @@ async function loadProject() {
         finishBtn.style.display = 'none';
       } else {
         finishBtn.addEventListener('click', async () => {
-
           if (finishBtn.disabled) return;
 
           finishBtn.disabled = true;
           finishBtn.innerHTML = '<span class="animate-spin inline-block mr-1">⟳</span> Сохранение...';
-
 
           const feedback = currentGroupMode === 'contest'
             ? null
@@ -330,6 +313,11 @@ async function loadProject() {
                 localStorage.setItem('reviewed_submissions', JSON.stringify(reviewed));
               }
             } catch (e) {}
+
+            // КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: принудительно очищаем кэш работ
+            // чтобы при возврате на review.html данные перезагрузились
+            localStorage.removeItem('my_reviews_cache');
+            localStorage.removeItem('my_reviews_cache_time');
 
             setTimeout(() => {
               const modeParam = currentGroupMode !== 'classic' ? `&mode=${currentGroupMode}` : '';
