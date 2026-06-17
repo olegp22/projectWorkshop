@@ -17,7 +17,7 @@ origins = [
     "http://localhost:5173",
      "http://127.0.0.1:5500", # если использует Vite
      "https://project-workshop-8s9jvp7am-olegp222.vercel.app",
-     "https://project-workshop-gilt.vercel.app/",
+     "https://project-workshop-gilt.vercel.app",
      
 ]
 
